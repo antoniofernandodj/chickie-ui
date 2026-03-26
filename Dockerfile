@@ -1,6 +1,8 @@
 # Stage 1: Build
 FROM node:22-alpine AS build
 
+RUN npm install -g npm@latest
+
 WORKDIR /app
 
 # Instala as dependências separadamente para aproveitar o cache do Docker
