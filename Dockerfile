@@ -1,7 +1,8 @@
 # Stage 1: Build
 FROM node:22-alpine AS build
 
-RUN npm install -g npm@latest
+# Corepack é a forma recomendada e segura de gerenciar o npm em containers Node.js recentes
+RUN corepack enable && corepack prepare npm@latest --activate
 
 WORKDIR /app
 
