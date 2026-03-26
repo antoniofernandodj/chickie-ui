@@ -12,7 +12,7 @@ export class App implements OnInit {
   private readonly http = inject(HttpClient);
   
   protected readonly title = signal('Chickie-ui');
-  protected readonly serverMessage = signal<string | null>(null);
+  protected readonly serverMessage = signal<string | null>("CARREGANDO NO SERVIDOR...");
 
   ngOnInit() {
     this.http.get<{ message: string }>('/api/hello')
