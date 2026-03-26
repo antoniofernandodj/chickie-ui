@@ -6,6 +6,9 @@ import { isPlatformServer } from '@angular/common';
 import { isPlatformBrowser } from '@angular/common';
 
 
+type ServerMessage = { message: string };
+
+
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
@@ -14,11 +17,14 @@ import { isPlatformBrowser } from '@angular/common';
 })
 export class App implements OnInit {
   private readonly http = inject(HttpClient);
-  
+
   protected readonly title = signal('Chickie-ui');
   protected readonly serverMessage = signal<string | null>("CARREGANDO NO SERVIDOR...");
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+  constructor(
+    @Inject(PLATFORM_ID)
+    private platformId: Object
+  ) {
     if (isPlatformServer(this.platformId)) {
       console.log('✅ EXECUTANDO NO SERVIDOR (DOCKER LOGS)');
     }
@@ -26,7 +32,7 @@ export class App implements OnInit {
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      this.http.get<{ message: string }>('/api/hello')
+      this.http.get<ServerMessage>('/api/hello')
         .subscribe({
           next: (data) => this.serverMessage.set(data.message),
           error: (err) => console.error('Erro ao buscar dados:', err)
