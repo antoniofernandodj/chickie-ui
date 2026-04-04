@@ -11,6 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-header',
+  standalone: true,
   imports: [RouterLink, RouterLinkActive],
   template: `
     <header

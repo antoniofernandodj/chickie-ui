@@ -48,7 +48,7 @@ const ORDER: StatusPedido[] = STEPS.map((s) => s.status);
       } @else {
         <div class="flex items-start justify-between mb-6">
           <div>
-            <p class="text-xs text-gray-400 mb-1">{{ pedido()!.criado_em | date:'dd/MM/yyyy \'às\' HH:mm' }}</p>
+            <p class="text-xs text-gray-400 mb-1">{{ getFormattedDate(pedido()!.criado_em) }}</p>
             <h1 class="text-xl font-bold text-gray-900">
               Pedido #{{ pedido()!.uuid.slice(-8).toUpperCase() }}
             </h1>
@@ -196,6 +196,12 @@ export class PedidoDetalheComponent {
   private currentIndex = computed(() =>
     ORDER.indexOf(this.pedido()?.status ?? 'criado'),
   );
+
+  // Method to format the date safely
+  getFormattedDate(date: string): string {
+    const datePipe = new DatePipe('en-US');
+    return `${datePipe.transform(date, 'dd/MM/yyyy')} às ${new Date(date).toLocaleTimeString('pt-BR')}`;
+  }
 
   isActive(s: StatusPedido) { return this.pedido()?.status === s; }
   isDone  (s: StatusPedido) { return ORDER.indexOf(s) < this.currentIndex(); }

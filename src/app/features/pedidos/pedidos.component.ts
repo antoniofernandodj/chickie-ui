@@ -92,7 +92,7 @@ const STATUS_CONFIG: Record<StatusPedido, { label: string; color: string; bg: st
               <div class="flex items-start justify-between mb-3">
                 <div>
                   <p class="text-xs text-gray-400 mb-1">
-                    {{ pedido.criado_em | date:'dd/MM/yyyy \'às\' HH:mm' }}
+                    {{ getFormattedDate(pedido.criado_em) }}
                   </p>
                   <p class="text-sm font-medium text-gray-700">
                     Pedido #{{ pedido.uuid.slice(-8).toUpperCase() }}
@@ -152,6 +152,12 @@ export class PedidosComponent {
     const status = this.filtro();
     return status === 'todos' ? all : all.filter((p) => p.status === status);
   });
+  
+  // Method to format the date safely
+  getFormattedDate(date: string): string {
+    const datePipe = new DatePipe('en-US');
+    return datePipe.transform(date, 'dd/MM/yyyy') + " às " + new Date(date).toLocaleTimeString('pt-BR');
+  }
 
   statusCfg(s: StatusPedido) {
     return STATUS_CONFIG[s];
