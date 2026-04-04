@@ -101,6 +101,7 @@ Todos os endpoints vivem sob `/api`.
 |---------|------------------------------------------|----------------------|------|--------|
 | `POST`  | `/api/admin/lojas`                       | Criar loja           | ✅   | Admin  |
 | `GET`   | `/api/admin/lojas/listar`                | Listar todas as lojas| ✅   | Admin  |
+| `GET`   | `/api/admin/minhas-lojas`                | Listar lojas do admin| ✅   | Admin  |
 | `POST`  | `/api/admin/lojas/{loja_uuid}/funcionarios` | Adicionar funcionário | ✅ | Admin |
 | `POST`  | `/api/admin/lojas/{loja_uuid}/entregadores` | Adicionar entregador | ✅  | Admin  |
 
@@ -290,6 +291,8 @@ src/
 | Auth         | JWT (jsonwebtoken)            |
 | Serialização | serde / serde_json            |
 | Timestamps   | chrono::DateTime<Utc>         |
+| Horários     | chrono::NaiveTime             |
+| Decimais     | rust_decimal::Decimal         |
 
 ---
 
