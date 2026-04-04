@@ -23,7 +23,7 @@ export class AdminService {
   }
 
   listarLojas(): Observable<Loja[]> {
-    return this.http.get<Loja[]>(`${this.base}/lojas/listar`);
+    return this.http.get<Loja[]>(`${this.base}/minhas-lojas`);
   }
 
   adicionarFuncionario(
