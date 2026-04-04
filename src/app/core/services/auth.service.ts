@@ -41,9 +41,16 @@ export class AuthService {
     );
   }
 
+  saveUserMeta(nome: string): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('chickie_nome', nome);
+    }
+  }
+
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem('chickie_token');
+      localStorage.removeItem('chickie_nome');
     }
     this._token.set(null);
   }

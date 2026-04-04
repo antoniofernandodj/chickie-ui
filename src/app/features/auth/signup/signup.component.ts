@@ -1,0 +1,168 @@
+import { Component, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../../core/services/auth.service';
+import { ClasseUsuario } from '../../../core/models';
+
+@Component({
+  selector: 'app-signup',
+  imports: [RouterLink, FormsModule],
+  template: `
+    <div class="min-h-[calc(100dvh-4rem)] flex items-center justify-center px-4 py-12"
+         style="background: var(--color-surface)">
+      <div class="w-full max-w-md">
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+          <div class="text-center mb-8">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl mx-auto mb-4"
+                 style="background: var(--color-brand)">C</div>
+            <h1 class="text-2xl font-bold text-gray-900">Criar sua conta</h1>
+            <p class="text-gray-500 text-sm mt-1">Rápido e gratuito</p>
+          </div>
+
+          <form (ngSubmit)="submit()" #f="ngForm" novalidate class="space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1.5">Nome completo</label>
+                <input type="text" name="nome" [(ngModel)]="form.nome" required
+                       placeholder="João Silva"
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1.5">Username</label>
+                <input type="text" name="username" [(ngModel)]="form.username" required
+                       placeholder="joao123"
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">E-mail</label>
+              <input type="email" name="email" [(ngModel)]="form.email" required
+                     placeholder="seu@email.com"
+                     class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Telefone</label>
+              <input type="tel" name="telefone" [(ngModel)]="form.telefone" required
+                     placeholder="11999999999"
+                     class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Senha</label>
+              <div class="relative">
+                <input [type]="showPass() ? 'text' : 'password'"
+                       name="senha" [(ngModel)]="form.senha" required
+                       placeholder="Mínimo 6 caracteres"
+                       class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400 pr-12"/>
+                <button type="button" (click)="showPass.set(!showPass())"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-2">Tipo de conta</label>
+              <div class="grid grid-cols-2 gap-2">
+                @for (opt of classOptions; track opt.value) {
+                  <label
+                    class="flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all text-sm"
+                    [class.border-orange-400]="form.classe === opt.value"
+                    [class.bg-orange-50]="form.classe === opt.value"
+                    [class.text-orange-700]="form.classe === opt.value"
+                    [class.border-gray-200]="form.classe !== opt.value"
+                    [class.text-gray-700]="form.classe !== opt.value"
+                  >
+                    <input type="radio" name="classe" [value]="opt.value" [(ngModel)]="form.classe" class="sr-only"/>
+                    <span>{{ opt.icon }}</span>
+                    <span class="font-medium">{{ opt.label }}</span>
+                  </label>
+                }
+              </div>
+            </div>
+
+            @if (error()) {
+              <div class="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-700">
+                <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                {{ error() }}
+              </div>
+            }
+
+            <button type="submit" [disabled]="loading()"
+                    class="w-full py-3.5 rounded-xl font-semibold text-white transition-all active:scale-95 disabled:opacity-60 mt-2"
+                    style="background: var(--color-brand)">
+              @if (loading()) {
+                <span class="flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>Criando conta...
+                </span>
+              } @else { Criar conta }
+            </button>
+          </form>
+
+          <p class="text-center text-sm text-gray-500 mt-6">
+            Já tem conta?
+            <a routerLink="/auth/login" class="font-semibold hover:underline" style="color:var(--color-brand)">Entrar</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  `,
+})
+export class SignupComponent {
+  private auth   = inject(AuthService);
+  private router = inject(Router);
+
+  form = {
+    nome:        '',
+    username:    '',
+    email:       '',
+    senha:       '',
+    telefone:    '',
+    auth_method: 'email',
+    classe:      'cliente' as ClasseUsuario,
+  };
+
+  readonly classOptions: { value: ClasseUsuario; label: string; icon: string }[] = [
+    { value: 'cliente',        label: 'Cliente',        icon: '🛒' },
+    { value: 'administrador',  label: 'Administrador',  icon: '👑' },
+  ];
+
+  loading  = signal(false);
+  error    = signal('');
+  showPass = signal(false);
+
+  submit() {
+    const { nome, username, email, senha, telefone } = this.form;
+    if (!nome || !username || !email || !senha || !telefone) {
+      this.error.set('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    this.loading.set(true);
+    this.error.set('');
+    this.auth.signup(this.form).subscribe({
+      next: (user) => {
+        this.auth.saveUserMeta(user.nome);
+        this.auth.login({ email, senha }).subscribe({
+          next: () => this.router.navigate(['/']),
+          error: () => this.router.navigate(['/auth/login']),
+        });
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.error.set(err?.error?.error ?? 'Erro ao criar conta. Tente novamente.');
+      },
+    });
+  }
+}

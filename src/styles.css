@@ -1,3 +1,28 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+@theme {
+  --color-brand:      oklch(65% 0.22 40);
+  --color-brand-dark: oklch(55% 0.22 40);
+  --color-brand-light:oklch(96% 0.04 40);
+  --color-surface:    oklch(98.5% 0.002 270);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-surface);
+  color: oklch(18% 0.01 270);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+}
+
+/* skeleton pulse */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.skeleton { animation: skeleton-pulse 1.5s ease-in-out infinite; }

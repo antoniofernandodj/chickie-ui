@@ -1,10 +1,9 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
-  {
-    path: '**',
-    // renderMode: RenderMode.Prerender
-    renderMode: RenderMode.Server
-
-  }
+  // páginas públicas → SSR completo
+  { path: '',          renderMode: RenderMode.Server },
+  { path: 'loja/:uuid',renderMode: RenderMode.Server },
+  // auth e páginas interativas → renderizadas no cliente
+  { path: '**',        renderMode: RenderMode.Client },
 ];

@@ -1,0 +1,289 @@
+import { Component, inject, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { catchError, of } from 'rxjs';
+import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
+import { AuthService } from '../../core/services/auth.service';
+import { EnderecoUsuario, EnderecoUsuarioRequest } from '../../core/models';
+
+@Component({
+  selector: 'app-perfil',
+  imports: [FormsModule, RouterLink],
+  template: `
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-8">Meu Perfil</h1>
+
+      <!-- Tabs -->
+      <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8">
+        @for (tab of tabs; track tab.id) {
+          <button
+            (click)="abaAtiva.set(tab.id)"
+            class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all"
+            [class.bg-white]="abaAtiva() === tab.id"
+            [class.shadow-sm]="abaAtiva() === tab.id"
+            [class.text-gray-900]="abaAtiva() === tab.id"
+            [class.text-gray-500]="abaAtiva() !== tab.id"
+          >{{ tab.label }}</button>
+        }
+      </div>
+
+      <!-- Aba: Conta -->
+      @if (abaAtiva() === 'conta') {
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl"
+                 style="background:var(--color-brand)">
+              {{ initial() }}
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900 text-lg">{{ nomeExibido() }}</p>
+              <p class="text-sm text-gray-500">Conta Chickie</p>
+            </div>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between py-3 border-b border-gray-50">
+              <span class="text-gray-500">Sessão</span>
+              <span class="font-medium text-green-600">Ativa</span>
+            </div>
+          </div>
+          <button
+            (click)="logout()"
+            class="mt-6 w-full py-3 rounded-xl border border-red-200 text-red-600 font-medium text-sm hover:bg-red-50 transition-colors"
+          >Sair da conta</button>
+        </div>
+      }
+
+      <!-- Aba: Endereços -->
+      @if (abaAtiva() === 'enderecos') {
+        <div class="space-y-4">
+          <!-- Formulário de novo endereço / edição -->
+          @if (showForm()) {
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h2 class="text-base font-semibold text-gray-900 mb-5">
+                {{ editando() ? 'Editar endereço' : 'Novo endereço' }}
+              </h2>
+              <form (ngSubmit)="salvarEndereco()" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">CEP</label>
+                    <input type="text" [(ngModel)]="formEnd.cep" name="cep"
+                           placeholder="00000-000"
+                           class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                  </div>
+                  <div class="col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Logradouro *</label>
+                    <input type="text" [(ngModel)]="formEnd.logradouro" name="logradouro" required
+                           placeholder="Rua das Flores"
+                           class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Número *</label>
+                    <input type="text" [(ngModel)]="formEnd.numero" name="numero" required
+                           placeholder="123"
+                           class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Complemento</label>
+                    <input type="text" [(ngModel)]="formEnd.complemento" name="complemento"
+                           placeholder="Apto 101"
+                           class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Bairro *</label>
+                    <input type="text" [(ngModel)]="formEnd.bairro" name="bairro" required
+                           placeholder="Centro"
+                           class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Cidade *</label>
+                    <input type="text" [(ngModel)]="formEnd.cidade" name="cidade" required
+                           placeholder="São Paulo"
+                           class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                  </div>
+                  <div class="col-span-2">
+                    <label class="block text-xs font-medium text-gray-700 mb-1.5">Estado *</label>
+                    <input type="text" [(ngModel)]="formEnd.estado" name="estado" required maxlength="2"
+                           placeholder="SP"
+                           class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                  </div>
+                </div>
+
+                @if (formError()) {
+                  <p class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ formError() }}</p>
+                }
+
+                <div class="flex gap-3">
+                  <button type="button" (click)="cancelarForm()"
+                          class="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                  </button>
+                  <button type="submit" [disabled]="formLoading()"
+                          class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
+                          style="background:var(--color-brand)">
+                    @if (formLoading()) { Salvando... } @else { Salvar }
+                  </button>
+                </div>
+              </form>
+            </div>
+          }
+
+          <!-- Lista de endereços -->
+          @if (endLoading()) {
+            @for (_ of [1,2]; track $index) {
+              <div class="bg-white rounded-2xl p-5 h-28 skeleton"></div>
+            }
+          } @else {
+            @for (end of enderecos(); track end.uuid) {
+              <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-start gap-3">
+                    <span class="text-2xl mt-0.5">📍</span>
+                    <div>
+                      <p class="font-medium text-gray-900 text-sm">
+                        {{ end.logradouro }}, {{ end.numero }}
+                        @if (end.complemento) { — {{ end.complemento }} }
+                      </p>
+                      <p class="text-xs text-gray-500 mt-0.5">
+                        {{ end.bairro }}, {{ end.cidade }} – {{ end.estado }}
+                        @if (end.cep) { · {{ end.cep }} }
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0 ml-3">
+                    <button (click)="editarEndereco(end)"
+                            class="p-2 rounded-lg hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                      </svg>
+                    </button>
+                    <button (click)="deletarEndereco(end.uuid)"
+                            class="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+
+            <button
+              (click)="abrirFormNovo()"
+              class="w-full py-4 rounded-2xl border-2 border-dashed border-gray-200 text-sm font-medium text-gray-500
+                     hover:border-orange-300 hover:text-orange-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              Adicionar endereço
+            </button>
+          }
+        </div>
+      }
+    </div>
+  `,
+})
+export class PerfilComponent {
+  private endService = inject(EnderecoUsuarioService);
+  private auth       = inject(AuthService);
+
+  readonly tabs = [
+    { id: 'conta',      label: '👤 Conta'      },
+    { id: 'enderecos',  label: '📍 Endereços'  },
+  ];
+
+  readonly abaAtiva   = signal('conta');
+  readonly showForm   = signal(false);
+  readonly editando   = signal<string | null>(null);
+  readonly formLoading= signal(false);
+  readonly formError  = signal('');
+
+  readonly nomeExibido = () => {
+    try { return localStorage.getItem('chickie_nome') ?? 'Usuário'; } catch { return 'Usuário'; }
+  };
+  readonly initial = () => this.nomeExibido().charAt(0).toUpperCase();
+
+  readonly _enderecos = toSignal(
+    this.endService.listar().pipe(catchError(() => of([]))),
+  );
+  readonly endLoading = computed(() => this._enderecos() === undefined);
+  readonly enderecos  = computed(() => this._enderecos() ?? []);
+
+  formEnd: EnderecoUsuarioRequest & { _uuid?: string } = this.emptyForm();
+
+  emptyForm() {
+    return { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' };
+  }
+
+  abrirFormNovo() {
+    this.formEnd   = this.emptyForm();
+    this.editando.set(null);
+    this.showForm.set(true);
+    this.formError.set('');
+  }
+
+  editarEndereco(e: EnderecoUsuario) {
+    this.formEnd = {
+      cep: e.cep ?? '',
+      logradouro: e.logradouro,
+      numero: e.numero,
+      complemento: e.complemento ?? '',
+      bairro: e.bairro,
+      cidade: e.cidade,
+      estado: e.estado,
+      _uuid: e.uuid,
+    };
+    this.editando.set(e.uuid);
+    this.showForm.set(true);
+    this.formError.set('');
+  }
+
+  cancelarForm() {
+    this.showForm.set(false);
+    this.editando.set(null);
+  }
+
+  salvarEndereco() {
+    const { logradouro, numero, bairro, cidade, estado } = this.formEnd;
+    if (!logradouro || !numero || !bairro || !cidade || !estado) {
+      this.formError.set('Preencha os campos obrigatórios.');
+      return;
+    }
+    this.formLoading.set(true);
+    this.formError.set('');
+    const payload: EnderecoUsuarioRequest = {
+      cep:         this.formEnd.cep   || null,
+      logradouro,
+      numero,
+      complemento: this.formEnd.complemento || null,
+      bairro,
+      cidade,
+      estado,
+    };
+    const uuid = this.editando();
+    const op   = uuid
+      ? this.endService.atualizar(uuid, payload)
+      : this.endService.criar(payload);
+
+    op.subscribe({
+      next: () => { this.formLoading.set(false); this.cancelarForm(); location.reload(); },
+      error: (e) => {
+        this.formLoading.set(false);
+        this.formError.set(e?.error?.error ?? 'Erro ao salvar endereço.');
+      },
+    });
+  }
+
+  deletarEndereco(uuid: string) {
+    if (!confirm('Remover este endereço?')) return;
+    this.endService.deletar(uuid).subscribe({ next: () => location.reload() });
+  }
+
+  logout() {
+    this.auth.logout();
+    location.href = '/';
+  }
+}

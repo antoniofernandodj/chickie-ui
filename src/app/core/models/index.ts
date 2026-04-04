@@ -17,19 +17,19 @@ export type StatusPedido =
   | 'entregue';
 
 export type TipoDesconto = 'percentual' | 'fixo';
-
-export type TipoEscopo = 'loja' | 'produto' | 'categoria';
+export type TipoEscopo   = 'loja' | 'produto' | 'categoria';
+export type StatusCupom  = 'Ativo' | 'Inativo' | 'Expirado';
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 export interface SignupRequest {
-  nome: string;
-  username: string;
-  senha: string;
-  email: string;
-  telefone: string;
+  nome:        string;
+  username:    string;
+  senha:       string;
+  email:       string;
+  telefone:    string;
   auth_method: string;
-  classe?: ClasseUsuario;
+  classe?:     ClasseUsuario;
 }
 
 export interface LoginRequest {
@@ -39,267 +39,291 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   access_token: string;
-  token_type: 'Bearer';
+  token_type:   'Bearer';
 }
 
 // ─── Usuario ─────────────────────────────────────────────────────────────────
 
 export interface Usuario {
-  uuid: string;
-  nome: string;
-  username: string;
-  email: string;
-  telefone: string;
-  auth_method: string;
-  classe: ClasseUsuario;
-  criado_em?: string;
-  atualizado_em?: string;
+  uuid:                       string;
+  nome:                       string;
+  username:                   string;
+  email:                      string;
+  celular:                    string;
+  telefone:                   string;
+  classe:                     ClasseUsuario;
+  ativo:                      boolean;
+  passou_pelo_primeiro_acesso:boolean;
+  criado_em:                  string;
+  atualizado_em:              string;
+  modo_de_cadastro:           string;
+  senha_hash?:                string;
 }
 
 // ─── Loja ─────────────────────────────────────────────────────────────────────
 
 export interface Loja {
-  uuid: string;
-  nome: string;
-  slug: string;
-  email_contato: string;
-  descricao: string | null;
-  telefone: string | null;
-  hora_abertura: string | null;
-  hora_fechamento: string | null;
-  dias_funcionamento: string | null;
-  tempo_medio: number;
-  nota_media: number;
-  taxa_entrega_base: number;
-  pedido_minimo: number;
-  max_partes: number;
-  criado_em?: string;
-  atualizado_em?: string;
+  uuid:                string;
+  nome:                string;
+  slug:                string;
+  descricao:           string | null;
+  email:               string;
+  telefone:            string | null;
+  ativa:               boolean;
+  logo_url:            string | null;
+  banner_url:          string | null;
+  horario_abertura:    string | null;
+  horario_fechamento:  string | null;
+  dias_funcionamento:  string | null;
+  tempo_preparo_min:   number;
+  taxa_entrega:        number;
+  valor_minimo_pedido: number;
+  raio_entrega_km:     number;
+  criado_em:           string;
+  atualizado_em:       string;
 }
 
 export interface CreateLojaRequest {
-  nome: string;
-  slug: string;
-  email_contato: string;
-  descricao?: string | null;
-  telefone?: string | null;
-  hora_abertura?: string | null;
-  hora_fechamento?: string | null;
-  dias_funcionamento?: string | null;
-  tempo_medio: number;
-  nota_media: number;
-  taxa_entrega_base: number;
-  pedido_minimo: number;
-  max_partes: number;
+  nome:               string;
+  slug:               string;
+  email_contato:      string;
+  descricao?:         string | null;
+  telefone?:          string | null;
+  hora_abertura?:     string | null;
+  hora_fechamento?:   string | null;
+  dias_funcionamento?:string | null;
+  tempo_medio:        number;
+  nota_media:         number;
+  taxa_entrega_base:  number;
+  pedido_minimo:      number;
+  max_partes:         number;
 }
 
 // ─── Funcionario ─────────────────────────────────────────────────────────────
 
 export interface Funcionario {
-  uuid: string;
-  loja_uuid: string;
-  usuario_uuid: string;
-  nome: string;
-  username: string;
-  email: string;
-  celular: string;
-  cargo: string | null;
-  salario: number;
+  uuid:          string;
+  loja_uuid:     string;
+  usuario_uuid:  string;
+  cargo:         string | null;
+  salario:       number;
   data_admissao: string;
+  criado_em:     string;
 }
 
 export interface CreateFuncionarioRequest {
-  nome: string;
-  username: string;
-  email: string;
-  senha: string;
-  celular: string;
-  cargo?: string | null;
-  salario: number;
+  nome:          string;
+  username:      string;
+  email:         string;
+  senha:         string;
+  celular:       string;
+  cargo?:        string | null;
+  salario:       number;
   data_admissao: string;
 }
 
 // ─── Entregador ───────────────────────────────────────────────────────────────
 
 export interface Entregador {
-  uuid: string;
-  loja_uuid: string;
+  uuid:         string;
+  loja_uuid:    string;
   usuario_uuid: string;
-  nome: string;
-  username: string;
-  email: string;
-  celular: string;
-  veiculo: string | null;
-  placa: string | null;
+  veiculo:      string | null;
+  placa:        string | null;
+  disponivel:   boolean;
+  criado_em:    string;
 }
 
 export interface CreateEntregadorRequest {
-  nome: string;
+  nome:     string;
   username: string;
-  email: string;
-  senha: string;
-  celular: string;
+  email:    string;
+  senha:    string;
+  celular:  string;
   veiculo?: string | null;
-  placa?: string | null;
+  placa?:   string | null;
 }
 
 // ─── Cliente ──────────────────────────────────────────────────────────────────
 
 export interface Cliente {
-  uuid: string;
-  loja_uuid: string;
+  uuid:         string;
   usuario_uuid: string;
-  nome: string;
-  username: string;
-  email: string;
-  celular: string;
+  loja_uuid:    string;
+  criado_em:    string;
 }
 
 export interface CreateClienteRequest {
-  nome: string;
+  nome:     string;
   username: string;
-  email: string;
-  senha: string;
-  celular: string;
+  email:    string;
+  senha:    string;
+  celular:  string;
 }
 
 // ─── Produto ─────────────────────────────────────────────────────────────────
 
 export interface Produto {
-  uuid: string;
-  categoria_uuid: string;
-  nome: string;
-  descricao: string | null;
-  preco: number;
-  imagem_url: string | null;
-  disponivel: boolean;
-  tempo_preparo_min: number;
-  destaque: boolean;
-  criado_em: string;
-  atualizado_em: string;
+  uuid:             string;
+  loja_uuid:        string;
+  categoria_uuid:   string;
+  nome:             string;
+  descricao:        string | null;
+  preco:            number;
+  imagem_url:       string | null;
+  disponivel:       boolean;
+  tempo_preparo_min:number;
+  destaque:         boolean;
+  criado_em:        string;
+  atualizado_em:    string;
 }
 
 export interface CreateProdutoRequest {
-  uuid?: string;
-  categoria_uuid: string;
-  nome: string;
-  descricao?: string | null;
-  preco: number;
-  imagem_url?: string | null;
-  disponivel: boolean;
-  tempo_preparo_min: number;
-  destaque: boolean;
-  criado_em?: string;
-  atualizado_em?: string;
+  uuid?:            string;
+  categoria_uuid:   string;
+  nome:             string;
+  descricao?:       string | null;
+  preco:            number;
+  imagem_url?:      string | null;
+  disponivel:       boolean;
+  tempo_preparo_min:number;
+  destaque:         boolean;
+  criado_em?:       string;
+  atualizado_em?:   string;
 }
 
 export interface UpdateProdutoRequest {
-  nome: string;
-  descricao?: string | null;
-  preco: number;
-  categoria_uuid: string;
-  tempo_preparo_min: number;
+  nome:             string;
+  descricao?:       string | null;
+  preco:            number;
+  categoria_uuid:   string;
+  tempo_preparo_min:number;
 }
 
 // ─── Adicional ────────────────────────────────────────────────────────────────
 
 export interface Adicional {
-  uuid: string;
+  uuid:      string;
+  nome:      string;
   loja_uuid: string;
-  nome: string;
+  disponivel:boolean;
   descricao: string;
-  preco: number;
-  disponivel: boolean;
+  preco:     number;
+  criado_em: string;
 }
 
 export interface CreateAdicionalRequest {
-  nome: string;
-  descricao: string;
-  preco: number;
+  nome:     string;
+  descricao:string;
+  preco:    number;
 }
 
 // ─── Categoria ────────────────────────────────────────────────────────────────
 
 export interface CategoriaProdutos {
-  uuid: string;
+  uuid:      string;
   loja_uuid: string;
-  nome: string;
+  nome:      string;
   descricao: string | null;
-  ordem: number;
+  ordem:     number;
+  criado_em: string;
 }
 
 export interface CreateCategoriaRequest {
-  nome: string;
-  descricao?: string | null;
-  ordem: number;
+  nome:      string;
+  descricao?:string | null;
+  ordem:     number;
 }
 
 // ─── Pedido ──────────────────────────────────────────────────────────────────
 
 export interface AdicionalDeItemDePedido {
-  uuid: string;
-  nome: string;
+  uuid:      string;
+  item_uuid: string;
+  loja_uuid: string;
+  nome:      string;
   descricao: string;
-  preco: number;
+  preco:     number;
 }
 
 export interface ParteDeItemPedido {
-  produto_uuid: string;
-  posicao: number;
-  produto_nome?: string;
-  preco_unitario?: number;
-  adicionais?: AdicionalDeItemDePedido[];
+  uuid:          string;
+  loja_uuid:     string;
+  item_uuid:     string;
+  produto_nome:  string;
+  produto_uuid:  string;
+  preco_unitario:number;
+  posicao:       number;
+  adicionais:    AdicionalDeItemDePedido[];
 }
 
 export interface ItemPedido {
-  uuid?: string;
+  uuid:       string;
+  loja_uuid:  string;
+  pedido_uuid:string;
   quantidade: number;
-  observacoes?: string | null;
-  partes: ParteDeItemPedido[];
-}
-
-export interface EnderecoEntregaInput {
-  cep?: string | null;
-  logradouro: string;
-  numero: string;
-  complemento?: string | null;
-  bairro: string;
-  cidade: string;
-  estado: string;
-}
-
-export interface CreatePedidoRequest {
-  loja_uuid?: string;
-  taxa_entrega: number;
-  forma_pagamento: string;
-  observacoes?: string | null;
-  codigo_cupom?: string | null;
-  itens: ItemPedido[];
-  endereco_entrega: EnderecoEntregaInput;
+  observacoes:string | null;
+  adicionais: AdicionalDeItemDePedido[];
+  partes:     ParteDeItemPedido[];
 }
 
 export interface Pedido {
-  uuid: string;
-  loja_uuid?: string;
-  usuario_uuid?: string;
-  status: StatusPedido;
-  total?: number;
-  taxa_entrega: number;
+  uuid:              string;
+  usuario_uuid:      string;
+  loja_uuid:         string;
+  status:            StatusPedido;
+  total:             number;
+  subtotal:          number;
+  taxa_entrega:      number;
+  desconto:          number;
+  forma_pagamento:   string;
+  observacoes:       string | null;
+  tempo_estimado_min:number;
+  criado_em:         string;
+  atualizado_em:     string;
+  itens:             ItemPedido[];
+  partes:            ParteDeItemPedido[];
+}
+
+export interface CreatePedidoItemRequest {
+  quantidade:  number;
+  observacoes?:string | null;
+  partes: {
+    produto_uuid:string;
+    posicao:     number;
+  }[];
+}
+
+export interface CreatePedidoRequest {
+  loja_uuid?:      string;
+  taxa_entrega:    number;
   forma_pagamento: string;
-  observacoes: string | null;
-  itens?: ItemPedido[];
-  criado_em?: string;
-  atualizado_em?: string;
+  observacoes?:    string | null;
+  codigo_cupom?:   string | null;
+  itens:           CreatePedidoItemRequest[];
+  endereco_entrega:{
+    cep?:         string | null;
+    logradouro:   string;
+    numero:       string;
+    complemento?: string | null;
+    bairro:       string;
+    cidade:       string;
+    estado:       string;
+  };
+}
+
+export interface CreatePedidoResponse {
+  uuid: string;
 }
 
 export interface StatusPedidoResponse {
-  uuid: string;
-  status: StatusPedido;
+  uuid:                  string;
+  status:                StatusPedido;
   transicoes_permitidas: StatusPedido[];
 }
 
 export interface PedidoComEntrega {
-  pedido: Pedido;
+  pedido:           Pedido;
   endereco_entrega: EnderecoEntrega | null;
 }
 
@@ -310,156 +334,164 @@ export interface UpdateStatusPedidoRequest {
 // ─── Endereço de Entrega ──────────────────────────────────────────────────────
 
 export interface EnderecoEntrega {
-  uuid: string;
-  pedido_uuid: string;
-  loja_uuid?: string;
-  cep: string | null;
-  logradouro: string;
-  numero: string;
-  complemento: string | null;
-  bairro: string;
-  cidade: string;
-  estado: string;
+  uuid:         string;
+  loja_uuid:    string;
+  pedido_uuid:  string;
+  cep:          string | null;
+  logradouro:   string;
+  numero:       string;
+  complemento:  string | null;
+  bairro:       string;
+  cidade:       string;
+  estado:       string;
+  latitude:     number | null;
+  longitude:    number | null;
+}
+
+export interface EnderecoEntregaInput {
+  cep?:         string | null;
+  logradouro:   string;
+  numero:       string;
+  complemento?: string | null;
+  bairro:       string;
+  cidade:       string;
+  estado:       string;
 }
 
 // ─── Endereço de Usuário ──────────────────────────────────────────────────────
 
 export interface EnderecoUsuario {
-  uuid: string;
+  uuid:         string;
   usuario_uuid: string;
-  cep: string | null;
-  logradouro: string;
-  numero: string;
-  complemento: string | null;
-  bairro: string;
-  cidade: string;
-  estado: string;
+  cep:          string | null;
+  logradouro:   string;
+  numero:       string;
+  complemento:  string | null;
+  bairro:       string;
+  cidade:       string;
+  estado:       string;
+  latitude:     number | null;
+  longitude:    number | null;
 }
 
 export interface EnderecoUsuarioRequest {
-  cep?: string | null;
-  logradouro: string;
-  numero: string;
+  cep?:         string | null;
+  logradouro:   string;
+  numero:       string;
   complemento?: string | null;
-  bairro: string;
-  cidade: string;
-  estado: string;
+  bairro:       string;
+  cidade:       string;
+  estado:       string;
 }
 
 // ─── Cupom ────────────────────────────────────────────────────────────────────
 
 export interface Cupom {
-  uuid: string;
-  loja_uuid?: string;
-  codigo: string;
-  descricao: string;
-  tipo_desconto: TipoDesconto;
+  uuid:           string;
+  loja_uuid:      string;
+  codigo:         string;
+  descricao:      string;
+  tipo_desconto:  TipoDesconto;
   valor_desconto: number;
-  valor_minimo: number;
-  data_validade: string;
-  limite_uso: number;
+  valor_minimo:   number;
+  data_validade:  string;
+  limite_uso:     number;
+  uso_atual:      number;
+  status:         StatusCupom;
+  criado_em:      string;
 }
 
 export interface CreateCupomRequest {
-  codigo: string;
-  descricao: string;
-  tipo_desconto: TipoDesconto;
+  codigo:         string;
+  descricao:      string;
+  tipo_desconto:  TipoDesconto;
   valor_desconto: number;
-  valor_minimo: number;
-  data_validade: string;
-  limite_uso: number;
+  valor_minimo:   number;
+  data_validade:  string;
+  limite_uso:     number;
 }
 
 // ─── Avaliação ────────────────────────────────────────────────────────────────
 
 export interface AvaliacaoDeLoja {
-  uuid: string;
-  loja_uuid: string;
+  uuid:         string;
+  loja_uuid:    string;
   usuario_uuid: string;
-  nota: number;
-  comentario: string | null;
-  criado_em?: string;
+  nota:         number;
+  comentario:   string | null;
+  criado_em:    string;
 }
 
 export interface AvaliarLojaRequest {
-  nota: number;
-  comentario?: string | null;
+  nota:       number;
+  comentario?:string | null;
 }
 
 export interface AvaliacaoDeProduto {
-  uuid: string;
-  loja_uuid: string;
-  produto_uuid: string;
+  uuid:         string;
   usuario_uuid: string;
-  nota: number;
-  descricao: string;
-  comentario: string | null;
-  criado_em?: string;
+  loja_uuid:    string;
+  produto_uuid: string;
+  nota:         number;
+  descricao:    string;
+  comentario:   string | null;
+  criado_em:    string;
 }
 
 export interface AvaliarProdutoRequest {
-  produto_uuid: string;
-  nota: number;
-  descricao: string;
+  produto_uuid:string;
+  nota:        number;
+  descricao:   string;
   comentario?: string | null;
 }
 
 // ─── Promoção ─────────────────────────────────────────────────────────────────
 
 export interface Promocao {
-  uuid: string;
-  loja_uuid: string;
-  nome: string;
-  descricao: string;
-  tipo_desconto: TipoDesconto;
-  valor_desconto: number;
-  valor_minimo: number | null;
-  data_inicio: string;
-  data_fim: string;
-  dias_semana_validos: number[];
-  tipo_escopo: TipoEscopo;
-  produto_uuid: string | null;
-  categoria_uuid: string | null;
-  prioridade: number;
+  uuid:               string;
+  loja_uuid:          string;
+  nome:               string;
+  descricao:          string;
+  tipo_desconto:      TipoDesconto;
+  valor_desconto:     number;
+  valor_minimo:       number | null;
+  data_inicio:        string;
+  data_fim:           string;
+  dias_semana_validos:number[];
+  tipo_escopo:        TipoEscopo;
+  produto_uuid:       string | null;
+  categoria_uuid:     string | null;
+  status:             string;
+  prioridade:         number;
+  criado_em:          string;
 }
 
 export interface CreatePromocaoRequest {
-  nome: string;
-  descricao: string;
-  tipo_desconto: TipoDesconto;
-  valor_desconto: number;
-  valor_minimo?: number | null;
-  data_inicio: string;
-  data_fim: string;
-  dias_semana_validos: number[];
-  tipo_escopo: TipoEscopo;
-  produto_uuid?: string | null;
-  categoria_uuid?: string | null;
-  prioridade: number;
+  nome:               string;
+  descricao:          string;
+  tipo_desconto:      TipoDesconto;
+  valor_desconto:     number;
+  valor_minimo?:      number | null;
+  data_inicio:        string;
+  data_fim:           string;
+  dias_semana_validos:number[];
+  tipo_escopo:        TipoEscopo;
+  produto_uuid?:      string | null;
+  categoria_uuid?:    string | null;
+  prioridade:         number;
 }
 
 // ─── Favoritos ────────────────────────────────────────────────────────────────
 
 export interface LojaFavorita {
-  uuid: string;
+  uuid:         string;
   usuario_uuid: string;
-  loja_uuid: string;
+  loja_uuid:    string;
+  criado_em:    string;
 }
 
-// ─── Respostas genéricas ──────────────────────────────────────────────────────
+// ─── Genéricos ───────────────────────────────────────────────────────────────
 
-export interface ApiError {
-  error: string;
-}
-
-export interface MessageResponse {
-  message: string;
-}
-
-export interface FavoritaResponse {
-  favorita: boolean;
-}
-
-export interface CreatePedidoResponse {
-  uuid: string;
-}
+export interface ApiError        { error:    string; }
+export interface MessageResponse { message:  string; }
+export interface FavoritaResponse{ favorita: boolean; }

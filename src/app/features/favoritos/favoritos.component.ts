@@ -1,0 +1,124 @@
+import { Component, inject, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { DecimalPipe } from '@angular/common';
+import { switchMap, catchError, of, combineLatest, map } from 'rxjs';
+import { FavoritosService } from '../../core/services/favoritos.service';
+import { LojaService } from '../../core/services/loja.service';
+import { Loja } from '../../core/models';
+
+@Component({
+  selector: 'app-favoritos',
+  imports: [RouterLink, DecimalPipe],
+  template: `
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Favoritos</h1>
+        <p class="text-gray-500 text-sm mt-1">Suas lojas preferidas</p>
+      </div>
+
+      @if (loading()) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (_ of [1,2,3]; track $index) {
+            <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
+              <div class="h-36 skeleton bg-gray-200"></div>
+              <div class="p-4 space-y-2">
+                <div class="h-4 skeleton bg-gray-200 rounded w-3/4"></div>
+                <div class="h-3 skeleton bg-gray-100 rounded w-1/2"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (favoritas().length === 0) {
+        <div class="text-center py-24">
+          <div class="text-6xl mb-4">💔</div>
+          <h2 class="text-xl font-semibold text-gray-800 mb-2">Sem favoritos ainda</h2>
+          <p class="text-gray-500 text-sm mb-6">Explore as lojas e adicione suas favoritas!</p>
+          <a routerLink="/"
+             class="inline-block px-6 py-3 rounded-xl font-semibold text-white text-sm"
+             style="background:var(--color-brand)">
+            Explorar lojas
+          </a>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (loja of favoritas(); track loja.uuid) {
+            <div class="relative group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100">
+              <!-- Remover favorito -->
+              <button
+                (click)="remover(loja.uuid, $event)"
+                class="absolute top-3 right-3 z-10 w-8 h-8 rounded-xl bg-white/80 backdrop-blur flex items-center justify-center
+                       opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                title="Remover dos favoritos"
+              >
+                <svg class="w-4 h-4 text-red-500 fill-red-500" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+              </button>
+
+              <a [routerLink]="['/loja', loja.uuid]" class="block">
+                <div class="relative h-36 bg-gradient-to-br from-orange-50 to-orange-100 overflow-hidden">
+                  @if (loja.banner_url) {
+                    <img [src]="loja.banner_url" [alt]="loja.nome"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                  } @else {
+                    <div class="w-full h-full flex items-center justify-center text-4xl opacity-30">🍽️</div>
+                  }
+                  @if (loja.ativa) {
+                    <span class="absolute bottom-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500 text-white">
+                      <span class="w-1.5 h-1.5 bg-white rounded-full"></span>Aberto
+                    </span>
+                  }
+                </div>
+                <div class="p-4">
+                  <h3 class="font-bold text-gray-900 mb-1">{{ loja.nome }}</h3>
+                  @if (loja.descricao) {
+                    <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ loja.descricao }}</p>
+                  }
+                  <div class="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t border-gray-50">
+                    <span>⏱ {{ loja.tempo_preparo_min }}min</span>
+                    <span>🛵
+                      @if (loja.taxa_entrega === 0) {
+                        Grátis
+                      } @else {
+                        R$ {{ loja.taxa_entrega | number:'1.2-2' }}
+                      }
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  `,
+})
+export class FavoritosComponent {
+  private favService  = inject(FavoritosService);
+  private lojaService = inject(LojaService);
+
+  private readonly _data = toSignal(
+    combineLatest([
+      this.favService.listarMinhas().pipe(catchError(() => of([]))),
+      this.lojaService.listar().pipe(catchError(() => of([]))),
+    ]).pipe(
+      map(([favs, lojas]) =>
+        favs
+          .map((f) => lojas.find((l) => l.uuid === f.loja_uuid))
+          .filter((l): l is Loja => !!l),
+      ),
+    ),
+  );
+
+  readonly loading   = computed(() => this._data() === undefined);
+  readonly favoritas = computed(() => this._data() ?? []);
+
+  remover(lojaUuid: string, event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.favService.remover(lojaUuid).subscribe();
+    // Optimistic: force re-fetch seria ideal com resource(), por simplicidade recarrega
+    location.reload();
+  }
+}
