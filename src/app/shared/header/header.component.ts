@@ -6,13 +6,13 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, RouterModule],
   template: `
     <header
       class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm"
@@ -179,11 +179,11 @@ import { AuthService } from '../../core/services/auth.service';
   `,
 })
 export class HeaderComponent {
-  readonly auth      = inject(AuthService);
-  private  router    = inject(Router);
-  private  platform  = inject(PLATFORM_ID);
+  readonly auth = inject(AuthService);
+  private  router = inject(Router);
+  private  platform = inject(PLATFORM_ID);
 
-  readonly menuOpen   = signal(false);
+  readonly menuOpen = signal(false);
   readonly mobileOpen = signal(false);
 
   readonly initial = () => {

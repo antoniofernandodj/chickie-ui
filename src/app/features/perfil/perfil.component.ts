@@ -9,7 +9,7 @@ import { EnderecoUsuario, EnderecoUsuarioRequest } from '../../core/models';
 
 @Component({
   selector: 'app-perfil',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   template: `
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 class="text-2xl font-bold text-gray-900 mb-8">Meu Perfil</h1>
