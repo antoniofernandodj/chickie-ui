@@ -18,7 +18,7 @@ const STATUS_CONFIG: Record<StatusPedido, { label: string; color: string; bg: st
 
 @Component({
   selector: 'app-pedidos',
-  imports: [RouterLink, DatePipe, DecimalPipe],
+  imports: [RouterLink, DecimalPipe],
   template: `
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div class="flex items-center justify-between mb-8">

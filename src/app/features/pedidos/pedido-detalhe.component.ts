@@ -20,7 +20,7 @@ const ORDER: StatusPedido[] = STEPS.map((s) => s.status);
 
 @Component({
   selector: 'app-pedido-detalhe',
-  imports: [RouterLink, DatePipe, DecimalPipe],
+  imports: [RouterLink, DecimalPipe],
   template: `
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
