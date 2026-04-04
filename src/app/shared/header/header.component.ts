@@ -60,7 +60,7 @@ import { AuthService } from '../../core/services/auth.service';
           <div class="flex items-center gap-3">
             @if (auth.isAuthenticated()) {
               <!-- Menu do usuário -->
-              <div class="relative">
+              <div class="relative" data-menu>
                 <button
                   (click)="menuOpen.set(!menuOpen())"
                   class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700"
