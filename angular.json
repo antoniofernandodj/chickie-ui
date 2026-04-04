@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "Chickie-ui": {
+    "chickie-ui": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -64,10 +64,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "Chickie-ui:build:production"
+              "buildTarget": "chickie-ui:build:production"
             },
             "development": {
-              "buildTarget": "Chickie-ui:build:development"
+              "buildTarget": "chickie-ui:build:development"
             }
           },
           "defaultConfiguration": "development"

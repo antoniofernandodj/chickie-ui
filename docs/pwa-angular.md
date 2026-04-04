@@ -2,7 +2,7 @@
 
 No ecossistema de desenvolvimento web atual, a experiência do usuário não termina quando a aba do navegador é fechada. As **Progressive Web Apps (PWAs)** vieram para preencher a lacuna entre a web e o mobile nativo, oferecendo performance, resiliência offline e instalabilidade.
 
-Recentemente, atualizamos o **Chickie-ui** para suportar esses recursos. Neste artigo, detalhamos os bastidores dessa implementação.
+Recentemente, atualizamos o **chickie-ui** para suportar esses recursos. Neste artigo, detalhamos os bastidores dessa implementação.
 
 ---
 
@@ -49,7 +49,7 @@ convert -size 1280x720 xc:darkgray public/screenshots/screenshot-desktop.png
 
 ## 4. O Resultado Final
 
-Com essas mudanças, o Chickie-ui agora oferece:
+Com essas mudanças, o chickie-ui agora oferece:
 1. **Instalabilidade**: Pode ser adicionado à tela inicial do celular ou desktop.
 2. **Offline-First**: Funciona sem conexão após o primeiro acesso.
 3. **App Shell**: A interface carrega instantaneamente, enquanto os dados são buscados em segundo plano.
@@ -59,4 +59,4 @@ A jornada PWA não para por aqui. No futuro, exploraremos **Push Notifications**
 
 ---
 *Publicado em: Março de 2026*
-*Equipe de Engenharia Chickie-ui*
+*Equipe de Engenharia chickie-ui*

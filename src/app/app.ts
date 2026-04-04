@@ -18,7 +18,7 @@ type ServerMessage = { message: string };
 export class App implements OnInit {
   private readonly http = inject(HttpClient);
 
-  protected readonly title = signal('Chickie-ui');
+  protected readonly title = signal('chickie-ui');
   protected readonly serverMessage = signal<string | null>("CARREGANDO NO SERVIDOR...");
 
   constructor(

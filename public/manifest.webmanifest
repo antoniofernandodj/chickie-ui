@@ -1,6 +1,6 @@
 {
-  "name": "Chickie-ui",
-  "short_name": "Chickie-ui",
+  "name": "chickie-ui",
+  "short_name": "chickie-ui",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",

@@ -17,7 +17,7 @@ const angularApp = new AngularNodeAppEngine();
  * Example Fastify REST API endpoints can be defined here.
  */
 app.get('/api/hello', async () => {
-  return { message: 'Olá do servidor Chickie-ui! 🐣' };
+  return { message: 'Olá do servidor chickie-ui! 🐣' };
 });
 
 /**

@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:Chickie-ui": "node dist/Chickie-ui/server/server.mjs"
+    "serve:ssr:chickie-ui": "node dist/chickie-ui/server/server.mjs"
   },
   "private": true,
   "packageManager": "npm@11.11.1",

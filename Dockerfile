@@ -24,12 +24,12 @@ ENV NODE_ENV=production
 ENV PORT=4000
 
 # Copia apenas os arquivos necessários do estágio de build
-# O Angular SSR moderno gera a saída em dist/Chickie-ui
-COPY --from=build /app/dist/Chickie-ui ./dist/Chickie-ui
+# O Angular SSR moderno gera a saída em dist/chickie-ui
+COPY --from=build /app/dist/chickie-ui ./dist/chickie-ui
 
 # Porta padrão do Angular SSR
 EXPOSE 4000
 
 # Comando para iniciar o servidor SSR
 # Referenciando o script definido no package.json ou o caminho direto
-CMD ["node", "dist/Chickie-ui/server/server.mjs"]
+CMD ["node", "dist/chickie-ui/server/server.mjs"]
