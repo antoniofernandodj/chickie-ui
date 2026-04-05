@@ -226,10 +226,9 @@ export class LojaDetalheComponent {
 
   readonly loja = toSignal(
     this.route.paramMap.pipe(
-      map((p) => p.get('uuid')!),
-      switchMap((uuid) =>
-        this.lojaService.listar().pipe(
-          map((lojas) => lojas.find((l) => l.uuid === uuid) ?? null),
+      map((p) => p.get('slug')!),
+      switchMap((slug) =>
+        this.lojaService.buscarPorSlug(slug).pipe(
           catchError(() => of(null)),
         ),
       ),

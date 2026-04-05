@@ -78,7 +78,7 @@ import { Subject } from 'rxjs';
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           @for (loja of lojas(); track loja.uuid) {
-            <a [routerLink]="['/loja', loja.uuid]"
+            <a [routerLink]="['/loja', loja.slug]"
                class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:-translate-y-0.5">
               <!-- Banner -->
               <div class="relative h-40 overflow-hidden bg-gradient-to-br from-orange-50 to-orange-100">

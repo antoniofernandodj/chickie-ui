@@ -19,4 +19,9 @@ export class LojaService {
     const params = new HttpParams().set('termo', termo);
     return this.http.get<Loja[]>(`${this.base}/pesquisar`, { params });
   }
+
+  /** Buscar loja por slug */
+  buscarPorSlug(slug: string): Observable<Loja> {
+    return this.http.get<Loja>(`${this.base}/slug/${slug}`);
+  }
 }

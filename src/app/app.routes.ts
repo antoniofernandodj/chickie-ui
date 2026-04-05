@@ -25,7 +25,7 @@ export const routes: Routes = [
     title: 'Criar conta — Chickie',
   },
   {
-    path: 'loja/:uuid',
+    path: 'loja/:slug',
     loadComponent: () =>
       import('./features/loja/loja-detalhe.component').then(
         (m) => m.LojaDetalheComponent,
