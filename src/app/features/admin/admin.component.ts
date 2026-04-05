@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
-import { catchError, of } from 'rxjs';
+import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
 import { AdminService } from '../../core/services/admin.service';
 import { ProdutoService } from '../../core/services/produto.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -238,11 +238,20 @@ export class AdminComponent {
 
   lojaSelecionada = signal<Loja | null>(null);
 
+  private readonly refreshTrigger = new BehaviorSubject<void>(undefined);
+
   private readonly _lojas = toSignal(
-    this.adminService.listarLojas().pipe(catchError(() => of([]))),
+    this.refreshTrigger.pipe(
+      switchMap(() => this.adminService.listarLojas()),
+      catchError(() => of([])),
+    ),
   );
   readonly lojasLoading = computed(() => this._lojas() === undefined);
   readonly lojas        = computed(() => this._lojas() ?? []);
+
+  private refreshLojas() {
+    this.refreshTrigger.next();
+  }
 
   criarLoja() {
     const { nome, slug, email_contato } = this.lojaForm;
@@ -260,6 +269,7 @@ export class AdminComponent {
         this.lojaForm = { nome: '', slug: '', email_contato: '', descricao: null,
                           taxa_entrega_base: 5, pedido_minimo: 20, tempo_medio: 30,
                           nota_media: 0, max_partes: 4 };
+        this.refreshLojas();
       },
       error: (e) => {
         this.lojaLoading.set(false);
