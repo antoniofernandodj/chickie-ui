@@ -2,15 +2,17 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
+import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { AuthService } from '../../core/services/auth.service';
 import { EnderecoUsuario, EnderecoUsuarioRequest } from '../../core/models';
 
 @Component({
   selector: 'app-perfil',
-  imports: [FormsModule],
+  imports: [FormsModule, NgxSonnerToaster],
   template: `
+    <ngx-sonner-toaster />
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 class="text-2xl font-bold text-gray-900 mb-8">Meu Perfil</h1>
 
@@ -206,8 +208,14 @@ export class PerfilComponent {
   };
   readonly initial = () => this.nomeExibido().charAt(0).toUpperCase();
 
+  private readonly refreshTrigger = new BehaviorSubject<void>(undefined);
+
   readonly _enderecos = toSignal(
-    this.endService.listar().pipe(catchError(() => of([]))),
+    this.refreshTrigger.pipe(
+      switchMap(() => this.endService.listar()),
+      catchError(() => of([])),
+    ),
+    { initialValue: [] as EnderecoUsuario[] },
   );
   readonly endLoading = computed(() => this._enderecos() === undefined);
   readonly enderecos  = computed(() => this._enderecos() ?? []);
@@ -269,7 +277,14 @@ export class PerfilComponent {
       : this.endService.criar(payload);
 
     op.subscribe({
-      next: () => { this.formLoading.set(false); this.cancelarForm(); location.reload(); },
+      next: () => {
+        this.formLoading.set(false);
+        this.cancelarForm();
+        this.refreshTrigger.next();
+        toast.success(
+          uuid ? 'Endereço atualizado com sucesso!' : 'Endereço adicionado com sucesso!'
+        );
+      },
       error: (e) => {
         this.formLoading.set(false);
         this.formError.set(e?.error?.error ?? 'Erro ao salvar endereço.');
@@ -279,7 +294,12 @@ export class PerfilComponent {
 
   deletarEndereco(uuid: string) {
     if (!confirm('Remover este endereço?')) return;
-    this.endService.deletar(uuid).subscribe({ next: () => location.reload() });
+    this.endService.deletar(uuid).subscribe({
+      next: () => {
+        this.refreshTrigger.next();
+        toast.success('Endereço removido com sucesso!');
+      },
+    });
   }
 
   logout() {
