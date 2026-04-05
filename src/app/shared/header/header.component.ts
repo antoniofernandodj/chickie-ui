@@ -98,6 +98,7 @@ import { AuthService } from '../../core/services/auth.service';
                       </svg>
                       Meus Pedidos
                     </a>
+                    @if (auth.isAdmin()) {
                     <a routerLink="/admin"
                        (click)="menuOpen.set(false)"
                        class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -108,6 +109,7 @@ import { AuthService } from '../../core/services/auth.service';
                       </svg>
                       Admin
                     </a>
+                    }
                     <hr class="my-1 border-gray-100">
                     <button
                       (click)="logout()"
