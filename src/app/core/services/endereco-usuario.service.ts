@@ -10,11 +10,11 @@ export class EnderecoUsuarioService {
   private readonly base = `${environment.apiUrl}/enderecos-usuario`;
 
   criar(body: EnderecoUsuarioRequest): Observable<EnderecoUsuario> {
-    return this.http.post<EnderecoUsuario>(`${this.base}/`, body);
+    return this.http.post<EnderecoUsuario>(`${this.base}`, body);
   }
 
   listar(): Observable<EnderecoUsuario[]> {
-    return this.http.get<EnderecoUsuario[]>(`${this.base}/`);
+    return this.http.get<EnderecoUsuario[]>(`${this.base}`);
   }
 
   buscar(uuid: string): Observable<EnderecoUsuario> {
