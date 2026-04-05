@@ -21,7 +21,7 @@ export class PedidoService {
   }
 
   listar(): Observable<Pedido[]> {
-    return this.http.get<Pedido[]>(`${this.base}/listar`);
+    return this.http.get<Pedido[]>(`${this.base}/`);
   }
 
   buscar(uuid: string): Observable<Pedido> {
