@@ -24,4 +24,9 @@ export class LojaService {
   buscarPorSlug(slug: string): Observable<Loja> {
     return this.http.get<Loja>(`${this.base}/slug/${slug}`);
   }
+
+  /** Buscar loja por UUID */
+  buscarPorUuid(uuid: string): Observable<Loja> {
+    return this.http.get<Loja>(`${this.base}/${uuid}`);
+  }
 }

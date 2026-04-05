@@ -2,7 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
-import { switchMap, catchError, of, combineLatest, map } from 'rxjs';
+import { switchMap, catchError, of, forkJoin } from 'rxjs';
 import { FavoritosService } from '../../core/services/favoritos.service';
 import { LojaService } from '../../core/services/loja.service';
 import { Loja } from '../../core/models';
@@ -46,7 +46,7 @@ import { Loja } from '../../core/models';
             <div class="relative group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100">
               <!-- Remover favorito -->
               <button
-                (click)="remover(loja.uuid, $event)"
+                (click)="remover(loja.uuid)"
                 class="absolute top-3 right-3 z-10 w-8 h-8 rounded-xl bg-white/80 backdrop-blur flex items-center justify-center
                        opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
                 title="Remover dos favoritos"
@@ -56,7 +56,7 @@ import { Loja } from '../../core/models';
                 </svg>
               </button>
 
-              <a [routerLink]="['/loja', loja.uuid]" class="block">
+              <a [routerLink]="['/loja', loja.slug]" class="block">
                 <div class="relative h-36 bg-gradient-to-br from-orange-50 to-orange-100 overflow-hidden">
                   @if (loja.banner_url) {
                     <img [src]="loja.banner_url" [alt]="loja.nome"
@@ -99,26 +99,32 @@ export class FavoritosComponent {
   private lojaService = inject(LojaService);
 
   private readonly _data = toSignal(
-    combineLatest([
-      this.favService.listarMinhas().pipe(catchError(() => of([]))),
-      this.lojaService.listar().pipe(catchError(() => of([]))),
-    ]).pipe(
-      map(([favs, lojas]) =>
-        favs
-          .map((f) => lojas.find((l) => l.uuid === f.loja_uuid))
-          .filter((l): l is Loja => !!l),
-      ),
+    this.favService.listarMinhas().pipe(
+      switchMap((favs) => {
+        if (favs.length === 0) return of([] as Loja[]);
+        return forkJoin(
+          favs.map((f) =>
+            this.lojaService.buscarPorUuid(f.loja_uuid).pipe(catchError(() => of(null))),
+          ),
+        ).pipe(
+          switchMap((lojas) => of(lojas.filter((l): l is Loja => l !== null))),
+        );
+      }),
+      catchError(() => of([] as Loja[])),
     ),
+    { initialValue: [] as Loja[] },
   );
 
   readonly loading   = computed(() => this._data() === undefined);
   readonly favoritas = computed(() => this._data() ?? []);
 
-  remover(lojaUuid: string, event: MouseEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    this.favService.remover(lojaUuid).subscribe();
-    // Optimistic: force re-fetch seria ideal com resource(), por simplicidade recarrega
-    location.reload();
+  remover(lojaUuid: string) {
+    this.favService.remover(lojaUuid).subscribe({
+      next: () => {
+        // Trigger re-fetch by re-subscribing: simplest approach
+        // Since we use toSignal with initialValue, we need a refresh mechanism
+        location.reload();
+      },
+    });
   }
 }
