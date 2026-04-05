@@ -116,7 +116,11 @@ Todos os endpoints vivem sob `/api`.
 |--------|---------------------|---------------------|------|
 | `POST` | `/api/produtos/`    | Criar produto       | ✅   |
 | `GET`  | `/api/produtos/`    | Listar produtos     | ✅   |
+| `GET`  | `/api/produtos/categoria/{categoria_uuid}` | Listar produtos por categoria | ✅ |
+| `GET`  | `/api/produtos/{uuid}` | Buscar produto por UUID | ✅ |
 | `PUT`  | `/api/produtos/{uuid}` | Atualizar produto | ✅   |
+| `DELETE` | `/api/produtos/{uuid}` | Deletar produto | ✅ |
+| `POST` | `/api/produtos/{uuid}/imagem` | Subir imagem do produto (S3) | ✅ |
 
 ### Horários de Funcionamento (auth required)
 
@@ -154,6 +158,7 @@ Todos os endpoints vivem sob `/api`.
 
 | Método | Rota                                                    | Descrição                | Auth |
 |--------|---------------------------------------------------------|--------------------------|------|
+| `GET`  | `/api/funcionarios/{loja_uuid}`                         | Listar funcionários      | ✅   |
 | `PUT`  | `/api/funcionarios/{loja_uuid}/{uuid}`                  | Atualizar funcionário    | ✅   |
 | `PUT`  | `/api/funcionarios/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | Trocar email/senha | ✅   |
 
@@ -161,6 +166,7 @@ Todos os endpoints vivem sob `/api`.
 
 | Método | Rota                                                    | Descrição                | Auth |
 |--------|---------------------------------------------------------|--------------------------|------|
+| `GET`  | `/api/entregadores/{loja_uuid}`                         | Listar entregadores      | ✅   |
 | `PUT`  | `/api/entregadores/{loja_uuid}/{uuid}`                  | Atualizar entregador     | ✅   |
 | `PUT`  | `/api/entregadores/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | Trocar email/senha | ✅   |
 
@@ -173,6 +179,9 @@ Todos os endpoints vivem sob `/api`.
 | `GET`  | `/api/catalogo/{loja_uuid}/adicionais/disponiveis` | Listar disponíveis | ✅ |
 | `PUT`  | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}/indisponivel` | Marcar indisponível | ✅ |
 | `POST` | `/api/catalogo/{loja_uuid}/categorias`   | Criar categoria        | ✅   |
+| `GET`  | `/api/catalogo/{loja_uuid}/categorias`   | Listar categorias      | ✅   |
+| `PUT`  | `/api/catalogo/{loja_uuid}/categorias/{uuid}` | Atualizar categoria | ✅ |
+| `DELETE` | `/api/catalogo/{loja_uuid}/categorias/{uuid}` | Deletar categoria (só se vazia) | ✅ |
 
 ### Pedidos (auth required)
 

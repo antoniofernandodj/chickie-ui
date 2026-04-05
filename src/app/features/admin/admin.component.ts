@@ -2,14 +2,15 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { DecimalPipe } from '@angular/common';
-import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
+import { DecimalPipe, DatePipe } from '@angular/common';
+import { BehaviorSubject, catchError, of, switchMap, tap } from 'rxjs';
+import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
-import { Loja } from '../../core/models';
+import { Loja, Funcionario, Entregador } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster],
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
@@ -104,6 +105,52 @@ export class AdminComponent {
     this.aba.set('equipe');
   }
 
+  // ── Equipe: Funcionários ──────────────────────────────────────────────────
+
+  private readonly refreshFuncTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _funcionarios = toSignal(
+    this.refreshFuncTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as Funcionario[]);
+        return this.adminService.listarFuncionarios(loja.uuid).pipe(
+          catchError(() => of([] as Funcionario[])),
+        );
+      }),
+    ),
+    { initialValue: [] as Funcionario[] },
+  );
+  readonly funcLoading = computed(() => this._funcionarios() === undefined);
+  readonly funcionarios = computed(() => this._funcionarios() ?? []);
+
+  private refreshFuncionarios() {
+    this.refreshFuncTrigger.next();
+  }
+
+  // ── Equipe: Entregadores ──────────────────────────────────────────────────
+
+  private readonly refreshEntregTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _entregadores = toSignal(
+    this.refreshEntregTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as Entregador[]);
+        return this.adminService.listarEntregadores(loja.uuid).pipe(
+          catchError(() => of([] as Entregador[])),
+        );
+      }),
+    ),
+    { initialValue: [] as Entregador[] },
+  );
+  readonly entregLoadingList = computed(() => this._entregadores() === undefined);
+  readonly entregadores = computed(() => this._entregadores() ?? []);
+
+  private refreshEntregadores() {
+    this.refreshEntregTrigger.next();
+  }
+
   // ── Funcionários ──────────────────────────────────────────────────────────
 
   funcForm = this.fb.group({
@@ -147,8 +194,9 @@ export class AdminComponent {
     }).subscribe({
       next: () => {
         this.equipeLoading.set(false);
-        alert('Funcionário adicionado com sucesso!');
+        toast.success('Funcionário adicionado com sucesso!');
         this.funcForm.reset({ salario: 0 });
+        this.refreshFuncionarios();
       },
       error: (e) => {
         this.equipeLoading.set(false);
@@ -188,18 +236,19 @@ export class AdminComponent {
     this.entregError.set('');
     const fv = this.entregForm.value;
     this.adminService.adicionarEntregador(loja.uuid, {
-      nome:     fv.nome!,
+      nome: fv.nome!,
       username: fv.username!,
-      email:    fv.email!,
-      senha:    fv.senha!,
-      celular:  fv.celular!,
-      veiculo:  fv.veiculo || null,
-      placa:    fv.placa || null,
+      email: fv.email!,
+      senha: fv.senha!,
+      celular: fv.celular!,
+      veiculo: fv.veiculo || null,
+      placa: fv.placa || null,
     }).subscribe({
       next: () => {
         this.entregLoading.set(false);
-        alert('Entregador adicionado com sucesso!');
+        toast.success('Entregador adicionado com sucesso!');
         this.entregForm.reset();
+        this.refreshEntregadores();
       },
       error: (e) => {
         this.entregLoading.set(false);

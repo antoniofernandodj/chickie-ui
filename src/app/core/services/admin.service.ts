@@ -55,4 +55,12 @@ export class AdminService {
       body,
     );
   }
+
+  listarFuncionarios(lojaUuid: string): Observable<Funcionario[]> {
+    return this.http.get<Funcionario[]>(`${this.base}/funcionarios/${lojaUuid}`);
+  }
+
+  listarEntregadores(lojaUuid: string): Observable<Entregador[]> {
+    return this.http.get<Entregador[]>(`${this.base}/entregadores/${lojaUuid}`);
+  }
 }
