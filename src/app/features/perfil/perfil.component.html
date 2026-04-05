@@ -51,49 +51,73 @@
           <h2 class="text-base font-semibold text-gray-900 mb-5">
             {{ editando() ? 'Editar endereço' : 'Novo endereço' }}
           </h2>
-          <form (ngSubmit)="salvarEndereco()" class="space-y-4">
+          <form [formGroup]="formEnd" (ngSubmit)="salvarEndereco()" class="space-y-4">
             <div class="grid grid-cols-2 gap-3">
               <div class="col-span-2">
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">CEP</label>
-                <input type="text" [(ngModel)]="formEnd.cep" name="cep"
+                <input type="text" formControlName="cep"
                        placeholder="00000-000"
                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
               </div>
               <div class="col-span-2">
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Logradouro *</label>
-                <input type="text" [(ngModel)]="formEnd.logradouro" name="logradouro" required
+                <input type="text" formControlName="logradouro" required
                        placeholder="Rua das Flores"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                       [class.border-red-400]="fe.logradouro.invalid && fe.logradouro.touched"/>
+                @if (fe.logradouro.invalid && fe.logradouro.touched) {
+                  <p class="text-xs text-red-600 mt-1">Logradouro é obrigatório.</p>
+                }
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Número *</label>
-                <input type="text" [(ngModel)]="formEnd.numero" name="numero" required
+                <input type="text" formControlName="numero" required
                        placeholder="123"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                       [class.border-red-400]="fe.numero.invalid && fe.numero.touched"/>
+                @if (fe.numero.invalid && fe.numero.touched) {
+                  <p class="text-xs text-red-600 mt-1">Número é obrigatório.</p>
+                }
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Complemento</label>
-                <input type="text" [(ngModel)]="formEnd.complemento" name="complemento"
+                <input type="text" formControlName="complemento"
                        placeholder="Apto 101"
                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Bairro *</label>
-                <input type="text" [(ngModel)]="formEnd.bairro" name="bairro" required
+                <input type="text" formControlName="bairro" required
                        placeholder="Centro"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                       [class.border-red-400]="fe.bairro.invalid && fe.bairro.touched"/>
+                @if (fe.bairro.invalid && fe.bairro.touched) {
+                  <p class="text-xs text-red-600 mt-1">Bairro é obrigatório.</p>
+                }
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Cidade *</label>
-                <input type="text" [(ngModel)]="formEnd.cidade" name="cidade" required
+                <input type="text" formControlName="cidade" required
                        placeholder="São Paulo"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                       [class.border-red-400]="fe.cidade.invalid && fe.cidade.touched"/>
+                @if (fe.cidade.invalid && fe.cidade.touched) {
+                  <p class="text-xs text-red-600 mt-1">Cidade é obrigatória.</p>
+                }
               </div>
               <div class="col-span-2">
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Estado *</label>
-                <input type="text" [(ngModel)]="formEnd.estado" name="estado" required maxlength="2"
+                <input type="text" formControlName="estado" required maxlength="2"
                        placeholder="SP"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+                       [class.border-red-400]="fe.estado.invalid && fe.estado.touched"/>
+                @if (fe.estado.invalid && fe.estado.touched) {
+                  <p class="text-xs text-red-600 mt-1">
+                    @if (fe.estado.errors?.['required']) { Estado é obrigatório. }
+                    @else if (fe.estado.errors?.['maxlength']) { Estado deve ter 2 caracteres. }
+                    @else if (fe.estado.errors?.['pattern']) { Estado deve ser 2 letras maiúsculas. }
+                  </p>
+                }
               </div>
             </div>
 
@@ -106,7 +130,7 @@
                       class="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Cancelar
               </button>
-              <button type="submit" [disabled]="formLoading()"
+              <button type="submit" [disabled]="formLoading() || formEnd.invalid"
                       class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
                       style="background:var(--color-brand)">
                 @if (formLoading()) { Salvando... } @else { Salvar }

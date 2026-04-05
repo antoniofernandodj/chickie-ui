@@ -22,7 +22,12 @@ export class AuthService {
   readonly token = this._token.asReadonly();
   readonly isAuthenticated = computed(() => !!this._token());
 
+  // Signal para forçar reatividade quando userClass muda
+  private readonly _userClassTrigger = signal<Date>(new Date());
+
   readonly userClass = computed<ClasseUsuario | null>(() => {
+    // Depende do signal para forçar recalculo quando _userClassTrigger muda
+    this._userClassTrigger();
     if (!isPlatformBrowser(this.platformId)) return null;
     return (localStorage.getItem('chickie_classe') as ClasseUsuario | null) ?? null;
   });
@@ -50,6 +55,7 @@ export class AuthService {
     return this.http.post<Usuario>(`${this.base}/signup`, body).pipe(
       tap((user) => {
         this.saveItem('chickie_classe', user.classe);
+        this._userClassTrigger.set(new Date()); // Força atualização reativa
       }),
     );
   }
@@ -58,10 +64,32 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${this.base}/login`, body).pipe(
       tap((res) => {
         this.saveItem('chickie_token', res.access_token);
-        // Tenta extrair a classe do JWT
-        const classe = this.extractClasseFromToken(res.access_token);
-        if (classe) this.saveItem('chickie_classe', classe);
         this._token.set(res.access_token);
+        // Tenta extrair do JWT como fallback
+        const classe = this.extractClasseFromToken(res.access_token);
+        if (classe) {
+          this.saveItem('chickie_classe', classe);
+          this._userClassTrigger.set(new Date()); // Força atualização reativa
+        }
+      }),
+    );
+  }
+
+  /**
+   * GET /api/auth/me - Seção 2.3 da API
+   * Busca o perfil do usuário autenticado e salva chickie_classe no localStorage.
+   * Deve ser chamado após o login para garantir que a classe seja armazenada.
+   */
+  fetchAndSaveUserProfile(): Observable<Usuario> {
+    return this.http.get<Usuario>(`${this.base}/me`).pipe(
+      tap((user) => {
+        if (user.classe) {
+          this.saveItem('chickie_classe', user.classe);
+          this._userClassTrigger.set(new Date()); // Força atualização reativa
+        }
+        if (user.nome) {
+          this.saveItem('chickie_nome', user.nome);
+        }
       }),
     );
   }
@@ -70,9 +98,22 @@ export class AuthService {
     try {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
-      const payload = JSON.parse(atob(parts[1]));
-      return payload?.classe ?? null;
-    } catch {
+      
+      // Adiciona padding se necessário
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padLength = (4 - (base64.length % 4)) % 4;
+      const padded = base64 + '='.repeat(padLength);
+      
+      const payload = JSON.parse(atob(padded));
+      
+      // Tenta diferentes campos possíveis para a classe
+      return payload?.classe 
+        ?? payload?.userClass 
+        ?? payload?.role 
+        ?? payload?.user_class 
+        ?? null;
+    } catch (e) {
+      console.warn('Failed to extract classe from JWT:', e);
       return null;
     }
   }

@@ -1,22 +1,20 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
 import { AdminService } from '../../core/services/admin.service';
-import { ProdutoService } from '../../core/services/produto.service';
-import { CatalogoService } from '../../core/services/catalogo.service';
-import { MarketingService } from '../../core/services/marketing.service';
-import { Loja, CreateLojaRequest } from '../../core/models';
+import { Loja } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
-  imports: [FormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe],
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
   private adminService = inject(AdminService);
+  private fb = inject(FormBuilder);
 
   readonly aba  = signal('lojas');
   readonly tabs = [
@@ -26,11 +24,16 @@ export class AdminComponent {
 
   // ── Lojas ──────────────────────────────────────────────────────────────────
 
-  lojaForm: CreateLojaRequest & { nota_media?: number } = {
-    nome: '', slug: '', email_contato: '', descricao: null,
-    taxa_entrega_base: 5, pedido_minimo: 20, tempo_medio: 30,
-    nota_media: 0, max_partes: 4,
-  };
+  lojaForm = this.fb.group({
+    nome: ['', [Validators.required, Validators.minLength(3)]],
+    slug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+    email_contato: ['', [Validators.required, Validators.email]],
+    descricao: [''],
+    taxa_entrega_base: [5, [Validators.min(0)]],
+    pedido_minimo: [20, [Validators.min(0)]],
+    tempo_medio: [30, [Validators.min(1)]],
+    max_partes: [4, [Validators.min(1), Validators.max(8)]],
+  });
 
   lojaLoading = signal(false);
   lojaError   = signal('');
@@ -53,22 +56,40 @@ export class AdminComponent {
     this.refreshTrigger.next();
   }
 
+  get fl() {
+    return this.lojaForm.controls;
+  }
+
   criarLoja() {
-    const { nome, slug, email_contato } = this.lojaForm;
-    if (!nome || !slug || !email_contato) {
-      this.lojaError.set('Preencha nome, slug e e-mail.');
+    if (this.lojaForm.invalid) {
+      this.lojaForm.markAllAsTouched();
+      this.lojaError.set('Preencha todos os campos obrigatórios corretamente.');
       return;
     }
     this.lojaLoading.set(true);
     this.lojaError.set('');
     this.lojaSuccess.set('');
-    this.adminService.criarLoja({ ...this.lojaForm, nota_media: 0 }).subscribe({
+    const fv = this.lojaForm.value;
+    this.adminService.criarLoja({
+      nome: fv.nome!,
+      slug: fv.slug!,
+      email_contato: fv.email_contato!,
+      descricao: fv.descricao || null,
+      taxa_entrega_base: fv.taxa_entrega_base ?? 5,
+      pedido_minimo: fv.pedido_minimo ?? 20,
+      tempo_medio: fv.tempo_medio ?? 30,
+      nota_media: 0,
+      max_partes: fv.max_partes ?? 4,
+    }).subscribe({
       next: (l) => {
         this.lojaLoading.set(false);
         this.lojaSuccess.set(`Loja "${l.nome}" criada com sucesso!`);
-        this.lojaForm = { nome: '', slug: '', email_contato: '', descricao: null,
-                          taxa_entrega_base: 5, pedido_minimo: 20, tempo_medio: 30,
-                          nota_media: 0, max_partes: 4 };
+        this.lojaForm.reset({
+          taxa_entrega_base: 5,
+          pedido_minimo: 20,
+          tempo_medio: 30,
+          max_partes: 4,
+        });
         this.refreshLojas();
       },
       error: (e) => {
@@ -85,43 +106,49 @@ export class AdminComponent {
 
   // ── Funcionários ──────────────────────────────────────────────────────────
 
-  funcFields = [
-    { name: 'nome',          label: 'Nome',       type: 'text',     required: true  },
-    { name: 'username',      label: 'Username',   type: 'text',     required: true  },
-    { name: 'email',         label: 'E-mail',     type: 'email',    required: true  },
-    { name: 'senha',         label: 'Senha',      type: 'password', required: true  },
-    { name: 'celular',       label: 'Celular',    type: 'tel',      required: true  },
-    { name: 'cargo',         label: 'Cargo',      type: 'text',     required: false },
-    { name: 'salario',       label: 'Salário',    type: 'number',   required: true  },
-    { name: 'data_admissao', label: 'Admissão',   type: 'date',     required: true  },
-  ] as const;
-
-  funcForm: Record<string, string | number> = {
-    nome: '', username: '', email: '', senha: '', celular: '', cargo: '', salario: 0, data_admissao: '',
-  };
+  funcForm = this.fb.group({
+    nome:          ['', Validators.required],
+    username:      ['', [Validators.required, Validators.minLength(3)]],
+    email:         ['', [Validators.required, Validators.email]],
+    senha:         ['', [Validators.required, Validators.minLength(6)]],
+    celular:       ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+    cargo:         [''],
+    salario:       [0, [Validators.required, Validators.min(0)]],
+    data_admissao: ['', Validators.required],
+  });
 
   equipeLoading = signal(false);
   equipeError   = signal('');
 
+  get ff() {
+    return this.funcForm.controls;
+  }
+
   adicionarFuncionario() {
     const loja = this.lojaSelecionada();
     if (!loja) return;
+    if (this.funcForm.invalid) {
+      this.funcForm.markAllAsTouched();
+      this.equipeError.set('Preencha todos os campos obrigatórios corretamente.');
+      return;
+    }
     this.equipeLoading.set(true);
     this.equipeError.set('');
+    const fv = this.funcForm.value;
     this.adminService.adicionarFuncionario(loja.uuid, {
-      nome:          String(this.funcForm['nome']),
-      username:      String(this.funcForm['username']),
-      email:         String(this.funcForm['email']),
-      senha:         String(this.funcForm['senha']),
-      celular:       String(this.funcForm['celular']),
-      cargo:         String(this.funcForm['cargo']) || null,
-      salario:       Number(this.funcForm['salario']),
-      data_admissao: String(this.funcForm['data_admissao']),
+      nome:          fv.nome!,
+      username:      fv.username!,
+      email:         fv.email!,
+      senha:         fv.senha!,
+      celular:       fv.celular!,
+      cargo:         fv.cargo || null,
+      salario:       fv.salario!,
+      data_admissao: fv.data_admissao!,
     }).subscribe({
       next: () => {
         this.equipeLoading.set(false);
         alert('Funcionário adicionado com sucesso!');
-        this.funcForm = { nome: '', username: '', email: '', senha: '', celular: '', cargo: '', salario: 0, data_admissao: '' };
+        this.funcForm.reset({ salario: 0 });
       },
       error: (e) => {
         this.equipeLoading.set(false);
@@ -132,41 +159,47 @@ export class AdminComponent {
 
   // ── Entregadores ──────────────────────────────────────────────────────────
 
-  entregFields = [
-    { name: 'nome',     label: 'Nome',    type: 'text',     required: true  },
-    { name: 'username', label: 'Username',type: 'text',     required: true  },
-    { name: 'email',    label: 'E-mail',  type: 'email',    required: true  },
-    { name: 'senha',    label: 'Senha',   type: 'password', required: true  },
-    { name: 'celular',  label: 'Celular', type: 'tel',      required: true  },
-    { name: 'veiculo',  label: 'Veículo', type: 'text',     required: false },
-    { name: 'placa',    label: 'Placa',   type: 'text',     required: false },
-  ] as const;
-
-  entregForm: Record<string, string> = {
-    nome: '', username: '', email: '', senha: '', celular: '', veiculo: '', placa: '',
-  };
+  entregForm = this.fb.group({
+    nome:     ['', Validators.required],
+    username: ['', [Validators.required, Validators.minLength(3)]],
+    email:    ['', [Validators.required, Validators.email]],
+    senha:    ['', [Validators.required, Validators.minLength(6)]],
+    celular:  ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+    veiculo:  [''],
+    placa:    [''],
+  });
 
   entregLoading = signal(false);
   entregError   = signal('');
 
+  get ef() {
+    return this.entregForm.controls;
+  }
+
   adicionarEntregador() {
     const loja = this.lojaSelecionada();
     if (!loja) return;
+    if (this.entregForm.invalid) {
+      this.entregForm.markAllAsTouched();
+      this.entregError.set('Preencha todos os campos obrigatórios corretamente.');
+      return;
+    }
     this.entregLoading.set(true);
     this.entregError.set('');
+    const fv = this.entregForm.value;
     this.adminService.adicionarEntregador(loja.uuid, {
-      nome:     this.entregForm['nome'],
-      username: this.entregForm['username'],
-      email:    this.entregForm['email'],
-      senha:    this.entregForm['senha'],
-      celular:  this.entregForm['celular'],
-      veiculo:  this.entregForm['veiculo'] || null,
-      placa:    this.entregForm['placa']   || null,
+      nome:     fv.nome!,
+      username: fv.username!,
+      email:    fv.email!,
+      senha:    fv.senha!,
+      celular:  fv.celular!,
+      veiculo:  fv.veiculo || null,
+      placa:    fv.placa || null,
     }).subscribe({
       next: () => {
         this.entregLoading.set(false);
         alert('Entregador adicionado com sucesso!');
-        this.entregForm = { nome: '', username: '', email: '', senha: '', celular: '', veiculo: '', placa: '' };
+        this.entregForm.reset();
       },
       error: (e) => {
         this.entregLoading.set(false);

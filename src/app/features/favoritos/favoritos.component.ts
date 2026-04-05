@@ -33,7 +33,7 @@ export class FavoritosComponent {
     { initialValue: [] as Loja[] },
   );
 
-  readonly loading   = computed(() => this._data() === undefined);
+  readonly loading = computed(() => this._data() === undefined);
   readonly favoritas = computed(() => this._data() ?? []);
 
   remover(lojaUuid: string) {

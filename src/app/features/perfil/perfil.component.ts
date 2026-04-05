@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
@@ -10,23 +10,24 @@ import { EnderecoUsuario, EnderecoUsuarioRequest } from '../../core/models';
 
 @Component({
   selector: 'app-perfil',
-  imports: [FormsModule, NgxSonnerToaster],
+  imports: [ReactiveFormsModule, NgxSonnerToaster],
   templateUrl: './perfil.component.html',
 })
 export class PerfilComponent {
   private endService = inject(EnderecoUsuarioService);
-  private auth       = inject(AuthService);
+  private auth = inject(AuthService);
+  private fb = inject(FormBuilder);
 
   readonly tabs = [
-    { id: 'conta',      label: '👤 Conta'      },
-    { id: 'enderecos',  label: '📍 Endereços'  },
+    { id: 'conta', label: '👤 Conta' },
+    { id: 'enderecos', label: '📍 Endereços' },
   ];
 
-  readonly abaAtiva   = signal('conta');
-  readonly showForm   = signal(false);
-  readonly editando   = signal<string | null>(null);
-  readonly formLoading= signal(false);
-  readonly formError  = signal('');
+  readonly abaAtiva = signal('conta');
+  readonly showForm = signal(false);
+  readonly editando = signal<string | null>(null);
+  readonly formLoading = signal(false);
+  readonly formError = signal('');
 
   readonly nomeExibido = () => {
     try { return localStorage.getItem('chickie_nome') ?? 'Usuário'; } catch { return 'Usuário'; }
@@ -43,23 +44,45 @@ export class PerfilComponent {
     { initialValue: [] as EnderecoUsuario[] },
   );
   readonly endLoading = computed(() => this._enderecos() === undefined);
-  readonly enderecos  = computed(() => this._enderecos() ?? []);
+  readonly enderecos = computed(() => this._enderecos() ?? []);
 
-  formEnd: EnderecoUsuarioRequest & { _uuid?: string } = this.emptyForm();
+  formEnd = this.fb.group({
+    cep: [''],
+    logradouro: ['', Validators.required],
+    numero: ['', Validators.required],
+    complemento: [''],
+    bairro: ['', Validators.required],
+    cidade: ['', Validators.required],
+    estado: ['', [Validators.required, Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]],
+    _uuid: ['' as string | null],
+  });
+
+  get fe() {
+    return this.formEnd.controls;
+  }
 
   emptyForm() {
-    return { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' };
+    this.formEnd.reset({
+      cep: '',
+      logradouro: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+      _uuid: null,
+    });
   }
 
   abrirFormNovo() {
-    this.formEnd = this.emptyForm();
+    this.emptyForm();
     this.editando.set(null);
     this.showForm.set(true);
     this.formError.set('');
   }
 
   editarEndereco(e: EnderecoUsuario) {
-    this.formEnd = {
+    this.formEnd.patchValue({
       cep: e.cep ?? '',
       logradouro: e.logradouro,
       numero: e.numero,
@@ -68,7 +91,7 @@ export class PerfilComponent {
       cidade: e.cidade,
       estado: e.estado,
       _uuid: e.uuid,
-    };
+    });
     this.editando.set(e.uuid);
     this.showForm.set(true);
     this.formError.set('');
@@ -80,21 +103,22 @@ export class PerfilComponent {
   }
 
   salvarEndereco() {
-    const { logradouro, numero, bairro, cidade, estado } = this.formEnd;
-    if (!logradouro || !numero || !bairro || !cidade || !estado) {
-      this.formError.set('Preencha os campos obrigatórios.');
+    if (this.formEnd.invalid) {
+      this.formEnd.markAllAsTouched();
+      this.formError.set('Preencha os campos obrigatórios corretamente.');
       return;
     }
     this.formLoading.set(true);
     this.formError.set('');
+    const { logradouro, numero, bairro, cidade, estado, cep, complemento } = this.formEnd.value;
     const payload: EnderecoUsuarioRequest = {
-      cep:         this.formEnd.cep   || null,
-      logradouro,
-      numero,
-      complemento: this.formEnd.complemento || null,
-      bairro,
-      cidade,
-      estado,
+      cep: cep || null,
+      logradouro: logradouro!,
+      numero: numero!,
+      complemento: complemento || null,
+      bairro: bairro!,
+      cidade: cidade!,
+      estado: estado!,
     };
     const uuid = this.editando();
     const op = uuid

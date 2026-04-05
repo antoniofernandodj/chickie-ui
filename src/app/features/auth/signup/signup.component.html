@@ -9,43 +9,73 @@
         <p class="text-gray-500 text-sm mt-1">Rápido e gratuito</p>
       </div>
 
-      <form (ngSubmit)="submit()" #f="ngForm" novalidate class="space-y-4">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1.5">Nome completo</label>
-            <input type="text" name="nome" [(ngModel)]="form.nome" required
+            <input type="text" formControlName="nome"
                    placeholder="João Silva"
-                   class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+                   class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
+                   [class.border-red-400]="f.nome.invalid && f.nome.touched"/>
+            @if (f.nome.invalid && f.nome.touched) {
+              <p class="text-xs text-red-600 mt-1">
+                @if (f.nome.errors?.['required']) { Nome é obrigatório. }
+                @else if (f.nome.errors?.['minlength']) { Nome deve ter pelo menos 3 caracteres. }
+              </p>
+            }
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700 mb-1.5">Username</label>
-            <input type="text" name="username" [(ngModel)]="form.username" required
+            <input type="text" formControlName="username"
                    placeholder="joao123"
-                   class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+                   class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
+                   [class.border-red-400]="f.username.invalid && f.username.touched"/>
+            @if (f.username.invalid && f.username.touched) {
+              <p class="text-xs text-red-600 mt-1">
+                @if (f.username.errors?.['required']) { Username é obrigatório. }
+                @else if (f.username.errors?.['minlength']) { Username deve ter pelo menos 3 caracteres. }
+                @else if (f.username.errors?.['pattern']) { Username pode conter apenas letras, números e underscore. }
+              </p>
+            }
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-medium text-gray-700 mb-1.5">E-mail</label>
-          <input type="email" name="email" [(ngModel)]="form.email" required
+          <input type="email" formControlName="email"
                  placeholder="seu@email.com"
-                 class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+                 class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
+                 [class.border-red-400]="f.email.invalid && f.email.touched"/>
+          @if (f.email.invalid && f.email.touched) {
+            <p class="text-xs text-red-600 mt-1">
+              @if (f.email.errors?.['required']) { E-mail é obrigatório. }
+              @else if (f.email.errors?.['email']) { E-mail inválido. }
+            </p>
+          }
         </div>
 
         <div>
           <label class="block text-xs font-medium text-gray-700 mb-1.5">Telefone</label>
-          <input type="tel" name="telefone" [(ngModel)]="form.telefone" required
+          <input type="tel" formControlName="telefone"
                  placeholder="11999999999"
-                 class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"/>
+                 class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
+                 [class.border-red-400]="f.telefone.invalid && f.telefone.touched"/>
+          @if (f.telefone.invalid && f.telefone.touched) {
+            <p class="text-xs text-red-600 mt-1">
+              @if (f.telefone.errors?.['required']) { Telefone é obrigatório. }
+              @else if (f.telefone.errors?.['pattern']) { Telefone deve ter 10 ou 11 dígitos. }
+            </p>
+          }
         </div>
 
         <div>
           <label class="block text-xs font-medium text-gray-700 mb-1.5">Senha</label>
           <div class="relative">
             <input [type]="showPass() ? 'text' : 'password'"
-                   name="senha" [(ngModel)]="form.senha" required
+                   formControlName="senha"
                    placeholder="Mínimo 6 caracteres"
-                   class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400 pr-12"/>
+                   class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400 pr-12"
+                   [class.border-red-400]="f.senha.invalid && f.senha.touched"/>
             <button type="button" (click)="showPass.set(!showPass())"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,6 +86,12 @@
               </svg>
             </button>
           </div>
+          @if (f.senha.invalid && f.senha.touched) {
+            <p class="text-xs text-red-600 mt-1">
+              @if (f.senha.errors?.['required']) { Senha é obrigatória. }
+              @else if (f.senha.errors?.['minlength']) { Senha deve ter pelo menos 6 caracteres. }
+            </p>
+          }
         </div>
 
         <div>
@@ -64,13 +100,13 @@
             @for (opt of classOptions; track opt.value) {
               <label
                 class="flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all text-sm"
-                [class.border-orange-400]="form.classe === opt.value"
-                [class.bg-orange-50]="form.classe === opt.value"
-                [class.text-orange-700]="form.classe === opt.value"
-                [class.border-gray-200]="form.classe !== opt.value"
-                [class.text-gray-700]="form.classe !== opt.value"
+                [class.border-orange-400]="form.get('classe')?.value === opt.value"
+                [class.bg-orange-50]="form.get('classe')?.value === opt.value"
+                [class.text-orange-700]="form.get('classe')?.value === opt.value"
+                [class.border-gray-200]="form.get('classe')?.value !== opt.value"
+                [class.text-gray-700]="form.get('classe')?.value !== opt.value"
               >
-                <input type="radio" name="classe" [value]="opt.value" [(ngModel)]="form.classe" class="sr-only"/>
+                <input type="radio" name="classe" [value]="opt.value" (click)="form.get('classe')?.setValue(opt.value)" class="sr-only"/>
                 <span>{{ opt.icon }}</span>
                 <span class="font-medium">{{ opt.label }}</span>
               </label>
@@ -87,7 +123,7 @@
           </div>
         }
 
-        <button type="submit" [disabled]="loading()"
+        <button type="submit" [disabled]="loading() || form.invalid"
                 class="w-full py-3.5 rounded-xl font-semibold text-white transition-all active:scale-95 disabled:opacity-60 mt-2"
                 style="background: var(--color-brand)">
           @if (loading()) {

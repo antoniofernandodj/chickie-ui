@@ -6,14 +6,20 @@ import { switchMap, catchError, of, map } from 'rxjs';
 import { PedidoService } from '../../core/services/pedido.service';
 import { Pedido, StatusPedido } from '../../core/models';
 
-const STEPS: { status: StatusPedido; label: string; icon: string }[] = [
-  { status: 'criado',                         label: 'Pedido criado',      icon: '🕐' },
-  { status: 'aguardando_confirmacao_de_loja', label: 'Aguardando loja',    icon: '⏳' },
-  { status: 'confirmado_pela_loja',           label: 'Confirmado',         icon: '✅' },
-  { status: 'em_preparo',                     label: 'Em preparo',         icon: '👨‍🍳' },
-  { status: 'pronto_para_retirada',           label: 'Pronto',             icon: '📦' },
-  { status: 'saiu_para_entrega',              label: 'Saiu p/ entrega',    icon: '🛵' },
-  { status: 'entregue',                       label: 'Entregue',           icon: '🎉' },
+type Steps = {
+  status: StatusPedido;
+  label: string;
+  icon: string
+}
+
+const STEPS: Steps[] = [
+  { status: 'criado', label: 'Pedido criado', icon: '🕐' },
+  { status: 'aguardando_confirmacao_de_loja', label: 'Aguardando loja', icon: '⏳' },
+  { status: 'confirmado_pela_loja', label: 'Confirmado', icon: '✅' },
+  { status: 'em_preparo', label: 'Em preparo', icon: '👨‍🍳' },
+  { status: 'pronto_para_retirada', label: 'Pronto', icon: '📦' },
+  { status: 'saiu_para_entrega', label: 'Saiu p/ entrega', icon: '🛵' },
+  { status: 'entregue', label: 'Entregue', icon: '🎉' },
 ];
 
 const ORDER: StatusPedido[] = STEPS.map((s) => s.status);
@@ -24,7 +30,7 @@ const ORDER: StatusPedido[] = STEPS.map((s) => s.status);
   templateUrl: './pedido-detalhe.component.html',
 })
 export class PedidoDetalheComponent {
-  private route         = inject(ActivatedRoute);
+  private route = inject(ActivatedRoute);
   private pedidoService = inject(PedidoService);
 
   readonly steps = STEPS;
@@ -33,7 +39,9 @@ export class PedidoDetalheComponent {
     this.route.paramMap.pipe(
       map((p) => p.get('uuid')!),
       switchMap((uuid) =>
-        this.pedidoService.buscar(uuid).pipe(catchError(() => of(null))),
+        this.pedidoService
+        .buscar(uuid)
+        .pipe(catchError(() => of(null))),
       ),
     ),
   );

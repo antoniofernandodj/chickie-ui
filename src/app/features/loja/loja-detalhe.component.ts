@@ -15,11 +15,11 @@ import { Produto } from '../../core/models';
   templateUrl: './loja-detalhe.component.html',
 })
 export class LojaDetalheComponent {
-  private route          = inject(ActivatedRoute);
-  private lojaService    = inject(LojaService);
+  private route = inject(ActivatedRoute);
+  private lojaService = inject(LojaService);
   private produtoService = inject(ProdutoService);
-  private favService     = inject(FavoritosService);
-  readonly auth          = inject(AuthService);
+  private favService = inject(FavoritosService);
+  readonly auth = inject(AuthService);
 
   readonly skeletons = Array(6);
   readonly favorita  = signal(false);
@@ -50,17 +50,19 @@ export class LojaDetalheComponent {
   );
 
   readonly produtosLoading = computed(() => this._produtos() === undefined);
-  readonly produtos        = computed(() => this._produtos() ?? []);
-  readonly destaques       = computed(() => this.produtos().filter((p) => p.destaque && p.disponivel));
-  readonly disponiveis     = computed(() => this.produtos().filter((p) => p.disponivel));
+  readonly produtos = computed(() => this._produtos() ?? []);
+  readonly destaques = computed(() => this.produtos().filter((p) => p.destaque && p.disponivel));
+  readonly disponiveis = computed(() => this.produtos().filter((p) => p.disponivel));
 
   toggleFav() {
     const l = this.loja();
     if (!l) return;
     if (this.favorita()) {
-      this.favService.remover(l.uuid).subscribe(() => this.favorita.set(false));
+      this.favService.remover(l.uuid)
+        .subscribe(() => this.favorita.set(false));
     } else {
-      this.favService.adicionar(l.uuid).subscribe(() => this.favorita.set(true));
+      this.favService.adicionar(l.uuid)
+        .subscribe(() => this.favorita.set(true));
     }
   }
 
