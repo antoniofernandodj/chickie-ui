@@ -3,7 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { LojaService } from '../../core/services/loja.service';
-import { catchError, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -37,7 +38,7 @@ import { catchError, of } from 'rxjs';
           </svg>
           <input
             [value]="search()"
-            (input)="search.set($any($event.target).value)"
+            (input)="onSearchInput($any($event.target).value)"
             placeholder="Buscar lojas, pratos..."
             class="bg-transparent flex-1 outline-none text-white placeholder-gray-500 text-sm"
           />
@@ -61,7 +62,7 @@ import { catchError, of } from 'rxjs';
             </div>
           }
         </div>
-      } @else if (filtered().length === 0) {
+      } @else if (lojas().length === 0) {
         <div class="text-center py-24">
           <div class="text-6xl mb-4">🏪</div>
           <h2 class="text-xl font-semibold text-gray-800 mb-2">Nenhuma loja encontrada</h2>
@@ -71,12 +72,12 @@ import { catchError, of } from 'rxjs';
         <div class="flex items-center justify-between mb-8">
           <div>
             <h2 class="text-2xl font-bold text-gray-900">Lojas disponíveis</h2>
-            <p class="text-gray-500 text-sm mt-1">{{ filtered().length }} lojas</p>
+            <p class="text-gray-500 text-sm mt-1">{{ lojas().length }} lojas</p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          @for (loja of filtered(); track loja.uuid) {
+          @for (loja of lojas(); track loja.uuid) {
             <a [routerLink]="['/loja', loja.uuid]"
                class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:-translate-y-0.5">
               <!-- Banner -->
@@ -145,22 +146,28 @@ export class HomeComponent {
   private lojaService = inject(LojaService);
 
   readonly skeletons = Array(8);
-  readonly search    = signal('');
+  readonly search = signal('');
+  
+  private searchSubject = new Subject<string>();
 
-  readonly _lojas = toSignal(
-    this.lojaService.listar().pipe(catchError(() => of([]))),
+  readonly lojas = toSignal(
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((termo) => {
+        this.search.set(termo);
+        if (!termo.trim()) {
+          return this.lojaService.listar().pipe(catchError(() => of([])));
+        }
+        return this.lojaService.pesquisar(termo).pipe(catchError(() => of([])));
+      }),
+    ),
+    { initialValue: [] }
   );
 
-  readonly loading  = computed(() => this._lojas() === undefined);
-  readonly filtered = computed(() => {
-    const all  = this._lojas() ?? [];
-    const term = this.search().toLowerCase().trim();
-    return term
-      ? all.filter(
-          (l) =>
-            l.nome.toLowerCase().includes(term) ||
-            (l.descricao ?? '').toLowerCase().includes(term),
-        )
-      : all;
-  });
+  readonly loading = computed(() => this.lojas() === undefined);
+
+  onSearchInput(value: string) {
+    this.searchSubject.next(value);
+  }
 }

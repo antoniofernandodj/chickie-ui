@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Loja } from '../models';
@@ -12,5 +12,11 @@ export class LojaService {
   /** Público — sem autenticação */
   listar(): Observable<Loja[]> {
     return this.http.get<Loja[]>(`${this.base}/`);
+  }
+
+  /** Pesquisar lojas por termo */
+  pesquisar(termo: string): Observable<Loja[]> {
+    const params = new HttpParams().set('termo', termo);
+    return this.http.get<Loja[]>(`${this.base}/pesquisar`, { params });
   }
 }
