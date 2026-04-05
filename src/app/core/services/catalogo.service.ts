@@ -7,6 +7,7 @@ import {
   CategoriaProdutos,
   CreateAdicionalRequest,
   CreateCategoriaRequest,
+  Produto,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +56,67 @@ export class CatalogoService {
     return this.http.post<CategoriaProdutos>(
       `${this.base}/${lojaUuid}/categorias`,
       body,
+    );
+  }
+
+  listarCategorias(lojaUuid: string): Observable<CategoriaProdutos[]> {
+    return this.http.get<CategoriaProdutos[]>(
+      `${this.base}/${lojaUuid}/categorias`,
+    );
+  }
+
+  atualizarCategoria(
+    lojaUuid: string,
+    categoriaUuid: string,
+    body: CreateCategoriaRequest,
+  ): Observable<CategoriaProdutos> {
+    return this.http.put<CategoriaProdutos>(
+      `${this.base}/${lojaUuid}/categorias/${categoriaUuid}`,
+      body,
+    );
+  }
+
+  deletarCategoria(
+    lojaUuid: string,
+    categoriaUuid: string,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.base}/${lojaUuid}/categorias/${categoriaUuid}`,
+    );
+  }
+
+  // ── Produtos ────────────────────────────────────────────────────────────────
+
+  private readonly prodBase = `${environment.apiUrl}/produtos`;
+
+  criarProduto(body: Partial<Produto>): Observable<Produto> {
+    return this.http.post<Produto>(this.prodBase, body);
+  }
+
+  atualizarProduto(uuid: string, body: Partial<Produto>): Observable<Produto> {
+    return this.http.put<Produto>(`${this.prodBase}/${uuid}`, body);
+  }
+
+  listarProdutos(): Observable<Produto[]> {
+    return this.http.get<Produto[]>(this.prodBase);
+  }
+
+  buscarProduto(uuid: string): Observable<Produto> {
+    return this.http.get<Produto>(`${this.prodBase}/${uuid}`);
+  }
+
+  listarProdutosPorCategoria(categoriaUuid: string): Observable<Produto[]> {
+    return this.http.get<Produto[]>(
+      `${this.prodBase}/categoria/${categoriaUuid}`,
+    );
+  }
+
+  uploadImagemProduto(produtoUuid: string, file: File): Observable<{ imagem_url: string; message: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ imagem_url: string; message: string }>(
+      `${this.prodBase}/${produtoUuid}/imagem`,
+      formData,
     );
   }
 }

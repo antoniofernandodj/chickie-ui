@@ -3,10 +3,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { BehaviorSubject, catchError, of, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
-import { Loja, Funcionario, Entregador } from '../../core/models';
+import { CatalogoService } from '../../core/services/catalogo.service';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -15,12 +16,14 @@ import { Loja, Funcionario, Entregador } from '../../core/models';
 })
 export class AdminComponent {
   private adminService = inject(AdminService);
+  private catalogoService = inject(CatalogoService);
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('lojas');
   readonly tabs = [
-    { id: 'lojas',  label: '🏪 Lojas'  },
-    { id: 'equipe', label: '👥 Equipe' },
+    { id: 'lojas',    label: '🏪 Lojas'     },
+    { id: 'equipe',   label: '👥 Equipe'    },
+    { id: 'catalogo', label: '📦 Catálogo'  },
   ];
 
   // ── Lojas ──────────────────────────────────────────────────────────────────
@@ -236,13 +239,13 @@ export class AdminComponent {
     this.entregError.set('');
     const fv = this.entregForm.value;
     this.adminService.adicionarEntregador(loja.uuid, {
-      nome: fv.nome!,
+      nome:     fv.nome!,
       username: fv.username!,
-      email: fv.email!,
-      senha: fv.senha!,
-      celular: fv.celular!,
-      veiculo: fv.veiculo || null,
-      placa: fv.placa || null,
+      email:    fv.email!,
+      senha:    fv.senha!,
+      celular:  fv.celular!,
+      veiculo:  fv.veiculo || null,
+      placa:    fv.placa || null,
     }).subscribe({
       next: () => {
         this.entregLoading.set(false);
@@ -253,6 +256,219 @@ export class AdminComponent {
       error: (e) => {
         this.entregLoading.set(false);
         this.entregError.set(e?.error?.error ?? 'Erro ao adicionar entregador.');
+      },
+    });
+  }
+
+  // ── Catálogo: Categorias ──────────────────────────────────────────────────
+
+  private readonly refreshCatTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _categorias = toSignal(
+    this.refreshCatTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as CategoriaProdutos[]);
+        return this.catalogoService.listarCategorias(loja.uuid).pipe(
+          catchError(() => of([] as CategoriaProdutos[])),
+        );
+      }),
+    ),
+    { initialValue: [] as CategoriaProdutos[] },
+  );
+  readonly catLoading = computed(() => this._categorias() === undefined);
+  readonly categorias = computed(() => this._categorias() ?? []);
+
+  private refreshCategorias() {
+    this.refreshCatTrigger.next();
+  }
+
+  catForm = this.fb.group({
+    nome: ['', [Validators.required, Validators.minLength(2)]],
+    descricao: [''],
+    ordem: [0, [Validators.min(0)]],
+  });
+
+  catLoadingSubmit = signal(false);
+  catError = signal('');
+  catEditId = signal<string | null>(null);
+
+  get fc() {
+    return this.catForm.controls;
+  }
+
+  criarCategoria() {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    if (this.catForm.invalid) {
+      this.catForm.markAllAsTouched();
+      return;
+    }
+    this.catLoadingSubmit.set(true);
+    this.catError.set('');
+    const fv = this.catForm.value;
+    const body: CreateCategoriaRequest = {
+      nome: fv.nome!,
+      descricao: fv.descricao || null,
+      ordem: fv.ordem ?? 0,
+    };
+    this.catalogoService.criarCategoria(loja.uuid, body).subscribe({
+      next: () => {
+        this.catLoadingSubmit.set(false);
+        toast.success('Categoria criada com sucesso!');
+        this.catForm.reset({ ordem: 0 });
+        this.refreshCategorias();
+      },
+      error: (e) => {
+        this.catLoadingSubmit.set(false);
+        this.catError.set(e?.error?.error ?? 'Erro ao criar categoria.');
+      },
+    });
+  }
+
+  editarCategoria(cat: CategoriaProdutos) {
+    this.catEditId.set(cat.uuid);
+    this.catForm.patchValue({
+      nome: cat.nome,
+      descricao: cat.descricao ?? '',
+      ordem: cat.ordem,
+    });
+    this.catError.set('');
+  }
+
+  salvarEdicaoCategoria() {
+    const loja = this.lojaSelecionada();
+    const uuid = this.catEditId();
+    if (!loja || !uuid) return;
+    if (this.catForm.invalid) {
+      this.catForm.markAllAsTouched();
+      return;
+    }
+    this.catLoadingSubmit.set(true);
+    this.catError.set('');
+    const fv = this.catForm.value;
+    this.catalogoService.atualizarCategoria(loja.uuid, uuid, {
+      nome: fv.nome!,
+      descricao: fv.descricao || null,
+      ordem: fv.ordem ?? 0,
+    }).subscribe({
+      next: () => {
+        this.catLoadingSubmit.set(false);
+        this.catEditId.set(null);
+        toast.success('Categoria atualizada com sucesso!');
+        this.catForm.reset({ ordem: 0 });
+        this.refreshCategorias();
+      },
+      error: (e) => {
+        this.catLoadingSubmit.set(false);
+        this.catError.set(e?.error?.error ?? 'Erro ao atualizar categoria.');
+      },
+    });
+  }
+
+  cancelarEdicaoCategoria() {
+    this.catEditId.set(null);
+    this.catForm.reset({ ordem: 0 });
+    this.catError.set('');
+  }
+
+  deletarCategoria(uuid: string, nome: string) {
+    if (!confirm(`Deletar categoria "${nome}"? Apenas funciona se não houver produtos vinculados.`)) return;
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.catalogoService.deletarCategoria(loja.uuid, uuid).subscribe({
+      next: () => {
+        toast.success('Categoria deletada com sucesso!');
+        this.refreshCategorias();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar categoria.');
+      },
+    });
+  }
+
+  // ── Catálogo: Produtos ────────────────────────────────────────────────────
+
+  prodForm = this.fb.group({
+    categoria_uuid: ['', Validators.required],
+    nome: ['', [Validators.required, Validators.minLength(2)]],
+    descricao: [''],
+    preco: [0, [Validators.required, Validators.min(0)]],
+    tempo_preparo_min: [30, [Validators.required, Validators.min(1)]],
+    destaque: [false],
+    disponivel: [true],
+  });
+
+  prodLoading = signal(false);
+  prodError = signal('');
+  prodImagem = signal<File | null>(null);
+  prodImagemPreview = signal<string | null>(null);
+
+  get fp() {
+    return this.prodForm.controls;
+  }
+
+  onImagemSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.prodImagem.set(file);
+    // Preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.prodImagemPreview.set(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  criarProduto() {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    if (this.prodForm.invalid) {
+      this.prodForm.markAllAsTouched();
+      return;
+    }
+    this.prodLoading.set(true);
+    this.prodError.set('');
+    const fv = this.prodForm.value;
+    this.catalogoService.criarProduto({
+      loja_uuid: loja.uuid,
+      categoria_uuid: fv.categoria_uuid!,
+      nome: fv.nome!,
+      descricao: fv.descricao || null,
+      preco: fv.preco!,
+      tempo_preparo_min: fv.tempo_preparo_min ?? 30,
+      destaque: fv.destaque ?? false,
+      disponivel: fv.disponivel ?? true,
+    }).subscribe({
+      next: (prod) => {
+        // Upload de imagem se houver
+        const imgFile = this.prodImagem();
+        if (imgFile) {
+          this.catalogoService.uploadImagemProduto(prod.uuid, imgFile).subscribe({
+            next: () => {
+              toast.success('Produto e imagem criados com sucesso!');
+              this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+              this.prodImagem.set(null);
+              this.prodImagemPreview.set(null);
+              this.refreshCategorias(); // Atualiza contagem de produtos
+            },
+            error: (e) => {
+              toast.success('Produto criado, mas falha ao enviar imagem.');
+              this.prodLoading.set(false);
+            },
+          });
+        } else {
+          toast.success('Produto criado com sucesso!');
+          this.prodLoading.set(false);
+          this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+          this.prodImagem.set(null);
+          this.prodImagemPreview.set(null);
+          this.refreshCategorias();
+        }
+      },
+      error: (e) => {
+        this.prodLoading.set(false);
+        this.prodError.set(e?.error?.error ?? 'Erro ao criar produto.');
       },
     });
   }
