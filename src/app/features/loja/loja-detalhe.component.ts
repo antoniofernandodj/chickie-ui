@@ -2,7 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
-import { switchMap, catchError, of, map } from 'rxjs';
+import { switchMap, catchError, of, map, tap, forkJoin } from 'rxjs';
 import { LojaService } from '../../core/services/loja.service';
 import { ProdutoService } from '../../core/services/produto.service';
 import { FavoritosService } from '../../core/services/favoritos.service';
@@ -229,6 +229,14 @@ export class LojaDetalheComponent {
       map((p) => p.get('slug')!),
       switchMap((slug) =>
         this.lojaService.buscarPorSlug(slug).pipe(
+          tap((loja) => {
+            if (this.auth.isAuthenticated()) {
+              this.favService.verificar(loja.uuid).subscribe({
+                next: (res) => this.favorita.set(res.favorita ?? false),
+                error: () => this.favorita.set(false),
+              });
+            }
+          }),
           catchError(() => of(null)),
         ),
       ),
