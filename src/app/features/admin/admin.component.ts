@@ -1,12 +1,13 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, of, switchMap, debounceTime, distinctUntilChanged, filter } from 'rxjs';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { LojaService } from '../../core/services/loja.service';
 import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest } from '../../core/models';
 
 @Component({
@@ -17,6 +18,7 @@ import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCatego
 export class AdminComponent {
   private adminService = inject(AdminService);
   private catalogoService = inject(CatalogoService);
+  private lojaService = inject(LojaService);
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('lojas');
@@ -38,6 +40,41 @@ export class AdminComponent {
     tempo_medio: [30, [Validators.min(1)]],
     max_partes: [4, [Validators.min(1), Validators.max(8)]],
   });
+
+  // ── Slug verification ──────────────────────────────────────────────
+  slugChecking = signal(false);
+  slugAvailable = signal<boolean | null>(null);
+  slugMessage = signal('');
+
+  constructor() {
+    // Monitor slug field changes with debounce
+    const slugControl = this.lojaForm.get('slug');
+    if (slugControl) {
+      slugControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((slug): slug is string => slug != null && slug.length > 0),
+        switchMap(slug => {
+          this.slugChecking.set(true);
+          this.slugAvailable.set(null);
+          this.slugMessage.set('');
+          return this.lojaService.verificarSlug(slug).pipe(
+            catchError(() => {
+              this.slugChecking.set(false);
+              this.slugAvailable.set(null);
+              this.slugMessage.set('Erro ao verificar slug.');
+              return of(null);
+            })
+          );
+        }),
+        filter((result): result is { disponivel: boolean; slug: string } => result !== null)
+      ).subscribe(result => {
+        this.slugChecking.set(false);
+        this.slugAvailable.set(result.disponivel);
+        this.slugMessage.set(result.disponivel ? 'Slug disponível!' : 'Slug já está em uso.');
+      });
+    }
+  }
 
   lojaLoading = signal(false);
   lojaError   = signal('');
@@ -94,6 +131,9 @@ export class AdminComponent {
           tempo_medio: 30,
           max_partes: 4,
         });
+        this.slugChecking.set(false);
+        this.slugAvailable.set(null);
+        this.slugMessage.set('');
         this.refreshLojas();
       },
       error: (e) => {

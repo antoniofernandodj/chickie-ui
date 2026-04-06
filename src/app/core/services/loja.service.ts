@@ -25,6 +25,11 @@ export class LojaService {
     return this.http.get<Loja>(`${this.base}/slug/${slug}`);
   }
 
+  /** Verificar disponibilidade de slug */
+  verificarSlug(slug: string): Observable<{ disponivel: boolean; slug: string }> {
+    return this.http.get<{ disponivel: boolean; slug: string }>(`${this.base}/verificar-slug/${slug}`);
+  }
+
   /** Buscar loja por UUID */
   buscarPorUuid(uuid: string): Observable<Loja> {
     return this.http.get<Loja>(`${this.base}/${uuid}`);
