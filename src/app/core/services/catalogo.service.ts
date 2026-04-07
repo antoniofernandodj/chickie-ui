@@ -119,4 +119,8 @@ export class CatalogoService {
       formData,
     );
   }
+
+  deletarProduto(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${this.prodBase}/${uuid}`);
+  }
 }

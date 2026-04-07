@@ -20,4 +20,8 @@ export class ProdutoService {
   atualizar(uuid: string, body: UpdateProdutoRequest): Observable<Produto> {
     return this.http.put<Produto>(`${this.base}/${uuid}`, body);
   }
+
+  deletar(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${uuid}`);
+  }
 }

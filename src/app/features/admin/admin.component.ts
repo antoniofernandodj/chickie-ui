@@ -477,6 +477,7 @@ export class AdminComponent {
   prodError = signal('');
   prodImagem = signal<File | null>(null);
   prodImagemPreview = signal<string | null>(null);
+  prodEditId = signal<string | null>(null);
 
   get fp() {
     return this.prodForm.controls;
@@ -547,6 +548,109 @@ export class AdminComponent {
       error: (e) => {
         this.prodLoading.set(false);
         this.prodError.set(e?.error?.error ?? 'Erro ao criar produto.');
+      },
+    });
+  }
+
+  editarProduto(prod: Produto) {
+    this.prodEditId.set(prod.uuid);
+    this.prodForm.patchValue({
+      categoria_uuid: prod.categoria_uuid ?? '',
+      nome: prod.nome,
+      descricao: prod.descricao ?? '',
+      preco: prod.preco,
+      tempo_preparo_min: prod.tempo_preparo_min,
+      destaque: prod.destaque ?? false,
+      disponivel: prod.disponivel ?? true,
+    });
+    this.prodError.set('');
+    // Clear image preview
+    this.prodImagem.set(null);
+    this.prodImagemPreview.set(null);
+  }
+
+  salvarEdicaoProduto() {
+    const loja = this.lojaSelecionada();
+    const uuid = this.prodEditId();
+    if (!loja || !uuid) return;
+    if (this.prodForm.invalid) {
+      this.prodForm.markAllAsTouched();
+      return;
+    }
+    this.prodLoading.set(true);
+    this.prodError.set('');
+    const fv = this.prodForm.value;
+    this.catalogoService.atualizarProduto(uuid, {
+      categoria_uuid: fv.categoria_uuid ?? undefined,
+      nome: fv.nome!,
+      descricao: fv.descricao || null,
+      preco: fv.preco!,
+      tempo_preparo_min: fv.tempo_preparo_min ?? 30,
+      destaque: fv.destaque ?? false,
+      disponivel: fv.disponivel ?? true,
+    }).subscribe({
+      next: (prod) => {
+        // Upload de imagem se houver
+        const imgFile = this.prodImagem();
+        if (imgFile) {
+          this.catalogoService.uploadImagemProduto(prod.uuid, imgFile).subscribe({
+            next: () => {
+              toast.success('Produto e imagem atualizados com sucesso!');
+              this.prodLoading.set(false);
+              this.prodEditId.set(null);
+              this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+              this.prodImagem.set(null);
+              this.prodImagemPreview.set(null);
+              // Refresh products for this category
+              const catUuid = fv.categoria_uuid!;
+              this.carregarProdutosDaCategoria(catUuid);
+            },
+            error: (e) => {
+              toast.success('Produto atualizado, mas falha ao enviar imagem.');
+              this.prodLoading.set(false);
+            },
+          });
+        } else {
+          toast.success('Produto atualizado com sucesso!');
+          this.prodLoading.set(false);
+          this.prodEditId.set(null);
+          this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+          this.prodImagem.set(null);
+          this.prodImagemPreview.set(null);
+          // Refresh products for this category
+          const catUuid = fv.categoria_uuid!;
+          this.carregarProdutosDaCategoria(catUuid);
+        }
+      },
+      error: (e) => {
+        this.prodLoading.set(false);
+        this.prodError.set(e?.error?.error ?? 'Erro ao atualizar produto.');
+      },
+    });
+  }
+
+  cancelarEdicaoProduto() {
+    this.prodEditId.set(null);
+    this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+    this.prodImagem.set(null);
+    this.prodImagemPreview.set(null);
+    this.prodError.set('');
+  }
+
+  deletarProduto(uuid: string, nome: string, categoriaUuid?: string) {
+    if (!confirm(`Deletar produto "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    this.catalogoService.deletarProduto(uuid).subscribe({
+      next: () => {
+        toast.success('Produto deletado com sucesso!');
+        // Refresh products for this category if provided
+        if (categoriaUuid) {
+          this.carregarProdutosDaCategoria(categoriaUuid);
+        } else {
+          this.carregarTodosProdutos();
+        }
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar produto.');
       },
     });
   }
