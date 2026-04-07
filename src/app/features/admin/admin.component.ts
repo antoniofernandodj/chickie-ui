@@ -519,7 +519,7 @@ export class AdminComponent {
         // Upload de imagem se houver
         const imgFile = this.prodImagem();
         if (imgFile) {
-          this.catalogoService.uploadImagemProduto(loja.uuid, prod.uuid, imgFile).subscribe({
+          this.catalogoService.uploadImagemProduto(prod.uuid, imgFile).subscribe({
             next: () => {
               toast.success('Produto e imagem criados com sucesso!');
               this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
@@ -570,9 +570,8 @@ export class AdminComponent {
   }
 
   salvarEdicaoProduto() {
-    const loja = this.lojaSelecionada();
     const uuid = this.prodEditId();
-    if (!loja || !uuid) return;
+    if (!uuid) return;
     if (this.prodForm.invalid) {
       this.prodForm.markAllAsTouched();
       return;
@@ -580,7 +579,7 @@ export class AdminComponent {
     this.prodLoading.set(true);
     this.prodError.set('');
     const fv = this.prodForm.value;
-    this.catalogoService.atualizarProduto(loja.uuid, uuid, {
+    this.catalogoService.atualizarProduto(uuid, {
       categoria_uuid: fv.categoria_uuid ?? undefined,
       nome: fv.nome!,
       descricao: fv.descricao || null,
@@ -593,7 +592,7 @@ export class AdminComponent {
         // Upload de imagem se houver
         const imgFile = this.prodImagem();
         if (imgFile) {
-          this.catalogoService.uploadImagemProduto(loja.uuid, prod.uuid, imgFile).subscribe({
+          this.catalogoService.uploadImagemProduto(prod.uuid, imgFile).subscribe({
             next: () => {
               toast.success('Produto e imagem atualizados com sucesso!');
               this.prodLoading.set(false);
@@ -639,9 +638,7 @@ export class AdminComponent {
 
   deletarProduto(uuid: string, nome: string, categoriaUuid?: string) {
     if (!confirm(`Deletar produto "${nome}"? Esta ação não pode ser desfeita.`)) return;
-    const loja = this.lojaSelecionada();
-    if (!loja) return;
-    this.catalogoService.deletarProduto(loja.uuid, uuid).subscribe({
+    this.catalogoService.deletarProduto(uuid).subscribe({
       next: () => {
         toast.success('Produto deletado com sucesso!');
         // Refresh products for this category if provided

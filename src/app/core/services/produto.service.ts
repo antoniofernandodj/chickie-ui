@@ -21,15 +21,15 @@ export class ProdutoService {
     return this.http.get<Produto[]>(`${this.base}/${lojaUuid}`);
   }
 
-  buscar(lojaUuid: string, uuid: string): Observable<Produto> {
-    return this.http.get<Produto>(`${this.base}/${lojaUuid}/${uuid}`);
+  buscar(uuid: string): Observable<Produto> {
+    return this.http.get<Produto>(`${this.base}/${uuid}`);
   }
 
-  atualizar(lojaUuid: string, uuid: string, body: UpdateProdutoRequest): Observable<Produto> {
-    return this.http.put<Produto>(`${this.base}/${lojaUuid}/${uuid}`, body);
+  atualizar(uuid: string, body: UpdateProdutoRequest): Observable<Produto> {
+    return this.http.put<Produto>(`${this.base}/${uuid}`, body);
   }
 
-  deletar(lojaUuid: string, uuid: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${lojaUuid}/${uuid}`);
+  deletar(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${uuid}`);
   }
 }
