@@ -102,7 +102,7 @@ export class CatalogoService {
   }
 
   listarProdutosPorLoja(lojaUuid: string): Observable<Produto[]> {
-    return this.http.get<Produto[]>(`${this.prodBase}/${lojaUuid}`);
+    return this.http.get<Produto[]>(`${this.prodBase}/listar/${lojaUuid}`);
   }
 
   buscarProduto(uuid: string): Observable<Produto> {

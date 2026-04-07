@@ -18,7 +18,7 @@ export class ProdutoService {
   }
 
   listarPorLoja(lojaUuid: string): Observable<Produto[]> {
-    return this.http.get<Produto[]>(`${this.base}/${lojaUuid}`);
+    return this.http.get<Produto[]>(`${this.base}/listar/${lojaUuid}`);
   }
 
   buscar(uuid: string): Observable<Produto> {
