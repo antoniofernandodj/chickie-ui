@@ -74,6 +74,16 @@ export class AdminComponent {
         this.slugMessage.set(result.disponivel ? 'Slug disponível!' : 'Slug já está em uso.');
       });
     }
+
+    // Auto-load products when categories change
+    effect(() => {
+      const cats = this.categorias();
+      if (cats.length > 0) {
+        this.carregarTodosProdutos();
+      } else {
+        this.produtosPorCategoria.set(new Map());
+      }
+    });
   }
 
   lojaLoading = signal(false);
@@ -319,8 +329,32 @@ export class AdminComponent {
   readonly catLoading = computed(() => this._categorias() === undefined);
   readonly categorias = computed(() => this._categorias() ?? []);
 
+  // Products per category (map of category UUID -> products)
+  readonly produtosPorCategoria = signal<Map<string, Produto[]>>(new Map());
+
   private refreshCategorias() {
     this.refreshCatTrigger.next();
+  }
+
+  // Load products for a specific category
+  carregarProdutosDaCategoria(categoriaUuid: string) {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    
+    this.catalogoService.listarProdutosPorCategoria(categoriaUuid).pipe(
+      catchError(() => of([] as Produto[]))
+    ).subscribe(produtos => {
+      const currentMap = this.produtosPorCategoria();
+      const newMap = new Map(currentMap);
+      newMap.set(categoriaUuid, produtos);
+      this.produtosPorCategoria.set(newMap);
+    });
+  }
+
+  // Load products for all categories
+  carregarTodosProdutos() {
+    const cats = this.categorias();
+    cats.forEach(cat => this.carregarProdutosDaCategoria(cat.uuid));
   }
 
   catForm = this.fb.group({
@@ -490,7 +524,9 @@ export class AdminComponent {
               this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
               this.prodImagem.set(null);
               this.prodImagemPreview.set(null);
-              this.refreshCategorias(); // Atualiza contagem de produtos
+              // Refresh products for this category
+              const catUuid = fv.categoria_uuid!;
+              this.carregarProdutosDaCategoria(catUuid);
             },
             error: (e) => {
               toast.success('Produto criado, mas falha ao enviar imagem.');
@@ -503,7 +539,9 @@ export class AdminComponent {
           this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
           this.prodImagem.set(null);
           this.prodImagemPreview.set(null);
-          this.refreshCategorias();
+          // Refresh products for this category
+          const catUuid = fv.categoria_uuid!;
+          this.carregarProdutosDaCategoria(catUuid);
         }
       },
       error: (e) => {

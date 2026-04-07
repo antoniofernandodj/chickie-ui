@@ -488,7 +488,7 @@
             </div>
           </form>
 
-          <!-- Lista de categorias -->
+          <!-- Lista de categorias com produtos -->
           @if (catLoading()) {
             @for (_ of [1,2,3]; track $index) {
               <div class="bg-gray-50 rounded-xl p-4 mb-2 skeleton h-16"></div>
@@ -496,29 +496,83 @@
           } @else if (categorias().length === 0) {
             <p class="text-xs text-gray-400 text-center py-4">Nenhuma categoria cadastrada.</p>
           } @else {
-            <div class="space-y-2">
+            <div class="space-y-3">
               @for (cat of categorias(); track cat.uuid) {
-                <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-                  <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-900">{{ cat.nome }}</p>
-                    @if (cat.descricao) {
-                      <p class="text-xs text-gray-500">{{ cat.descricao }}</p>
-                    }
-                    <p class="text-xs text-gray-400">Ordem: {{ cat.ordem }}</p>
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <!-- Categoria header -->
+                  <div class="bg-gray-50 px-4 py-3 flex items-center justify-between">
+                    <div class="flex-1">
+                      <p class="text-sm font-semibold text-gray-900">{{ cat.nome }}</p>
+                      @if (cat.descricao) {
+                        <p class="text-xs text-gray-500">{{ cat.descricao }}</p>
+                      }
+                      <p class="text-xs text-gray-400">
+                        Ordem: {{ cat.ordem }} · 
+                        {{ produtosPorCategoria().get(cat.uuid)?.length ?? 0 }} produto(s)
+                      </p>
+                    </div>
+                    <div class="flex gap-2 shrink-0 ml-3">
+                      <button (click)="editarCategoria(cat)"
+                              class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </button>
+                      <button (click)="deletarCategoria(cat.uuid, cat.nome)"
+                              class="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                  <div class="flex gap-2 shrink-0 ml-3">
-                    <button (click)="editarCategoria(cat)"
-                            class="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition-colors">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                      </svg>
-                    </button>
-                    <button (click)="deletarCategoria(cat.uuid, cat.nome)"
-                            class="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
-                    </button>
+
+                  <!-- Produtos da categoria -->
+                  <div class="px-3 py-2">
+                    @let prods = produtosPorCategoria().get(cat.uuid);
+                    @if (!prods || prods.length === 0) {
+                      <p class="text-xs text-gray-400 py-2 pl-1">Nenhum produto nesta categoria.</p>
+                    } @else {
+                      <div class="space-y-1.5">
+                        @for (prod of prods; track prod.uuid) {
+                          <div class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                            @if (prod.imagem_url) {
+                              <img [src]="prod.imagem_url" class="w-10 h-10 rounded-lg object-cover shrink-0"/>
+                            } @else {
+                              <div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                              </div>
+                            }
+                            <div class="flex-1 min-w-0">
+                              <p class="text-sm font-medium text-gray-900 truncate">
+                                {{ prod.nome }}
+                                @if (prod.destaque) {
+                                  <span class="ml-1 text-xs">⭐</span>
+                                }
+                              </p>
+                              @if (prod.descricao) {
+                                <p class="text-xs text-gray-500 truncate">{{ prod.descricao }}</p>
+                              }
+                            </div>
+                            <div class="text-right shrink-0 ml-2">
+                              <p class="text-sm font-semibold text-gray-900">R$ {{ prod.preco | number:'1.2-2' }}</p>
+                              <p class="text-xs text-gray-400">{{ prod.tempo_preparo_min }} min</p>
+                            </div>
+                            <div class="shrink-0">
+                              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                    [class.bg-green-100]="prod.disponivel"
+                                    [class.text-green-700]="prod.disponivel"
+                                    [class.bg-red-100]="!prod.disponivel"
+                                    [class.text-red-700]="!prod.disponivel">
+                                {{ prod.disponivel ? 'Disponível' : 'Indisponível' }}
+                              </span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
                   </div>
                 </div>
               }
