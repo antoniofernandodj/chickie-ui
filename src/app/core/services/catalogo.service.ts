@@ -93,16 +93,16 @@ export class CatalogoService {
     return this.http.post<Produto>(this.prodBase, body);
   }
 
-  atualizarProduto(uuid: string, body: Partial<Produto>): Observable<Produto> {
-    return this.http.put<Produto>(`${this.prodBase}/${uuid}`, body);
+  atualizarProduto(lojaUuid: string, uuid: string, body: Partial<Produto>): Observable<Produto> {
+    return this.http.put<Produto>(`${this.prodBase}/${lojaUuid}/${uuid}`, body);
   }
 
   listarProdutos(): Observable<Produto[]> {
     return this.http.get<Produto[]>(this.prodBase);
   }
 
-  buscarProduto(uuid: string): Observable<Produto> {
-    return this.http.get<Produto>(`${this.prodBase}/${uuid}`);
+  buscarProduto(lojaUuid: string, uuid: string): Observable<Produto> {
+    return this.http.get<Produto>(`${this.prodBase}/${lojaUuid}/${uuid}`);
   }
 
   listarProdutosPorCategoria(categoriaUuid: string): Observable<Produto[]> {
@@ -111,16 +111,16 @@ export class CatalogoService {
     );
   }
 
-  uploadImagemProduto(produtoUuid: string, file: File): Observable<{ imagem_url: string; message: string }> {
+  uploadImagemProduto(lojaUuid: string, produtoUuid: string, file: File): Observable<{ imagem_url: string; message: string }> {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ imagem_url: string; message: string }>(
-      `${this.prodBase}/${produtoUuid}/imagem`,
+      `${this.prodBase}/${lojaUuid}/${produtoUuid}/imagem`,
       formData,
     );
   }
 
-  deletarProduto(uuid: string): Observable<void> {
-    return this.http.delete<void>(`${this.prodBase}/${uuid}`);
+  deletarProduto(lojaUuid: string, uuid: string): Observable<void> {
+    return this.http.delete<void>(`${this.prodBase}/${lojaUuid}/${uuid}`);
   }
 }

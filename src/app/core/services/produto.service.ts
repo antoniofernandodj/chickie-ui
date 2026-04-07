@@ -17,11 +17,19 @@ export class ProdutoService {
     return this.http.get<Produto[]>(`${this.base}/`);
   }
 
-  atualizar(uuid: string, body: UpdateProdutoRequest): Observable<Produto> {
-    return this.http.put<Produto>(`${this.base}/${uuid}`, body);
+  listarPorLoja(lojaUuid: string): Observable<Produto[]> {
+    return this.http.get<Produto[]>(`${this.base}/${lojaUuid}`);
   }
 
-  deletar(uuid: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${uuid}`);
+  buscar(lojaUuid: string, uuid: string): Observable<Produto> {
+    return this.http.get<Produto>(`${this.base}/${lojaUuid}/${uuid}`);
+  }
+
+  atualizar(lojaUuid: string, uuid: string, body: UpdateProdutoRequest): Observable<Produto> {
+    return this.http.put<Produto>(`${this.base}/${lojaUuid}/${uuid}`, body);
+  }
+
+  deletar(lojaUuid: string, uuid: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${lojaUuid}/${uuid}`);
   }
 }
