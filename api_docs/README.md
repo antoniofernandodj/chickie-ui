@@ -206,10 +206,14 @@ Todos os endpoints vivem sob `/api`.
 |--------|---------------------|---------------------|------|
 | `POST` | `/api/pedidos/criar` | Criar pedido (`loja_uuid` no body) | ✅ |
 | `GET`  | `/api/pedidos/listar` | Listar todos pedidos | ✅   |
+| `GET`  | `/api/pedidos/meus` | Listar meus pedidos | ✅ |
 | `GET`  | `/api/pedidos/por-loja/{loja_uuid}` | Listar por loja | ✅ |
 | `GET`  | `/api/pedidos/{uuid}` | Buscar pedido     | ✅   |
 | `GET`  | `/api/pedidos/{uuid}/com-entrega` | Pedido com endereço | ✅ |
 | `PUT`  | `/api/pedidos/{uuid}/status` | Avançar status | ✅ |
+| `PUT`  | `/api/pedidos/{pedido_uuid}/entregador/{loja_uuid}` | Atribuir entregador | ✅ |
+| `DELETE` | `/api/pedidos/{pedido_uuid}/entregador/{loja_uuid}` | Remover entregador | ✅ |
+| `GET`  | `/api/pedidos/{uuid}/com-entregador` | Pedido com entregador | ✅ |
 
 ### Cupons & Avaliações
 
