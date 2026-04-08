@@ -14,7 +14,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
 
   form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
+    identifier: ['', [Validators.required]],
     senha: ['', [Validators.required, Validators.minLength(6)]],
   });
 
@@ -22,16 +22,20 @@ export class LoginComponent {
   error = signal('');
   showPass = signal(false);
 
+  get f() {
+    return this.form.controls;
+  }
+
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.error.set('Preencha e-mail e senha corretamente.');
+      this.error.set('Preencha identificador e senha corretamente.');
       return;
     }
     this.loading.set(true);
     this.error.set('');
-    const { email, senha } = this.form.value;
-    this.auth.login({ email: email!, senha: senha! }).subscribe({
+    const { identifier, senha } = this.form.value;
+    this.auth.login({ identifier: identifier!, senha: senha! }).subscribe({
       next: () => {
         // Busca o perfil via GET /api/auth/me para salvar chickie_classe
         this.auth.fetchAndSaveUserProfile().subscribe({
@@ -41,7 +45,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        this.error.set(err?.error?.error ?? 'E-mail ou senha incorretos.');
+        this.error.set(err?.error?.error ?? 'Identificador ou senha incorretos.');
       },
     });
   }

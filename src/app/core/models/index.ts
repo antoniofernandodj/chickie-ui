@@ -33,7 +33,7 @@ export interface SignupRequest {
 }
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   senha: string;
 }
 

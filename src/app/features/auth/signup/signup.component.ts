@@ -127,7 +127,7 @@ export class SignupComponent {
       next: (user) => {
         this.auth.saveUserMeta(user.nome);
         const { email, senha } = formValue;
-        this.auth.login({ email: email!, senha: senha! }).subscribe({
+        this.auth.login({ identifier: email!, senha: senha! }).subscribe({
           next: () => {
             // Busca o perfil via GET /api/auth/me para salvar chickie_classe
             this.auth.fetchAndSaveUserProfile().subscribe({

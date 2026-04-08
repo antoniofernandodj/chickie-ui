@@ -15,21 +15,19 @@
       <!-- Form -->
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">E-mail, username ou celular</label>
           <input
-            type="email"
-            formControlName="email"
-            placeholder="seu@email.com"
+            type="text"
+            formControlName="identifier"
+            placeholder="seu@email.com, joao123 ou 11999999999"
             class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all
                    focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
-            [class.border-red-400]="form.get('email')?.invalid && form.get('email')?.touched"
+            [class.border-red-400]="f.identifier.invalid && f.identifier.touched"
           />
-          @if (form.get('email')?.invalid && form.get('email')?.touched) {
+          @if (f.identifier.invalid && f.identifier.touched) {
             <p class="text-xs text-red-600 mt-1">
-              @if (form.get('email')?.errors?.['required']) {
-                E-mail é obrigatório.
-              } @else if (form.get('email')?.errors?.['email']) {
-                E-mail inválido.
+              @if (f.identifier.errors?.['required']) {
+                Identificador é obrigatório.
               }
             </p>
           }
@@ -43,7 +41,7 @@
               placeholder="••••••••"
               class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none transition-all
                      focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400 pr-12"
-              [class.border-red-400]="form.get('senha')?.invalid && form.get('senha')?.touched"
+              [class.border-red-400]="f.senha.invalid && f.senha.touched"
             />
             <button type="button"
                     (click)="showPass.set(!showPass())"
@@ -63,12 +61,12 @@
               }
             </button>
           </div>
-          @if (form.get('senha')?.invalid && form.get('senha')?.touched) {
+          @if (f.senha.invalid && f.senha.touched) {
             <p class="text-xs text-red-600 mt-1">
-              @if (form.get('senha')?.errors?.['required']) {
+              @if (f.senha.errors?.['required']) {
                 Senha é obrigatória.
-              } @else if (form.get('senha')?.errors?.['minlength']) {
-                Senha deve ter pelo menos {{ form.get('senha')?.errors?.['minlength'].requiredLength }} caracteres.
+              } @else if (f.senha.errors?.['minlength']) {
+                Senha deve ter pelo menos {{ f.senha.errors?.['minlength'].requiredLength }} caracteres.
               }
             </p>
           }
