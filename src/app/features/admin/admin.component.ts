@@ -118,6 +118,8 @@ export class AdminComponent {
   selecionarLoja(l: Loja) {
     this.lojaSelecionada.set(l);
     this.aba.set('equipe');
+    this.refreshFuncionarios();
+    this.refreshEntregadores();
   }
 
   // ── Equipe: Funcionários ──────────────────────────────────────────────────
