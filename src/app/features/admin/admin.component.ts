@@ -8,6 +8,7 @@ import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest } from '../../core/models';
 
 @Component({
@@ -19,6 +20,7 @@ export class AdminComponent {
   private adminService = inject(AdminService);
   private catalogoService = inject(CatalogoService);
   private lojaService = inject(LojaService);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('lojas');
@@ -45,46 +47,6 @@ export class AdminComponent {
   slugChecking = signal(false);
   slugAvailable = signal<boolean | null>(null);
   slugMessage = signal('');
-
-  constructor() {
-    // Monitor slug field changes with debounce
-    const slugControl = this.lojaForm.get('slug');
-    if (slugControl) {
-      slugControl.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged(),
-        filter((slug): slug is string => slug != null && slug.length > 0),
-        switchMap(slug => {
-          this.slugChecking.set(true);
-          this.slugAvailable.set(null);
-          this.slugMessage.set('');
-          return this.lojaService.verificarSlug(slug).pipe(
-            catchError(() => {
-              this.slugChecking.set(false);
-              this.slugAvailable.set(null);
-              this.slugMessage.set('Erro ao verificar slug.');
-              return of(null);
-            })
-          );
-        }),
-        filter((result): result is { disponivel: boolean; slug: string } => result !== null)
-      ).subscribe(result => {
-        this.slugChecking.set(false);
-        this.slugAvailable.set(result.disponivel);
-        this.slugMessage.set(result.disponivel ? 'Slug disponível!' : 'Slug já está em uso.');
-      });
-    }
-
-    // Auto-load products when categories change
-    effect(() => {
-      const cats = this.categorias();
-      if (cats.length > 0) {
-        this.carregarTodosProdutos();
-      } else {
-        this.produtosPorCategoria.set(new Map());
-      }
-    });
-  }
 
   lojaLoading = signal(false);
   lojaError   = signal('');
@@ -217,6 +179,12 @@ export class AdminComponent {
     data_admissao: ['', Validators.required],
   });
 
+  // Funcionario email/username verification
+  funcEmailChecking = signal(false);
+  funcEmailAvailable = signal<boolean | null>(null);
+  funcUsernameChecking = signal(false);
+  funcUsernameAvailable = signal<boolean | null>(null);
+
   equipeLoading = signal(false);
   equipeError   = signal('');
 
@@ -224,12 +192,160 @@ export class AdminComponent {
     return this.funcForm.controls;
   }
 
+  get funcFormReady(): boolean {
+    const emailOk = this.funcEmailAvailable() === true;
+    const usernameOk = this.funcUsernameAvailable() === true;
+    return emailOk && usernameOk && this.funcForm.valid;
+  }
+
+  constructor() {
+    // Monitor funcionario email changes with debounce
+    const funcEmailControl = this.funcForm.get('email');
+    if (funcEmailControl) {
+      funcEmailControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((email): email is string => {
+          const emailValid = this.funcForm.get('email')?.valid ?? false;
+          return email != null && email.length > 0 && emailValid;
+        }),
+        switchMap(email => {
+          this.funcEmailChecking.set(true);
+          this.funcEmailAvailable.set(null);
+          return this.authService.verificarEmail(email).pipe(
+            catchError(() => {
+              this.funcEmailChecking.set(false);
+              this.funcEmailAvailable.set(null);
+              return of({ disponivel: false });
+            })
+          );
+        })
+      ).subscribe(result => {
+        this.funcEmailChecking.set(false);
+        this.funcEmailAvailable.set(result.disponivel);
+      });
+    }
+
+    // Monitor funcionario username changes with debounce
+    const funcUsernameControl = this.funcForm.get('username');
+    if (funcUsernameControl) {
+      funcUsernameControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((username): username is string => username != null && username.length >= 3),
+        switchMap(username => {
+          this.funcUsernameChecking.set(true);
+          this.funcUsernameAvailable.set(null);
+          return this.authService.verificarUsername(username).pipe(
+            catchError(() => {
+              this.funcUsernameChecking.set(false);
+              this.funcUsernameAvailable.set(null);
+              return of({ disponivel: false });
+            })
+          );
+        })
+      ).subscribe(result => {
+        this.funcUsernameChecking.set(false);
+        this.funcUsernameAvailable.set(result.disponivel);
+      });
+    }
+
+    // Monitor entregador email changes with debounce
+    const entregEmailControl = this.entregForm.get('email');
+    if (entregEmailControl) {
+      entregEmailControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((email): email is string => {
+          const emailValid = this.entregForm.get('email')?.valid ?? false;
+          return email != null && email.length > 0 && emailValid;
+        }),
+        switchMap(email => {
+          this.entregEmailChecking.set(true);
+          this.entregEmailAvailable.set(null);
+          return this.authService.verificarEmail(email).pipe(
+            catchError(() => {
+              this.entregEmailChecking.set(false);
+              this.entregEmailAvailable.set(null);
+              return of({ disponivel: false });
+            })
+          );
+        })
+      ).subscribe(result => {
+        this.entregEmailChecking.set(false);
+        this.entregEmailAvailable.set(result.disponivel);
+      });
+    }
+
+    // Monitor entregador username changes with debounce
+    const entregUsernameControl = this.entregForm.get('username');
+    if (entregUsernameControl) {
+      entregUsernameControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((username): username is string => username != null && username.length >= 3),
+        switchMap(username => {
+          this.entregUsernameChecking.set(true);
+          this.entregUsernameAvailable.set(null);
+          return this.authService.verificarUsername(username).pipe(
+            catchError(() => {
+              this.entregUsernameChecking.set(false);
+              this.entregUsernameAvailable.set(null);
+              return of({ disponivel: false });
+            })
+          );
+        })
+      ).subscribe(result => {
+        this.entregUsernameChecking.set(false);
+        this.entregUsernameAvailable.set(result.disponivel);
+      });
+    }
+
+    // Monitor slug field changes with debounce
+    const slugControl = this.lojaForm.get('slug');
+    if (slugControl) {
+      slugControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((slug): slug is string => slug != null && slug.length > 0),
+        switchMap(slug => {
+          this.slugChecking.set(true);
+          this.slugAvailable.set(null);
+          this.slugMessage.set('');
+          return this.lojaService.verificarSlug(slug).pipe(
+            catchError(() => {
+              this.slugChecking.set(false);
+              this.slugAvailable.set(null);
+              this.slugMessage.set('Erro ao verificar slug.');
+              return of(null);
+            })
+          );
+        }),
+        filter((result): result is { disponivel: boolean; slug: string } => result !== null)
+      ).subscribe(result => {
+        this.slugChecking.set(false);
+        this.slugAvailable.set(result.disponivel);
+        this.slugMessage.set(result.disponivel ? 'Slug disponível!' : 'Slug já está em uso.');
+      });
+    }
+
+    // Auto-load products when categories change
+    effect(() => {
+      const cats = this.categorias();
+      if (cats.length > 0) {
+        this.carregarTodosProdutos();
+      } else {
+        this.produtosPorCategoria.set(new Map());
+      }
+    });
+  }
+
   adicionarFuncionario() {
     const loja = this.lojaSelecionada();
     if (!loja) return;
-    if (this.funcForm.invalid) {
+    if (this.funcForm.invalid || !this.funcFormReady) {
       this.funcForm.markAllAsTouched();
-      this.equipeError.set('Preencha todos os campos obrigatórios corretamente.');
+      this.equipeError.set('Preencha todos os campos obrigatórios corretamente e aguarde a verificação.');
       return;
     }
     this.equipeLoading.set(true);
@@ -270,6 +386,12 @@ export class AdminComponent {
     placa:    [''],
   });
 
+  // Entregador email/username verification
+  entregEmailChecking = signal(false);
+  entregEmailAvailable = signal<boolean | null>(null);
+  entregUsernameChecking = signal(false);
+  entregUsernameAvailable = signal<boolean | null>(null);
+
   entregLoading = signal(false);
   entregError   = signal('');
 
@@ -277,12 +399,18 @@ export class AdminComponent {
     return this.entregForm.controls;
   }
 
+  get entregFormReady(): boolean {
+    const emailOk = this.entregEmailAvailable() === true;
+    const usernameOk = this.entregUsernameAvailable() === true;
+    return emailOk && usernameOk && this.entregForm.valid;
+  }
+
   adicionarEntregador() {
     const loja = this.lojaSelecionada();
     if (!loja) return;
-    if (this.entregForm.invalid) {
+    if (this.entregForm.invalid || !this.entregFormReady) {
       this.entregForm.markAllAsTouched();
-      this.entregError.set('Preencha todos os campos obrigatórios corretamente.');
+      this.entregError.set('Preencha todos os campos obrigatórios corretamente e aguarde a verificação.');
       return;
     }
     this.entregLoading.set(true);

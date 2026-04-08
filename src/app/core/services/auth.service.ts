@@ -122,6 +122,16 @@ export class AuthService {
     this.saveItem('chickie_nome', nome);
   }
 
+  /** Verificar disponibilidade de email */
+  verificarEmail(email: string): Observable<{ disponivel: boolean }> {
+    return this.http.post<{ disponivel: boolean }>(`${this.base}/verificar-email`, { email });
+  }
+
+  /** Verificar disponibilidade de username */
+  verificarUsername(username: string): Observable<{ disponivel: boolean }> {
+    return this.http.post<{ disponivel: boolean }>(`${this.base}/verificar-username`, { username });
+  }
+
   logout(): void {
     this.removeItem('chickie_token');
     this.removeItem('chickie_nome');

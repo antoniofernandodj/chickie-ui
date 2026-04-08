@@ -29,13 +29,32 @@
             <input type="text" formControlName="username"
                    placeholder="joao123"
                    class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
-                   [class.border-red-400]="f.username.invalid && f.username.touched"/>
+                   [class.border-red-400]="f.username.invalid && f.username.touched"
+                   [class.border-green-400]="!f.username.invalid && usernameAvailable() === true"
+                   [class.border-yellow-400]="!f.username.invalid && usernameChecking()"/>
             @if (f.username.invalid && f.username.touched) {
               <p class="text-xs text-red-600 mt-1">
                 @if (f.username.errors?.['required']) { Username é obrigatório. }
                 @else if (f.username.errors?.['minlength']) { Username deve ter pelo menos 3 caracteres. }
                 @else if (f.username.errors?.['pattern']) { Username pode conter apenas letras, números e underscore. }
               </p>
+            }
+            @if (!f.username.invalid && usernameChecking()) {
+              <p class="text-xs text-gray-500 mt-1">
+                <span class="inline-flex items-center gap-1">
+                  <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Verificando...
+                </span>
+              </p>
+            }
+            @if (!f.username.invalid && !usernameChecking() && usernameAvailable() === true) {
+              <p class="text-xs text-green-600 mt-1">✅ Username disponível!</p>
+            }
+            @if (!f.username.invalid && !usernameChecking() && usernameAvailable() === false) {
+              <p class="text-xs text-red-600 mt-1">❌ Username já está em uso.</p>
             }
           </div>
         </div>
@@ -45,12 +64,31 @@
           <input type="email" formControlName="email"
                  placeholder="seu@email.com"
                  class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
-                 [class.border-red-400]="f.email.invalid && f.email.touched"/>
+                 [class.border-red-400]="f.email.invalid && f.email.touched"
+                 [class.border-green-400]="!f.email.invalid && emailAvailable() === true"
+                 [class.border-yellow-400]="!f.email.invalid && emailChecking()"/>
           @if (f.email.invalid && f.email.touched) {
             <p class="text-xs text-red-600 mt-1">
               @if (f.email.errors?.['required']) { E-mail é obrigatório. }
               @else if (f.email.errors?.['email']) { E-mail inválido. }
             </p>
+          }
+          @if (!f.email.invalid && emailChecking()) {
+            <p class="text-xs text-gray-500 mt-1">
+              <span class="inline-flex items-center gap-1">
+                <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Verificando...
+              </span>
+            </p>
+          }
+          @if (!f.email.invalid && !emailChecking() && emailAvailable() === true) {
+            <p class="text-xs text-green-600 mt-1">✅ E-mail disponível!</p>
+          }
+          @if (!f.email.invalid && !emailChecking() && emailAvailable() === false) {
+            <p class="text-xs text-red-600 mt-1">❌ E-mail já está em uso.</p>
           }
         </div>
 
@@ -123,7 +161,7 @@
           </div>
         }
 
-        <button type="submit" [disabled]="loading() || form.invalid"
+        <button type="submit" [disabled]="loading() || !formReady"
                 class="w-full py-3.5 rounded-xl font-semibold text-white transition-all active:scale-95 disabled:opacity-60 mt-2"
                 style="background: var(--color-brand)">
           @if (loading()) {

@@ -1,8 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AsyncValidatorFn, AbstractControl } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClasseUsuario } from '../../../core/models';
+import { debounceTime, distinctUntilChanged, filter, switchMap, catchError, of, map } from 'rxjs';
 
 @Component({
   selector: 'app-signup',
@@ -13,6 +14,11 @@ export class SignupComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+
+  emailAvailable = signal<boolean | null>(null);
+  usernameAvailable = signal<boolean | null>(null);
+  emailChecking = signal(false);
+  usernameChecking = signal(false);
 
   form = this.fb.group({
     nome: ['', [Validators.required, Validators.minLength(3)]],
@@ -33,14 +39,77 @@ export class SignupComponent {
   error = signal('');
   showPass = signal(false);
 
+  constructor() {
+    // Monitor email changes with debounce
+    const emailControl = this.form.get('email');
+    if (emailControl) {
+      emailControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((email): email is string => {
+          const emailValid = this.form.get('email')?.valid ?? false;
+          return email != null && email.length > 0 && emailValid;
+        }),
+        switchMap(email => {
+          this.emailChecking.set(true);
+          this.emailAvailable.set(null);
+          return this.auth.verificarEmail(email).pipe(
+            catchError(() => {
+              this.emailChecking.set(false);
+              this.emailAvailable.set(null);
+              return of({ disponivel: false });
+            })
+          );
+        })
+      ).subscribe(result => {
+        this.emailChecking.set(false);
+        this.emailAvailable.set(result.disponivel);
+      });
+    }
+
+    // Monitor username changes with debounce
+    const usernameControl = this.form.get('username');
+    if (usernameControl) {
+      usernameControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((username): username is string => username != null && username.length >= 3),
+        switchMap(username => {
+          this.usernameChecking.set(true);
+          this.usernameAvailable.set(null);
+          return this.auth.verificarUsername(username).pipe(
+            catchError(() => {
+              this.usernameChecking.set(false);
+              this.usernameAvailable.set(null);
+              return of({ disponivel: false });
+            })
+          );
+        })
+      ).subscribe(result => {
+        this.usernameChecking.set(false);
+        this.usernameAvailable.set(result.disponivel);
+      });
+    }
+  }
+
   get f() {
     return this.form.controls;
+  }
+
+  get formReady(): boolean {
+    const emailOk = this.emailAvailable() === true;
+    const usernameOk = this.usernameAvailable() === true;
+    return emailOk && usernameOk && this.form.valid;
   }
 
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.error.set('Preencha todos os campos obrigatórios corretamente.');
+      return;
+    }
+    if (!this.formReady) {
+      this.error.set('Aguarde a verificação dos campos ou corrija os erros.');
       return;
     }
     this.loading.set(true);
