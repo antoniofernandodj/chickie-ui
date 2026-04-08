@@ -226,6 +226,7 @@ export interface CategoriaProdutos {
   nome:      string;
   descricao: string | null;
   ordem:     number;
+  pizza_mode: boolean;
   criado_em: string;
 }
 
@@ -233,6 +234,7 @@ export interface CreateCategoriaRequest {
   nome:      string;
   descricao?:string | null;
   ordem:     number;
+  pizza_mode: boolean;
 }
 
 // ─── Pedido ──────────────────────────────────────────────────────────────────
