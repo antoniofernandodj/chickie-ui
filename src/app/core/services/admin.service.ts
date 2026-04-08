@@ -11,6 +11,9 @@ import {
   Entregador,
   Funcionario,
   Loja,
+  UpdateFuncionarioRequest,
+  UpdateEntregadorRequest,
+  MessageResponse,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -60,7 +63,29 @@ export class AdminService {
     return this.http.get<Funcionario[]>(`${environment.apiUrl}/funcionarios/${lojaUuid}`);
   }
 
+  atualizarFuncionario(
+    lojaUuid: string,
+    funcionarioUuid: string,
+    body: UpdateFuncionarioRequest,
+  ): Observable<MessageResponse> {
+    return this.http.put<MessageResponse>(
+      `${environment.apiUrl}/funcionarios/${lojaUuid}/${funcionarioUuid}`,
+      body,
+    );
+  }
+
   listarEntregadores(lojaUuid: string): Observable<Entregador[]> {
     return this.http.get<Entregador[]>(`${environment.apiUrl}/entregadores/${lojaUuid}`);
+  }
+
+  atualizarEntregador(
+    lojaUuid: string,
+    entregadorUuid: string,
+    body: UpdateEntregadorRequest,
+  ): Observable<MessageResponse> {
+    return this.http.put<MessageResponse>(
+      `${environment.apiUrl}/entregadores/${lojaUuid}/${entregadorUuid}`,
+      body,
+    );
   }
 }

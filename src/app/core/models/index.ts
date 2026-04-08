@@ -122,6 +122,12 @@ export interface CreateFuncionarioRequest {
   data_admissao: string;
 }
 
+export interface UpdateFuncionarioRequest {
+  cargo?:         string | null;
+  salario?:       number;
+  data_admissao?: string;
+}
+
 // ─── Entregador ───────────────────────────────────────────────────────────────
 
 export interface Entregador {
@@ -142,6 +148,12 @@ export interface CreateEntregadorRequest {
   celular:  string;
   veiculo?: string | null;
   placa?:   string | null;
+}
+
+export interface UpdateEntregadorRequest {
+  veiculo?:  string | null;
+  placa?:    string | null;
+  disponivel?: boolean;
 }
 
 // ─── Cliente ──────────────────────────────────────────────────────────────────

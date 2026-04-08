@@ -9,7 +9,7 @@ import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -376,6 +376,63 @@ export class AdminComponent {
     });
   }
 
+  // ── Editar Funcionário ────────────────────────────────────────────────────
+
+  editFuncionario = signal<Funcionario | null>(null);
+  editFuncForm = this.fb.group({
+    cargo:         [''],
+    salario:       [0, [Validators.required, Validators.min(0)]],
+    data_admissao: ['', Validators.required],
+  });
+  editFuncLoading = signal(false);
+
+  get editFf() {
+    return this.editFuncForm.controls;
+  }
+
+  abrirEditFuncionario(func: Funcionario) {
+    this.editFuncionario.set(func);
+    this.editFuncForm.patchValue({
+      cargo: func.cargo ?? '',
+      salario: func.salario,
+      data_admissao: func.data_admissao,
+    });
+  }
+
+  fecharEditFuncionario() {
+    this.editFuncionario.set(null);
+    this.editFuncForm.reset({ salario: 0 });
+  }
+
+  salvarEditFuncionario() {
+    const loja = this.lojaSelecionada();
+    const func = this.editFuncionario();
+    if (!loja || !func) return;
+    if (this.editFuncForm.invalid) {
+      this.editFuncForm.markAllAsTouched();
+      return;
+    }
+    this.editFuncLoading.set(true);
+    const fv = this.editFuncForm.value;
+    const body: UpdateFuncionarioRequest = {
+      cargo: fv.cargo || null,
+      salario: fv.salario!,
+      data_admissao: fv.data_admissao!,
+    };
+    this.adminService.atualizarFuncionario(loja.uuid, func.uuid, body).subscribe({
+      next: () => {
+        this.editFuncLoading.set(false);
+        toast.success('Funcionário atualizado com sucesso!');
+        this.fecharEditFuncionario();
+        this.refreshFuncionarios();
+      },
+      error: (e) => {
+        this.editFuncLoading.set(false);
+        toast.error(e?.error?.error ?? 'Erro ao atualizar funcionário.');
+      },
+    });
+  }
+
   // ── Entregadores ──────────────────────────────────────────────────────────
 
   entregForm = this.fb.group({
@@ -436,6 +493,63 @@ export class AdminComponent {
       error: (e) => {
         this.entregLoading.set(false);
         this.entregError.set(e?.error?.error ?? 'Erro ao adicionar entregador.');
+      },
+    });
+  }
+
+  // ── Editar Entregador ─────────────────────────────────────────────────────
+
+  editEntregador = signal<Entregador | null>(null);
+  editEntregForm = this.fb.group({
+    veiculo:  [''],
+    placa:    [''],
+    disponivel: [true],
+  });
+  editEntregLoading = signal(false);
+
+  get editEf() {
+    return this.editEntregForm.controls;
+  }
+
+  abrirEditEntregador(entreg: Entregador) {
+    this.editEntregador.set(entreg);
+    this.editEntregForm.patchValue({
+      veiculo: entreg.veiculo ?? '',
+      placa: entreg.placa ?? '',
+      disponivel: entreg.disponivel,
+    });
+  }
+
+  fecharEditEntregador() {
+    this.editEntregador.set(null);
+    this.editEntregForm.reset({ disponivel: true });
+  }
+
+  salvarEditEntregador() {
+    const loja = this.lojaSelecionada();
+    const entreg = this.editEntregador();
+    if (!loja || !entreg) return;
+    if (this.editEntregForm.invalid) {
+      this.editEntregForm.markAllAsTouched();
+      return;
+    }
+    this.editEntregLoading.set(true);
+    const fv = this.editEntregForm.value;
+    const body: UpdateEntregadorRequest = {
+      veiculo: fv.veiculo || null,
+      placa: fv.placa || null,
+      disponivel: fv.disponivel ?? true,
+    };
+    this.adminService.atualizarEntregador(loja.uuid, entreg.uuid, body).subscribe({
+      next: () => {
+        this.editEntregLoading.set(false);
+        toast.success('Entregador atualizado com sucesso!');
+        this.fecharEditEntregador();
+        this.refreshEntregadores();
+      },
+      error: (e) => {
+        this.editEntregLoading.set(false);
+        toast.error(e?.error?.error ?? 'Erro ao atualizar entregador.');
       },
     });
   }
