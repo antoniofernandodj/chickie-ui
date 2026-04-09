@@ -515,7 +515,6 @@ export class AdminComponent {
   editEntregForm = this.fb.group({
     veiculo:  [''],
     placa:    [''],
-    disponivel: [true],
   });
   editEntregLoading = signal(false);
 
@@ -528,13 +527,12 @@ export class AdminComponent {
     this.editEntregForm.patchValue({
       veiculo: entreg.veiculo ?? '',
       placa: entreg.placa ?? '',
-      disponivel: entreg.disponivel,
     });
   }
 
   fecharEditEntregador() {
     this.editEntregador.set(null);
-    this.editEntregForm.reset({ disponivel: true });
+    this.editEntregForm.reset();
   }
 
   salvarEditEntregador() {
@@ -550,7 +548,6 @@ export class AdminComponent {
     const body: UpdateEntregadorRequest = {
       veiculo: fv.veiculo || null,
       placa: fv.placa || null,
-      disponivel: fv.disponivel ?? true,
     };
     this.adminService.atualizarEntregador(loja.uuid, entreg.uuid, body).subscribe({
       next: () => {
@@ -562,6 +559,21 @@ export class AdminComponent {
       error: (e) => {
         this.editEntregLoading.set(false);
         toast.error(e?.error?.error ?? 'Erro ao atualizar entregador.');
+      },
+    });
+  }
+
+  toggleDisponibilidadeEntregador(uuid: string, nome: string, disponivelAtual: boolean) {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    const novoEstado = !disponivelAtual;
+    this.adminService.toggleDisponibilidadeEntregador(loja.uuid, uuid, novoEstado).subscribe({
+      next: () => {
+        toast.success(`Entregador "${nome}" agora está ${novoEstado ? 'disponível' : 'indisponível'}.`);
+        this.refreshEntregadores();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao alterar disponibilidade do entregador.');
       },
     });
   }

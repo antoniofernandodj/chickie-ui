@@ -88,4 +88,15 @@ export class AdminService {
       body,
     );
   }
+
+  toggleDisponibilidadeEntregador(
+    lojaUuid: string,
+    entregadorUuid: string,
+    disponivel: boolean,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${environment.apiUrl}/entregadores/${lojaUuid}/${entregadorUuid}/disponibilidade`,
+      { disponivel },
+    );
+  }
 }
