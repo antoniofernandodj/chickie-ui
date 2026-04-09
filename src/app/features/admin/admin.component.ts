@@ -121,6 +121,7 @@ export class AdminComponent {
     this.aba.set('equipe');
     this.refreshFuncionarios();
     this.refreshEntregadores();
+    this.refreshAdicionais();
   }
 
   // ── Equipe: Funcionários ──────────────────────────────────────────────────
@@ -339,6 +340,15 @@ export class AdminComponent {
         this.carregarTodosProdutos();
       } else {
         this.produtosPorCategoria.set(new Map());
+      }
+    });
+
+    // Auto-load adicionais when tab changes to 'adicionais'
+    effect(() => {
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'adicionais' && loja) {
+        this.refreshAdicionais();
       }
     });
   }
