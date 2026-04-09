@@ -122,6 +122,7 @@ export class AdminComponent {
     this.refreshFuncionarios();
     this.refreshEntregadores();
     this.refreshAdicionais();
+    this.refreshCategorias();
   }
 
   // ── Equipe: Funcionários ──────────────────────────────────────────────────
@@ -590,6 +591,15 @@ export class AdminComponent {
   private refreshCategorias() {
     this.refreshCatTrigger.next();
   }
+
+  // Auto-load categories when switching to catalogo tab
+  private readonly _loadCatEffect = effect(() => {
+    const aba = this.aba();
+    const loja = this.lojaSelecionada();
+    if (aba === 'catalogo' && loja) {
+      this.refreshCategorias();
+    }
+  });
 
   // Load products for a specific category
   carregarProdutosDaCategoria(categoriaUuid: string) {
