@@ -939,23 +939,24 @@
                       </span>
                     </div>
                     <div class="flex gap-1">
-                      @if (adc.disponivel) {
-                        <button (click)="marcarAdicionalIndisponivel(adc.uuid, adc.nome)"
-                                class="p-1.5 rounded-lg hover:bg-orange-50 text-gray-400 hover:text-orange-600 transition-colors"
-                                title="Marcar indisponível">
+                      <button (click)="toggleDisponibilidadeAdicional(adc.uuid, adc.nome, adc.disponivel)"
+                              class="p-1.5 rounded-lg transition-colors"
+                              [class.hover:bg-orange-50]="adc.disponivel"
+                              [class.text-gray-400]="true"
+                              [class.hover:text-orange-600]="adc.disponivel"
+                              [class.hover:bg-green-50]="!adc.disponivel"
+                              [class.hover:text-green-600]="!adc.disponivel"
+                              [title]="adc.disponivel ? 'Marcar indisponível' : 'Marcar disponível'">
+                        @if (adc.disponivel) {
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
                           </svg>
-                        </button>
-                      } @else {
-                        <button (click)="marcarAdicionalDisponivel(adc.uuid, adc.nome)"
-                                class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors"
-                                title="Marcar disponível">
+                        } @else {
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                           </svg>
-                        </button>
-                      }
+                        }
+                      </button>
                       <button (click)="editarAdicional(adc)"
                               class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors"
                               title="Editar adicional">

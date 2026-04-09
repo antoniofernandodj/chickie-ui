@@ -47,6 +47,17 @@ export class CatalogoService {
     );
   }
 
+  toggleDisponibilidadeAdicional(
+    lojaUuid: string,
+    adicionalUuid: string,
+    disponivel: boolean,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.base}/${lojaUuid}/adicionais/${adicionalUuid}/disponibilidade`,
+      { disponivel },
+    );
+  }
+
   atualizarAdicional(
     lojaUuid: string,
     adicionalUuid: string,

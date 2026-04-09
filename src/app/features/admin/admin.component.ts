@@ -1040,33 +1040,17 @@ export class AdminComponent {
     });
   }
 
-  marcarAdicionalIndisponivel(uuid: string, nome: string) {
+  toggleDisponibilidadeAdicional(uuid: string, nome: string, disponivelAtual: boolean) {
     const loja = this.lojaSelecionada();
     if (!loja) return;
-    this.catalogoService.marcarAdicionalIndisponivel(loja.uuid, uuid).subscribe({
+    const novoEstado = !disponivelAtual;
+    this.catalogoService.toggleDisponibilidadeAdicional(loja.uuid, uuid, novoEstado).subscribe({
       next: () => {
-        toast.success(`Adicional "${nome}" marcado como indisponível.`);
+        toast.success(`Adicional "${nome}" agora está ${novoEstado ? 'disponível' : 'indisponível'}.`);
         this.refreshAdicionais();
       },
       error: (e) => {
-        toast.error(e?.error?.error ?? 'Erro ao marcar adicional como indisponível.');
-      },
-    });
-  }
-
-  marcarAdicionalDisponivel(uuid: string, nome: string) {
-    // Reutiliza o endpoint de indisponível para toggling (caso a API suporte)
-    // Se necessário, criar um endpoint separado para disponivel
-    const loja = this.lojaSelecionada();
-    if (!loja) return;
-    // OBS: Ajustar conforme API - aqui assumimos que o endpoint toggle funciona
-    this.catalogoService.marcarAdicionalIndisponivel(loja.uuid, uuid).subscribe({
-      next: () => {
-        toast.success(`Adicional "${nome}" marcado como disponível.`);
-        this.refreshAdicionais();
-      },
-      error: (e) => {
-        toast.error(e?.error?.error ?? 'Erro ao marcar adicional como disponível.');
+        toast.error(e?.error?.error ?? 'Erro ao alterar disponibilidade do adicional.');
       },
     });
   }
