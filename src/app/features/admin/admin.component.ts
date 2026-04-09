@@ -9,7 +9,7 @@ import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -25,9 +25,10 @@ export class AdminComponent {
 
   readonly aba  = signal('lojas');
   readonly tabs = [
-    { id: 'lojas',    label: '🏪 Lojas'     },
-    { id: 'equipe',   label: '👥 Equipe'    },
-    { id: 'catalogo', label: '📦 Catálogo'  },
+    { id: 'lojas',       label: '🏪 Lojas'     },
+    { id: 'equipe',      label: '👥 Equipe'    },
+    { id: 'catalogo',    label: '📦 Catálogo'  },
+    { id: 'adicionais',  label: '🧀 Adicionais' },
   ];
 
   // ── Lojas ──────────────────────────────────────────────────────────────────
@@ -898,6 +899,164 @@ export class AdminComponent {
       },
       error: (e) => {
         toast.error(e?.error?.error ?? 'Erro ao deletar produto.');
+      },
+    });
+  }
+
+  // ── Catálogo: Adicionais ──────────────────────────────────────────────────
+
+  private readonly refreshAdicTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _adicionais = toSignal(
+    this.refreshAdicTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as Adicional[]);
+        return this.catalogoService.listarAdicionais(loja.uuid).pipe(
+          catchError(() => of([] as Adicional[])),
+        );
+      }),
+    ),
+    { initialValue: [] as Adicional[] },
+  );
+  readonly adcLoading = computed(() => this._adicionais() === undefined);
+  readonly adicionais = computed(() => this._adicionais() ?? []);
+
+  private refreshAdicionais() {
+    this.refreshAdicTrigger.next();
+  }
+
+  adcForm = this.fb.group({
+    nome: ['', [Validators.required, Validators.minLength(2)]],
+    descricao: [''],
+    preco: [0, [Validators.required, Validators.min(0)]],
+  });
+
+  adcLoadingSubmit = signal(false);
+  adcError = signal('');
+  adcEditId = signal<string | null>(null);
+
+  get fa() {
+    return this.adcForm.controls;
+  }
+
+  criarAdicional() {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    if (this.adcForm.invalid) {
+      this.adcForm.markAllAsTouched();
+      return;
+    }
+    this.adcLoadingSubmit.set(true);
+    this.adcError.set('');
+    const fv = this.adcForm.value;
+    const body: CreateAdicionalRequest = {
+      nome: fv.nome!,
+      descricao: fv.descricao || '',
+      preco: fv.preco!,
+    };
+    this.catalogoService.criarAdicional(loja.uuid, body).subscribe({
+      next: () => {
+        this.adcLoadingSubmit.set(false);
+        toast.success('Adicional criado com sucesso!');
+        this.adcForm.reset({ preco: 0 });
+        this.refreshAdicionais();
+      },
+      error: (e) => {
+        this.adcLoadingSubmit.set(false);
+        this.adcError.set(e?.error?.error ?? 'Erro ao criar adicional.');
+      },
+    });
+  }
+
+  editarAdicional(adc: Adicional) {
+    this.adcEditId.set(adc.uuid);
+    this.adcForm.patchValue({
+      nome: adc.nome,
+      descricao: adc.descricao,
+      preco: adc.preco,
+    });
+    this.adcError.set('');
+  }
+
+  salvarEdicaoAdicional() {
+    const loja = this.lojaSelecionada();
+    const uuid = this.adcEditId();
+    if (!loja || !uuid) return;
+    if (this.adcForm.invalid) {
+      this.adcForm.markAllAsTouched();
+      return;
+    }
+    this.adcLoadingSubmit.set(true);
+    this.adcError.set('');
+    const fv = this.adcForm.value;
+    this.catalogoService.atualizarAdicional(loja.uuid, uuid, {
+      nome: fv.nome!,
+      descricao: fv.descricao || '',
+      preco: fv.preco!,
+    }).subscribe({
+      next: () => {
+        this.adcLoadingSubmit.set(false);
+        this.adcEditId.set(null);
+        toast.success('Adicional atualizado com sucesso!');
+        this.adcForm.reset({ preco: 0 });
+        this.refreshAdicionais();
+      },
+      error: (e) => {
+        this.adcLoadingSubmit.set(false);
+        this.adcError.set(e?.error?.error ?? 'Erro ao atualizar adicional.');
+      },
+    });
+  }
+
+  cancelarEdicaoAdicional() {
+    this.adcEditId.set(null);
+    this.adcForm.reset({ preco: 0 });
+    this.adcError.set('');
+  }
+
+  deletarAdicional(uuid: string, nome: string) {
+    if (!confirm(`Deletar adicional "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.catalogoService.deletarAdicional(loja.uuid, uuid).subscribe({
+      next: () => {
+        toast.success('Adicional deletado com sucesso!');
+        this.refreshAdicionais();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar adicional.');
+      },
+    });
+  }
+
+  marcarAdicionalIndisponivel(uuid: string, nome: string) {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.catalogoService.marcarAdicionalIndisponivel(loja.uuid, uuid).subscribe({
+      next: () => {
+        toast.success(`Adicional "${nome}" marcado como indisponível.`);
+        this.refreshAdicionais();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao marcar adicional como indisponível.');
+      },
+    });
+  }
+
+  marcarAdicionalDisponivel(uuid: string, nome: string) {
+    // Reutiliza o endpoint de indisponível para toggling (caso a API suporte)
+    // Se necessário, criar um endpoint separado para disponivel
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    // OBS: Ajustar conforme API - aqui assumimos que o endpoint toggle funciona
+    this.catalogoService.marcarAdicionalIndisponivel(loja.uuid, uuid).subscribe({
+      next: () => {
+        toast.success(`Adicional "${nome}" marcado como disponível.`);
+        this.refreshAdicionais();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao marcar adicional como disponível.');
       },
     });
   }

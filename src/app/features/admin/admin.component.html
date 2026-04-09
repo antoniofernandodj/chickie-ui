@@ -881,4 +881,156 @@
       </div>
     }
   }
+
+  <!-- ── ABA: ADICIONAIS ───────────────────────────────────────────────── -->
+  @if (aba() === 'adicionais') {
+    @if (!lojaSelecionada()) {
+      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
+        <div class="text-5xl mb-3">🏪</div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Selecione uma loja</h2>
+        <p class="text-gray-500 text-sm">Vá para a aba <strong>Lojas</strong> e clique em uma loja para gerenciar os adicionais.</p>
+      </div>
+    } @else {
+      <div class="mb-6 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
+             style="background:var(--color-brand)">
+          {{ lojaSelecionada()!.nome.charAt(0) }}
+        </div>
+        <div>
+          <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
+          <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
+        </div>
+        <button (click)="lojaSelecionada.set(null)" class="ml-auto text-xs text-gray-400 hover:text-gray-700">Trocar loja</button>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Lista de adicionais -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="text-base font-semibold text-gray-900 mb-5">🧀 Adicionais Cadastrados</h3>
+
+          @if (adcLoading()) {
+            @for (_ of [1,2,3]; track $index) {
+              <div class="bg-gray-50 rounded-xl p-4 mb-2 skeleton h-16"></div>
+            }
+          } @else if (adicionais().length === 0) {
+            <p class="text-xs text-gray-400 text-center py-4">Nenhum adicional cadastrado.</p>
+          } @else {
+            <div class="space-y-2">
+              @for (adc of adicionais(); track adc.uuid) {
+                <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between hover:border-orange-200 transition-colors">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-900 truncate">{{ adc.nome }}</p>
+                    @if (adc.descricao) {
+                      <p class="text-xs text-gray-500 truncate">{{ adc.descricao }}</p>
+                    }
+                    <p class="text-xs text-gray-400 mt-1">
+                      Criado em {{ adc.criado_em | date:'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-3 shrink-0 ml-3">
+                    <div class="text-right">
+                      <p class="text-sm font-semibold text-gray-900">R$ {{ adc.preco | number:'1.2-2' }}</p>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                            [class.bg-green-100]="adc.disponivel"
+                            [class.text-green-700]="adc.disponivel"
+                            [class.bg-red-100]="!adc.disponivel"
+                            [class.text-red-700]="!adc.disponivel">
+                        {{ adc.disponivel ? 'Disponível' : 'Indisponível' }}
+                      </span>
+                    </div>
+                    <div class="flex gap-1">
+                      @if (adc.disponivel) {
+                        <button (click)="marcarAdicionalIndisponivel(adc.uuid, adc.nome)"
+                                class="p-1.5 rounded-lg hover:bg-orange-50 text-gray-400 hover:text-orange-600 transition-colors"
+                                title="Marcar indisponível">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                          </svg>
+                        </button>
+                      } @else {
+                        <button (click)="marcarAdicionalDisponivel(adc.uuid, adc.nome)"
+                                class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition-colors"
+                                title="Marcar disponível">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </button>
+                      }
+                      <button (click)="editarAdicional(adc)"
+                              class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-colors"
+                              title="Editar adicional">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </button>
+                      <button (click)="deletarAdicional(adc.uuid, adc.nome)"
+                              class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                              title="Deletar adicional">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Criar/Editar Adicional -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="text-base font-semibold text-gray-900 mb-5">
+            @if (adcEditId()) { 📝 Editar Adicional } @else { 🧀 Criar Adicional }
+          </h3>
+
+          <form [formGroup]="adcForm" (ngSubmit)="adcEditId() ? salvarEdicaoAdicional() : criarAdicional()" class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Nome *</label>
+              <input type="text" formControlName="nome"
+                     [class.border-red-400]="fa.nome.invalid && fa.nome.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (fa.nome.invalid && fa.nome.touched) {
+                <p class="text-xs text-red-600 mt-1">Nome é obrigatório (mín. 2 caracteres).</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Descrição</label>
+              <textarea formControlName="descricao" rows="2"
+                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Preço (R$) *</label>
+              <input type="number" formControlName="preco" min="0" step="0.01"
+                     [class.border-red-400]="fa.preco.invalid && fa.preco.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (fa.preco.invalid && fa.preco.touched) {
+                <p class="text-xs text-red-600 mt-1">Preço é obrigatório e deve ser >= 0.</p>
+              }
+            </div>
+
+            @if (adcError()) {
+              <p class="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ adcError() }}</p>
+            }
+
+            <div class="flex gap-2">
+              <button type="submit" [disabled]="adcLoadingSubmit() || adcForm.invalid"
+                      class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
+                      style="background:var(--color-brand)">
+                @if (adcLoadingSubmit()) { Salvando... }
+                @else if (adcEditId()) { Atualizar Adicional }
+                @else { Criar Adicional }
+              </button>
+              @if (adcEditId()) {
+                <button type="button" (click)="cancelarEdicaoAdicional()"
+                        class="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  Cancelar
+                </button>
+              }
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
 </div>

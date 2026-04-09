@@ -47,6 +47,26 @@ export class CatalogoService {
     );
   }
 
+  atualizarAdicional(
+    lojaUuid: string,
+    adicionalUuid: string,
+    body: CreateAdicionalRequest,
+  ): Observable<Adicional> {
+    return this.http.put<Adicional>(
+      `${this.base}/${lojaUuid}/adicionais/${adicionalUuid}`,
+      body,
+    );
+  }
+
+  deletarAdicional(
+    lojaUuid: string,
+    adicionalUuid: string,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${this.base}/${lojaUuid}/adicionais/${adicionalUuid}`,
+    );
+  }
+
   // ── Categorias ──────────────────────────────────────────────────────────────
 
   criarCategoria(
