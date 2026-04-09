@@ -158,4 +158,15 @@ export class CatalogoService {
   deletarProduto(uuid: string): Observable<void> {
     return this.http.delete<void>(`${this.prodBase}/${uuid}`);
   }
+
+  toggleDisponibilidadeProduto(
+    lojaUuid: string,
+    produtoUuid: string,
+    disponivel: boolean,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.prodBase}/${lojaUuid}/${produtoUuid}/disponibilidade`,
+      { disponivel },
+    );
+  }
 }

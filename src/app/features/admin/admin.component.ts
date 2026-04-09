@@ -729,7 +729,6 @@ export class AdminComponent {
     preco: [0, [Validators.required, Validators.min(0)]],
     tempo_preparo_min: [30, [Validators.required, Validators.min(1)]],
     destaque: [false],
-    disponivel: [true],
   });
 
   prodLoading = signal(false);
@@ -772,7 +771,7 @@ export class AdminComponent {
       preco: fv.preco!,
       tempo_preparo_min: fv.tempo_preparo_min ?? 30,
       destaque: fv.destaque ?? false,
-      disponivel: fv.disponivel ?? true,
+      disponivel: true,
     }).subscribe({
       next: (prod) => {
         // Upload de imagem se houver
@@ -781,7 +780,7 @@ export class AdminComponent {
           this.catalogoService.uploadImagemProduto(prod.uuid, imgFile).subscribe({
             next: () => {
               toast.success('Produto e imagem criados com sucesso!');
-              this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+              this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false });
               this.prodImagem.set(null);
               this.prodImagemPreview.set(null);
               // Refresh products for this category
@@ -796,7 +795,7 @@ export class AdminComponent {
         } else {
           toast.success('Produto criado com sucesso!');
           this.prodLoading.set(false);
-          this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+          this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false });
           this.prodImagem.set(null);
           this.prodImagemPreview.set(null);
           // Refresh products for this category
@@ -820,7 +819,6 @@ export class AdminComponent {
       preco: prod.preco,
       tempo_preparo_min: prod.tempo_preparo_min,
       destaque: prod.destaque ?? false,
-      disponivel: prod.disponivel ?? true,
     });
     this.prodError.set('');
     // Clear image preview
@@ -845,7 +843,6 @@ export class AdminComponent {
       preco: fv.preco!,
       tempo_preparo_min: fv.tempo_preparo_min ?? 30,
       destaque: fv.destaque ?? false,
-      disponivel: fv.disponivel ?? true,
     }).subscribe({
       next: (prod) => {
         // Upload de imagem se houver
@@ -856,7 +853,7 @@ export class AdminComponent {
               toast.success('Produto e imagem atualizados com sucesso!');
               this.prodLoading.set(false);
               this.prodEditId.set(null);
-              this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+              this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false });
               this.prodImagem.set(null);
               this.prodImagemPreview.set(null);
               // Refresh products for this category
@@ -872,7 +869,7 @@ export class AdminComponent {
           toast.success('Produto atualizado com sucesso!');
           this.prodLoading.set(false);
           this.prodEditId.set(null);
-          this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+          this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false });
           this.prodImagem.set(null);
           this.prodImagemPreview.set(null);
           // Refresh products for this category
@@ -889,7 +886,7 @@ export class AdminComponent {
 
   cancelarEdicaoProduto() {
     this.prodEditId.set(null);
-    this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false, disponivel: true });
+    this.prodForm.reset({ preco: 0, tempo_preparo_min: 30, destaque: false });
     this.prodImagem.set(null);
     this.prodImagemPreview.set(null);
     this.prodError.set('');
@@ -909,6 +906,25 @@ export class AdminComponent {
       },
       error: (e) => {
         toast.error(e?.error?.error ?? 'Erro ao deletar produto.');
+      },
+    });
+  }
+
+  toggleDisponibilidadeProduto(uuid: string, nome: string, disponivelAtual: boolean, categoriaUuid?: string) {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    const novoEstado = !disponivelAtual;
+    this.catalogoService.toggleDisponibilidadeProduto(loja.uuid, uuid, novoEstado).subscribe({
+      next: () => {
+        toast.success(`Produto "${nome}" agora está ${novoEstado ? 'disponível' : 'indisponível'}.`);
+        if (categoriaUuid) {
+          this.carregarProdutosDaCategoria(categoriaUuid);
+        } else {
+          this.carregarTodosProdutos();
+        }
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao alterar disponibilidade do produto.');
       },
     });
   }
