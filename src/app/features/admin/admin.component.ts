@@ -1315,6 +1315,7 @@ export class AdminComponent {
       dia_semana: parseInt(fv.dia_semana as unknown as string, 10),
       abertura: fv.abertura!,
       fechamento: fv.fechamento!,
+      ativo: true,
     }).subscribe({
       next: () => {
         this.horarioLoadingSubmit.set(false);

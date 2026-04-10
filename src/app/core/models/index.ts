@@ -453,6 +453,7 @@ export interface CreateHorarioFuncionamentoRequest {
   dia_semana:  number;
   abertura:    string;
   fechamento:  string;
+  ativo:       boolean;
 }
 
 export interface UpdateHorarioFuncionamentoRequest {
