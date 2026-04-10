@@ -1287,6 +1287,12 @@ export class AdminComponent {
     { valor: 6, nome: 'Sábado' },
   ];
 
+  readonly diasSemanaDisponiveis = computed(() => {
+    const horariosList = this.horarios();
+    const diasCadastrados = new Set(horariosList.map(h => h.dia_semana));
+    return this.diasSemana.filter(dia => !diasCadastrados.has(dia.valor));
+  });
+
   horarioForm = this.fb.group({
     dia_semana: [0, Validators.required],
     abertura: ['', Validators.required],

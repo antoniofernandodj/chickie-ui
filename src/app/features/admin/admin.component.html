@@ -1232,12 +1232,15 @@
             <select formControlName="dia_semana"
                     [class.border-red-400]="hh.dia_semana.invalid && hh.dia_semana.touched"
                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400">
-              @for (dia of diasSemana; track dia.valor) {
+              @for (dia of diasSemanaDisponiveis(); track dia.valor) {
                 <option [value]="dia.valor">{{ dia.nome }}</option>
               }
             </select>
             @if (hh.dia_semana.invalid && hh.dia_semana.touched) {
               <p class="text-xs text-red-600 mt-1">Dia é obrigatório.</p>
+            }
+            @if (diasSemanaDisponiveis().length === 0) {
+              <p class="text-xs text-gray-500 mt-1">Todos os dias já estão cadastrados.</p>
             }
           </div>
           <div class="grid grid-cols-2 gap-3">
