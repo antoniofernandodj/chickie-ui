@@ -27,7 +27,7 @@ export interface SignupRequest {
   username:    string;
   senha:       string;
   email:       string;
-  telefone:    string;
+  celular:     string;
   auth_method: string;
   classe?:     ClasseUsuario;
 }
@@ -50,7 +50,6 @@ export interface Usuario {
   username:                   string;
   email:                      string;
   celular:                    string;
-  telefone:                   string;
   classe:                     ClasseUsuario;
   ativo:                      boolean;
   passou_pelo_primeiro_acesso:boolean;
@@ -68,7 +67,7 @@ export interface Loja {
   slug:                string;
   descricao:           string | null;
   email:               string;
-  telefone:            string | null;
+  celular:             string | null;
   ativa:               boolean;
   logo_url:            string | null;
   banner_url:          string | null;
@@ -88,7 +87,7 @@ export interface CreateLojaRequest {
   slug:               string;
   email_contato:      string;
   descricao?:         string | null;
-  telefone?:          string | null;
+  celular?:           string | null;
   hora_abertura?:     string | null;
   hora_fechamento?:   string | null;
   dias_funcionamento?:string | null;
@@ -396,6 +395,69 @@ export interface EnderecoUsuarioRequest {
   bairro:       string;
   cidade:       string;
   estado:       string;
+}
+
+// ─── Endereço de Loja ──────────────────────────────────────────────────────
+
+export interface EnderecoLoja {
+  uuid:        string;
+  loja_uuid:   string;
+  cep:         string | null;
+  logradouro:  string;
+  numero:      string;
+  complemento: string | null;
+  bairro:      string;
+  cidade:      string;
+  estado:      string;
+  latitude:    number | null;
+  longitude:   number | null;
+}
+
+export interface CreateEnderecoLojaRequest {
+  cep?:         string | null;
+  logradouro:   string;
+  numero:       string;
+  complemento?: string | null;
+  bairro:       string;
+  cidade:       string;
+  estado:       string;
+  latitude?:    number | null;
+  longitude?:   number | null;
+}
+
+export interface UpdateEnderecoLojaRequest {
+  cep?:         string | null;
+  logradouro?:  string | null;
+  numero?:      string | null;
+  complemento?: string | null;
+  bairro?:      string | null;
+  cidade?:      string | null;
+  estado?:      string | null;
+  latitude?:    number | null;
+  longitude?:   number | null;
+}
+
+// ─── Horário de Funcionamento ──────────────────────────────────────────────
+
+export interface HorarioFuncionamento {
+  uuid:       string;
+  loja_uuid:  string;
+  dia_semana: number;
+  abertura:   string;
+  fechamento: string;
+  ativo:      boolean;
+  criado_em:  string;
+}
+
+export interface CreateHorarioFuncionamentoRequest {
+  dia_semana:  number;
+  abertura:    string;
+  fechamento:  string;
+}
+
+export interface UpdateHorarioFuncionamentoRequest {
+  abertura?:   string;
+  fechamento?: string;
 }
 
 // ─── Cupom ────────────────────────────────────────────────────────────────────

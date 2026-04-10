@@ -1065,4 +1065,241 @@
       </div>
     }
   }
+
+  <!-- ── ABA: ENDEREÇOS ──────────────────────────────────────────────────── -->
+  @if (aba() === 'enderecos') {
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Criar/Editar Endereço -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-base font-semibold text-gray-900 mb-5">
+          @if (editEnderecoId()) { Editar Endereço } @else { Adicionar Endereço }
+        </h2>
+        <form [formGroup]="enderecoForm" (ngSubmit)="editEnderecoId() ? atualizarEndereco() : criarEndereco()" class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">CEP</label>
+              <input type="text" formControlName="cep"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Número *</label>
+              <input type="text" formControlName="numero"
+                     [class.border-red-400]="ee.numero.invalid && ee.numero.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (ee.numero.invalid && ee.numero.touched) {
+                <p class="text-xs text-red-600 mt-1">Número é obrigatório.</p>
+              }
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Logradouro *</label>
+              <input type="text" formControlName="logradouro"
+                     [class.border-red-400]="ee.logradouro.invalid && ee.logradouro.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (ee.logradouro.invalid && ee.logradouro.touched) {
+                <p class="text-xs text-red-600 mt-1">Logradouro é obrigatório.</p>
+              }
+            </div>
+            <div class="col-span-2">
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Complemento</label>
+              <input type="text" formControlName="complemento"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Bairro *</label>
+              <input type="text" formControlName="bairro"
+                     [class.border-red-400]="ee.bairro.invalid && ee.bairro.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (ee.bairro.invalid && ee.bairro.touched) {
+                <p class="text-xs text-red-600 mt-1">Bairro é obrigatório.</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Cidade *</label>
+              <input type="text" formControlName="cidade"
+                     [class.border-red-400]="ee.cidade.invalid && ee.cidade.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (ee.cidade.invalid && ee.cidade.touched) {
+                <p class="text-xs text-red-600 mt-1">Cidade é obrigatória.</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Estado *</label>
+              <input type="text" formControlName="estado" maxlength="2"
+                     [class.border-red-400]="ee.estado.invalid && ee.estado.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (ee.estado.invalid && ee.estado.touched) {
+                <p class="text-xs text-red-600 mt-1">Estado é obrigatório (UF).</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Latitude</label>
+              <input type="number" formControlName="latitude" step="any"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Longitude</label>
+              <input type="number" formControlName="longitude" step="any"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+            </div>
+          </div>
+
+          @if (enderecoError()) {
+            <p class="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ enderecoError() }}</p>
+          }
+
+          <div class="flex gap-2">
+            <button type="submit" [disabled]="enderecoLoadingSubmit() || enderecoForm.invalid"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
+                    style="background:var(--color-brand)">
+              @if (enderecoLoadingSubmit()) { Salvando... }
+              @else if (editEnderecoId()) { Atualizar Endereço }
+              @else { Criar Endereço }
+            </button>
+            @if (editEnderecoId()) {
+              <button type="button" (click)="cancelarEdicaoEndereco()"
+                      class="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Cancelar
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+
+      <!-- Lista de Endereços -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-base font-semibold text-gray-900 mb-5">Endereços da Loja</h2>
+        @if (enderecoLoading()) {
+          <p class="text-sm text-gray-500 py-8 text-center">Carregando...</p>
+        } @else if (enderecos().length === 0) {
+          <p class="text-sm text-gray-500 py-8 text-center">Nenhum endereço cadastrado.</p>
+        } @else {
+          <div class="space-y-3">
+            @for (endereco of enderecos(); track endereco.uuid) {
+              <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">{{ endereco.logradouro }}, {{ endereco.numero }}</p>
+                    @if (endereco.complemento) {
+                      <p class="text-xs text-gray-600">{{ endereco.complemento }}</p>
+                    }
+                    <p class="text-xs text-gray-500 mt-1">{{ endereco.bairro }} - {{ endereco.cidade }}/{{ endereco.estado }}</p>
+                    @if (endereco.cep) {
+                      <p class="text-xs text-gray-500">CEP: {{ endereco.cep }}</p>
+                    }
+                  </div>
+                  <div class="flex gap-2">
+                    <button (click)="abrirEdicaoEndereco(endereco)"
+                            class="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50">
+                      Editar
+                    </button>
+                    <button (click)="deletarEndereco(endereco.uuid)"
+                            class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1 rounded hover:bg-red-50">
+                      Deletar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ── ABA: HORÁRIOS ──────────────────────────────────────────────────── -->
+  @if (aba() === 'horarios') {
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Criar Horário -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-base font-semibold text-gray-900 mb-5">Adicionar Horário</h2>
+        <form [formGroup]="horarioForm" (ngSubmit)="criarHorario()" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1.5">Dia da Semana *</label>
+            <select formControlName="dia_semana"
+                    [class.border-red-400]="hh.dia_semana.invalid && hh.dia_semana.touched"
+                    class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400">
+              @for (dia of diasSemana; track dia.valor) {
+                <option [value]="dia.valor">{{ dia.nome }}</option>
+              }
+            </select>
+            @if (hh.dia_semana.invalid && hh.dia_semana.touched) {
+              <p class="text-xs text-red-600 mt-1">Dia é obrigatório.</p>
+            }
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Abertura *</label>
+              <input type="time" formControlName="abertura"
+                     [class.border-red-400]="hh.abertura.invalid && hh.abertura.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (hh.abertura.invalid && hh.abertura.touched) {
+                <p class="text-xs text-red-600 mt-1">Hora de abertura é obrigatória.</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1.5">Fechamento *</label>
+              <input type="time" formControlName="fechamento"
+                     [class.border-red-400]="hh.fechamento.invalid && hh.fechamento.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (hh.fechamento.invalid && hh.fechamento.touched) {
+                <p class="text-xs text-red-600 mt-1">Hora de fechamento é obrigatória.</p>
+              }
+            </div>
+          </div>
+
+          @if (horarioError()) {
+            <p class="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ horarioError() }}</p>
+          }
+
+          <button type="submit" [disabled]="horarioLoadingSubmit() || horarioForm.invalid"
+                  class="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
+                  style="background:var(--color-brand)">
+            @if (horarioLoadingSubmit()) { Salvando... } @else { Criar Horário }
+          </button>
+        </form>
+      </div>
+
+      <!-- Lista de Horários -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-base font-semibold text-gray-900 mb-5">Horários de Funcionamento</h2>
+        @if (horarioLoading()) {
+          <p class="text-sm text-gray-500 py-8 text-center">Carregando...</p>
+        } @else if (horarios().length === 0) {
+          <p class="text-sm text-gray-500 py-8 text-center">Nenhum horário cadastrado.</p>
+        } @else {
+          <div class="space-y-3">
+            @for (horario of horarios(); track horario.uuid) {
+              <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-gray-900">
+                      {{ diasSemana[horario.dia_semana]?.nome }}
+                      @if (!horario.ativo) {
+                        <span class="ml-2 text-xs text-gray-500">(Inativo)</span>
+                      }
+                    </p>
+                    <p class="text-xs text-gray-600 mt-1">{{ horario.abertura }} - {{ horario.fechamento }}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button (click)="toggleDiaAtivo(horario)"
+                            class="text-xs font-medium px-3 py-1.5 rounded-lg"
+                            [class.bg-green-100]="horario.ativo"
+                            [class.text-green-700]="horario.ativo"
+                            [class.bg-gray-100]="!horario.ativo"
+                            [class.text-gray-700]="!horario.ativo">
+                      @if (horario.ativo) { Ativo } @else { Inativo }
+                    </button>
+                    <button (click)="deletarDia(horario.dia_semana, diasSemana[horario.dia_semana]?.nome ?? '')"
+                            class="text-xs text-red-600 hover:text-red-800 font-medium px-2 py-1.5 rounded hover:bg-red-50">
+                      Deletar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
 </div>

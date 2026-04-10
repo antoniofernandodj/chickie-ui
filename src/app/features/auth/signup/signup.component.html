@@ -93,16 +93,16 @@
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1.5">Telefone</label>
-          <input type="tel" formControlName="telefone"
+          <label class="block text-xs font-medium text-gray-700 mb-1.5">Celular</label>
+          <input type="tel" formControlName="celular"
                  placeholder="21 9 9999-9999"
                  appPhoneMask
                  class="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 placeholder-gray-400"
-                 [class.border-red-400]="f.telefone.invalid && f.telefone.touched"/>
-          @if (f.telefone.invalid && f.telefone.touched) {
+                 [class.border-red-400]="f.celular.invalid && f.celular.touched"/>
+          @if (f.celular.invalid && f.celular.touched) {
             <p class="text-xs text-red-600 mt-1">
-              @if (f.telefone.errors?.['required']) { Telefone é obrigatório. }
-              @else if (f.telefone.errors?.['pattern']) { Telefone deve ter 11 dígitos. }
+              @if (f.celular.errors?.['required']) { Celular é obrigatório. }
+              @else if (f.celular.errors?.['pattern']) { Celular deve ter 11 dígitos. }
             </p>
           }
         </div>

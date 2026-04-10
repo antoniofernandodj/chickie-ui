@@ -75,8 +75,8 @@
       <span class="flex items-center gap-1.5 shrink-0">
         💳 Mín. <strong class="text-gray-900">R$ {{ loja()!.valor_minimo_pedido | number:'1.2-2' }}</strong>
       </span>
-      @if (loja()!.telefone) {
-        <span class="flex items-center gap-1.5 shrink-0">📞 {{ loja()!.telefone }}</span>
+      @if (loja()!.celular) {
+        <span class="flex items-center gap-1.5 shrink-0">📞 {{ loja()!.celular }}</span>
       }
       @if (loja()!.ativa) {
         <span class="ml-auto flex items-center gap-1 text-green-600 font-medium shrink-0">

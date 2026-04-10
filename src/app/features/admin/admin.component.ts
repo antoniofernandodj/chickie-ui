@@ -10,7 +10,7 @@ import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -30,6 +30,8 @@ export class AdminComponent {
     { id: 'equipe',      label: '👥 Equipe'    },
     { id: 'catalogo',    label: '📦 Catálogo'  },
     { id: 'adicionais',  label: '🧀 Adicionais' },
+    { id: 'enderecos',   label: '📍 Endereços' },
+    { id: 'horarios',    label: '🕐 Horários'  },
   ];
 
   // ── Lojas ──────────────────────────────────────────────────────────────────
@@ -124,6 +126,8 @@ export class AdminComponent {
     this.refreshEntregadores();
     this.refreshAdicionais();
     this.refreshCategorias();
+    this.refreshEnderecos();
+    this.refreshHorarios();
   }
 
   // ── Equipe: Funcionários ──────────────────────────────────────────────────
@@ -1090,6 +1094,264 @@ export class AdminComponent {
       },
       error: (e) => {
         toast.error(e?.error?.error ?? 'Erro ao alterar disponibilidade do adicional.');
+      },
+    });
+  }
+
+  // ── Endereços da Loja ─────────────────────────────────────────────────────
+
+  private readonly refreshEnderecoTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _enderecos = toSignal(
+    this.refreshEnderecoTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as EnderecoLoja[]);
+        return this.adminService.listarEnderecosLoja(loja.uuid).pipe(
+          catchError(() => of([] as EnderecoLoja[])),
+        );
+      }),
+    ),
+    { initialValue: [] as EnderecoLoja[] },
+  );
+  readonly enderecoLoading = computed(() => this._enderecos() === undefined);
+  readonly enderecos = computed(() => this._enderecos() ?? []);
+
+  private refreshEnderecos() {
+    this.refreshEnderecoTrigger.next();
+  }
+
+  enderecoForm = this.fb.group({
+    cep: [''],
+    logradouro: ['', Validators.required],
+    numero: ['', Validators.required],
+    complemento: [''],
+    bairro: ['', Validators.required],
+    cidade: ['', Validators.required],
+    estado: ['', Validators.required],
+    latitude: [''],
+    longitude: [''],
+  });
+
+  enderecoLoadingSubmit = signal(false);
+  enderecoError = signal('');
+  editEnderecoId = signal<string | null>(null);
+
+  get ee() {
+    return this.enderecoForm.controls;
+  }
+
+  criarEndereco() {
+    if (this.enderecoForm.invalid) {
+      this.enderecoForm.markAllAsTouched();
+      this.enderecoError.set('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.enderecoLoadingSubmit.set(true);
+    this.enderecoError.set('');
+    const fv = this.enderecoForm.value;
+    this.adminService.criarEnderecoLoja(loja.uuid, {
+      cep: fv.cep || null,
+      logradouro: fv.logradouro!,
+      numero: fv.numero!,
+      complemento: fv.complemento || null,
+      bairro: fv.bairro!,
+      cidade: fv.cidade!,
+      estado: fv.estado!,
+      latitude: fv.latitude ? parseFloat(fv.latitude) : null,
+      longitude: fv.longitude ? parseFloat(fv.longitude) : null,
+    }).subscribe({
+      next: () => {
+        this.enderecoLoadingSubmit.set(false);
+        toast.success('Endereço criado com sucesso!');
+        this.enderecoForm.reset();
+        this.refreshEnderecos();
+      },
+      error: (e) => {
+        this.enderecoLoadingSubmit.set(false);
+        this.enderecoError.set(e?.error?.error ?? 'Erro ao criar endereço.');
+      },
+    });
+  }
+
+  abrirEdicaoEndereco(endereco: EnderecoLoja) {
+    this.editEnderecoId.set(endereco.uuid);
+    this.enderecoForm.patchValue({
+      cep: endereco.cep ?? '',
+      logradouro: endereco.logradouro,
+      numero: endereco.numero,
+      complemento: endereco.complemento ?? '',
+      bairro: endereco.bairro,
+      cidade: endereco.cidade,
+      estado: endereco.estado,
+      latitude: endereco.latitude?.toString() ?? '',
+      longitude: endereco.longitude?.toString() ?? '',
+    });
+  }
+
+  cancelarEdicaoEndereco() {
+    this.editEnderecoId.set(null);
+    this.enderecoForm.reset();
+    this.enderecoError.set('');
+  }
+
+  atualizarEndereco() {
+    if (this.enderecoForm.invalid) {
+      this.enderecoForm.markAllAsTouched();
+      this.enderecoError.set('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    const enderecoUuid = this.editEnderecoId();
+    const loja = this.lojaSelecionada();
+    if (!loja || !enderecoUuid) return;
+    this.enderecoLoadingSubmit.set(true);
+    this.enderecoError.set('');
+    const fv = this.enderecoForm.value;
+    this.adminService.atualizarEnderecoLoja(loja.uuid, enderecoUuid, {
+      cep: fv.cep || null,
+      logradouro: fv.logradouro,
+      numero: fv.numero,
+      complemento: fv.complemento || null,
+      bairro: fv.bairro,
+      cidade: fv.cidade,
+      estado: fv.estado,
+      latitude: fv.latitude ? parseFloat(fv.latitude) : null,
+      longitude: fv.longitude ? parseFloat(fv.longitude) : null,
+    }).subscribe({
+      next: () => {
+        this.enderecoLoadingSubmit.set(false);
+        this.editEnderecoId.set(null);
+        toast.success('Endereço atualizado com sucesso!');
+        this.enderecoForm.reset();
+        this.refreshEnderecos();
+      },
+      error: (e) => {
+        this.enderecoLoadingSubmit.set(false);
+        this.enderecoError.set(e?.error?.error ?? 'Erro ao atualizar endereço.');
+      },
+    });
+  }
+
+  deletarEndereco(uuid: string) {
+    if (!confirm('Deletar este endereço? Esta ação não pode ser desfeita.')) return;
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.adminService.deletarEnderecoLoja(loja.uuid, uuid).subscribe({
+      next: () => {
+        toast.success('Endereço deletado com sucesso!');
+        if (this.editEnderecoId() === uuid) {
+          this.cancelarEdicaoEndereco();
+        }
+        this.refreshEnderecos();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar endereço.');
+      },
+    });
+  }
+
+  // ── Horários de Funcionamento ─────────────────────────────────────────────
+
+  private readonly refreshHorarioTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _horarios = toSignal(
+    this.refreshHorarioTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as HorarioFuncionamento[]);
+        return this.adminService.listarHorarios(loja.uuid).pipe(
+          catchError(() => of([] as HorarioFuncionamento[])),
+        );
+      }),
+    ),
+    { initialValue: [] as HorarioFuncionamento[] },
+  );
+  readonly horarioLoading = computed(() => this._horarios() === undefined);
+  readonly horarios = computed(() => this._horarios() ?? []);
+
+  private refreshHorarios() {
+    this.refreshHorarioTrigger.next();
+  }
+
+  readonly diasSemana = [
+    { valor: 0, nome: 'Domingo' },
+    { valor: 1, nome: 'Segunda-feira' },
+    { valor: 2, nome: 'Terça-feira' },
+    { valor: 3, nome: 'Quarta-feira' },
+    { valor: 4, nome: 'Quinta-feira' },
+    { valor: 5, nome: 'Sexta-feira' },
+    { valor: 6, nome: 'Sábado' },
+  ];
+
+  horarioForm = this.fb.group({
+    dia_semana: [0, Validators.required],
+    abertura: ['', Validators.required],
+    fechamento: ['', Validators.required],
+  });
+
+  horarioLoadingSubmit = signal(false);
+  horarioError = signal('');
+
+  get hh() {
+    return this.horarioForm.controls;
+  }
+
+  criarHorario() {
+    if (this.horarioForm.invalid) {
+      this.horarioForm.markAllAsTouched();
+      this.horarioError.set('Preencha todos os campos obrigatórios.');
+      return;
+    }
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.horarioLoadingSubmit.set(true);
+    this.horarioError.set('');
+    const fv = this.horarioForm.value;
+    this.adminService.criarHorario(loja.uuid, {
+      dia_semana: fv.dia_semana!,
+      abertura: fv.abertura!,
+      fechamento: fv.fechamento!,
+    }).subscribe({
+      next: () => {
+        this.horarioLoadingSubmit.set(false);
+        toast.success('Horário criado com sucesso!');
+        this.horarioForm.reset({ dia_semana: 0 });
+        this.refreshHorarios();
+      },
+      error: (e) => {
+        this.horarioLoadingSubmit.set(false);
+        this.horarioError.set(e?.error?.error ?? 'Erro ao criar horário.');
+      },
+    });
+  }
+
+  toggleDiaAtivo(horario: HorarioFuncionamento) {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.adminService.toggleDiaAtivo(loja.uuid, horario.dia_semana, !horario.ativo).subscribe({
+      next: () => {
+        toast.success(`Dia ${horario.ativo ? 'desativado' : 'ativado'} com sucesso!`);
+        this.refreshHorarios();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao alterar status do dia.');
+      },
+    });
+  }
+
+  deletarDia(diaSemana: number, diaNome: string) {
+    if (!confirm(`Deletar horário de ${diaNome}? Esta ação não pode ser desfeita.`)) return;
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    this.adminService.deletarDia(loja.uuid, diaSemana).subscribe({
+      next: () => {
+        toast.success('Horário deletado com sucesso!');
+        this.refreshHorarios();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar horário.');
       },
     });
   }

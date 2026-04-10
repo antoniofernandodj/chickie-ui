@@ -14,6 +14,11 @@ import {
   UpdateFuncionarioRequest,
   UpdateEntregadorRequest,
   MessageResponse,
+  EnderecoLoja,
+  CreateEnderecoLojaRequest,
+  UpdateEnderecoLojaRequest,
+  HorarioFuncionamento,
+  CreateHorarioFuncionamentoRequest,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -97,6 +102,92 @@ export class AdminService {
     return this.http.put<void>(
       `${environment.apiUrl}/entregadores/${lojaUuid}/${entregadorUuid}/disponibilidade`,
       { disponivel },
+    );
+  }
+
+  // ── Endereços de Loja ─────────────────────────────────────────────────────
+
+  listarEnderecosLoja(lojaUuid: string): Observable<EnderecoLoja[]> {
+    return this.http.get<EnderecoLoja[]>(
+      `${environment.apiUrl}/enderecos-loja/${lojaUuid}`,
+    );
+  }
+
+  criarEnderecoLoja(
+    lojaUuid: string,
+    body: CreateEnderecoLojaRequest,
+  ): Observable<{ uuid: string }> {
+    return this.http.post<{ uuid: string }>(
+      `${environment.apiUrl}/enderecos-loja/${lojaUuid}`,
+      body,
+    );
+  }
+
+  atualizarEnderecoLoja(
+    lojaUuid: string,
+    enderecoUuid: string,
+    body: UpdateEnderecoLojaRequest,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${environment.apiUrl}/enderecos-loja/${lojaUuid}/${enderecoUuid}`,
+      body,
+    );
+  }
+
+  deletarEnderecoLoja(
+    lojaUuid: string,
+    enderecoUuid: string,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}/enderecos-loja/${lojaUuid}/${enderecoUuid}`,
+    );
+  }
+
+  // ── Horários de Funcionamento ─────────────────────────────────────────────
+
+  listarHorarios(lojaUuid: string): Observable<HorarioFuncionamento[]> {
+    return this.http.get<HorarioFuncionamento[]>(
+      `${environment.apiUrl}/horarios/${lojaUuid}`,
+    );
+  }
+
+  criarHorario(
+    lojaUuid: string,
+    body: CreateHorarioFuncionamentoRequest,
+  ): Observable<HorarioFuncionamento> {
+    return this.http.post<HorarioFuncionamento>(
+      `${environment.apiUrl}/horarios/${lojaUuid}`,
+      body,
+    );
+  }
+
+  atualizarHorario(
+    lojaUuid: string,
+    body: CreateHorarioFuncionamentoRequest,
+  ): Observable<HorarioFuncionamento> {
+    return this.http.post<HorarioFuncionamento>(
+      `${environment.apiUrl}/horarios/${lojaUuid}`,
+      body,
+    );
+  }
+
+  toggleDiaAtivo(
+    lojaUuid: string,
+    diaSemana: number,
+    ativo: boolean,
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${environment.apiUrl}/horarios/${lojaUuid}/dia/${diaSemana}/ativo`,
+      { ativo },
+    );
+  }
+
+  deletarDia(
+    lojaUuid: string,
+    diaSemana: number,
+  ): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}/horarios/${lojaUuid}/dia/${diaSemana}`,
     );
   }
 }

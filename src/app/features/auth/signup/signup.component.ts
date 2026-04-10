@@ -26,7 +26,7 @@ export class SignupComponent {
     username: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
     email: ['', [Validators.required, Validators.email]],
     senha: ['', [Validators.required, Validators.minLength(6)]],
-    telefone: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+    celular: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
     auth_method: ['email'],
     classe: ['cliente' as ClasseUsuario],
   });
@@ -121,7 +121,7 @@ export class SignupComponent {
       username: formValue.username!,
       email: formValue.email!,
       senha: formValue.senha!,
-      telefone: formValue.telefone!,
+      celular: formValue.celular!,
       auth_method: formValue.auth_method!,
       classe: formValue.classe!,
     }).subscribe({
