@@ -4,10 +4,11 @@ import { ReactiveFormsModule, FormBuilder, Validators, AsyncValidatorFn, Abstrac
 import { AuthService } from '../../../core/services/auth.service';
 import { ClasseUsuario } from '../../../core/models';
 import { debounceTime, distinctUntilChanged, filter, switchMap, catchError, of, map } from 'rxjs';
+import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 
 @Component({
   selector: 'app-signup',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, PhoneMaskDirective],
   templateUrl: './signup.component.html',
 })
 export class SignupComponent {
@@ -25,7 +26,7 @@ export class SignupComponent {
     username: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
     email: ['', [Validators.required, Validators.email]],
     senha: ['', [Validators.required, Validators.minLength(6)]],
-    telefone: ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+    telefone: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
     auth_method: ['email'],
     classe: ['cliente' as ClasseUsuario],
   });

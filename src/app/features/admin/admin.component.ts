@@ -9,11 +9,12 @@ import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
+import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
 import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster],
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective],
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
@@ -178,7 +179,7 @@ export class AdminComponent {
     username:      ['', [Validators.required, Validators.minLength(3)]],
     email:         ['', [Validators.required, Validators.email]],
     senha:         ['', [Validators.required, Validators.minLength(6)]],
-    celular:       ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+    celular:       ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
     cargo:         [''],
     salario:       [0, [Validators.required, Validators.min(0)]],
     data_admissao: ['', Validators.required],
@@ -452,7 +453,7 @@ export class AdminComponent {
     username: ['', [Validators.required, Validators.minLength(3)]],
     email:    ['', [Validators.required, Validators.email]],
     senha:    ['', [Validators.required, Validators.minLength(6)]],
-    celular:  ['', [Validators.required, Validators.pattern(/^\d{10,11}$/)]],
+    celular:  ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
     veiculo:  [''],
     placa:    [''],
   });
