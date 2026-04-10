@@ -1312,7 +1312,7 @@ export class AdminComponent {
     this.horarioError.set('');
     const fv = this.horarioForm.value;
     this.adminService.criarHorario(loja.uuid, {
-      dia_semana: fv.dia_semana!,
+      dia_semana: parseInt(fv.dia_semana as unknown as string, 10),
       abertura: fv.abertura!,
       fechamento: fv.fechamento!,
     }).subscribe({
