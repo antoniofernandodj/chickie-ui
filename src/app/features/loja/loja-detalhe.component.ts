@@ -67,6 +67,44 @@ export class LojaDetalheComponent {
   readonly horarios = computed(() => this._horarios() ?? []);
   readonly diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
+  // Verificar se a loja está aberta agora (horário de Brasília)
+  readonly lojaAbertaAgora = computed(() => {
+    const horarios = this.horarios();
+    if (!horarios || horarios.length === 0) {
+      // Se não tem horários, usa o campo 'ativa' da loja
+      return this.loja()?.ativa ?? false;
+    }
+
+    // Obter hora atual de Brasília (UTC-3)
+    const agoraUTC = new Date();
+    const offsetBrasilia = -3; // UTC-3
+    const offsetLocal = agoraUTC.getTimezoneOffset(); // em minutos
+    const offsetBrasiliaMin = offsetBrasilia * 60; // em segundos
+    const agoraBrasilia = new Date(agoraUTC.getTime() + (offsetBrasiliaMin + offsetLocal * 60) * 1000);
+    
+    const diaSemana = agoraBrasilia.getDay(); // 0=Domingo, 1=Segunda, ..., 6=Sábado
+    const horaAtual = agoraBrasilia.getHours();
+    const minutoAtual = agoraBrasilia.getMinutes();
+    const minutoDoDia = horaAtual * 60 + minutoAtual; // Total de minutos desde 00:00
+
+    // Encontrar horário do dia atual
+    const horarioDoDia = horarios.find(h => h.dia_semana === diaSemana && h.ativo);
+    
+    if (!horarioDoDia) {
+      return false; // Loja fechada neste dia
+    }
+
+    // Converter horários de abertura e fechamento para minutos
+    const [aberturaHora, aberturaMinuto] = horarioDoDia.abertura.split(':').map(Number);
+    const [fechamentoHora, fechamentoMinuto] = horarioDoDia.fechamento.split(':').map(Number);
+    
+    const minutoAbertura = aberturaHora * 60 + aberturaMinuto;
+    const minutoFechamento = fechamentoHora * 60 + fechamentoMinuto;
+
+    // Verificar se está dentro do horário
+    return minutoDoDia >= minutoAbertura && minutoDoDia <= minutoFechamento;
+  });
+
   // Catálogo: Categorias e Produtos
   readonly _categorias = toSignal(
     this.route.paramMap.pipe(
