@@ -112,12 +112,22 @@ export class LojaDetalheComponent {
     const cats = this.categorias();
     const prods = this.produtos().filter((p) => p.disponivel);
     
-    return cats
-      .map((cat) => ({
-        categoria: cat,
-        produtos: prods.filter((p) => p.categoria_uuid === cat.uuid),
-      }))
+    console.log('📊 Categorias:', cats);
+    console.log('📦 Produtos disponíveis:', prods);
+    
+    const grouped = cats
+      .map((cat) => {
+        const catProds = prods.filter((p) => p.categoria_uuid === cat.uuid);
+        console.log(`📂 Categoria ${cat.nome} (${cat.uuid}): ${catProds.length} produtos`, catProds);
+        return {
+          categoria: cat,
+          produtos: catProds,
+        };
+      })
       .filter((group) => group.produtos.length > 0);
+    
+    console.log('📊 Grupos finais:', grouped);
+    return grouped;
   });
 
   toggleFav() {
