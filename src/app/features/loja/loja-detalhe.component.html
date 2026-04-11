@@ -93,10 +93,37 @@
       <p class="text-gray-500 text-sm mb-8 leading-relaxed max-w-2xl">{{ loja()!.descricao }}</p>
     }
 
+    <!-- Horários de Funcionamento -->
+    @if (horarios().length > 0) {
+      <section class="mb-10">
+        <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          🕒 Horários de Funcionamento
+        </h2>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="divide-y divide-gray-100">
+            @for (horario of horarios(); track horario.uuid) {
+              <div class="px-6 py-4 flex items-center justify-between">
+                <span class="font-medium text-gray-900 text-sm">
+                  {{ formatarDia(horario.dia_semana) }}
+                </span>
+                @if (horario.ativo) {
+                  <span class="text-gray-600 text-sm">
+                    {{ horario.abertura }} – {{ horario.fechamento }}
+                  </span>
+                } @else {
+                  <span class="text-gray-400 text-sm">Fechado</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+    }
+
     @if (!auth.isAuthenticated()) {
-      <div class="bg-orange-50 border border-orange-100 rounded-2xl p-8 text-center max-w-md mx-auto">
+      <div class="bg-orange-50 border border-orange-100 rounded-2xl p-8 text-center max-w-md mx-auto mb-10">
         <div class="text-4xl mb-3">🔒</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Faça login para ver o cardápio</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Faça login para ver o cardápio completo</h2>
         <p class="text-gray-500 text-sm mb-5">Acesse sua conta para ver produtos e fazer pedidos.</p>
         <div class="flex justify-center gap-3">
           <a routerLink="/auth/login"
@@ -108,92 +135,139 @@
           </a>
         </div>
       </div>
-    } @else if (produtosLoading()) {
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        @for (_ of skeletons; track $index) {
-          <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div class="h-36 skeleton bg-gray-200"></div>
-            <div class="p-4 space-y-2">
-              <div class="h-4 skeleton bg-gray-200 rounded w-3/4"></div>
-              <div class="h-3 skeleton bg-gray-100 rounded w-full"></div>
-              <div class="h-5 skeleton bg-gray-100 rounded w-1/3 mt-2"></div>
-            </div>
-          </div>
-        }
-      </div>
-    } @else if (produtos().length === 0) {
-      <div class="text-center py-16">
-        <div class="text-5xl mb-3">🍽️</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-1">Cardápio vazio</h2>
-        <p class="text-gray-500 text-sm">Esta loja ainda não adicionou produtos.</p>
-      </div>
-    } @else {
-      <!-- Destaques -->
-      @if (destaques().length > 0) {
-        <section class="mb-10">
-          <h2 class="text-lg font-bold text-gray-900 mb-4">⭐ Destaques</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            @for (p of destaques(); track p.uuid) {
-              <div (click)="selecionarProduto(p)"
-                   class="bg-white rounded-2xl shadow-sm border-2 border-orange-100 overflow-hidden cursor-pointer
-                          hover:shadow-md hover:-translate-y-0.5 transition-all group">
-                <div class="relative h-40 overflow-hidden">
-                  @if (p.imagem_url) {
-                    <img [src]="p.imagem_url" [alt]="p.nome"
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
-                  } @else {
-                    <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center text-4xl opacity-50">🍴</div>
-                  }
-                </div>
-                <div class="p-4">
-                  <h3 class="font-semibold text-gray-900 text-sm mb-1">{{ p.nome }}</h3>
-                  @if (p.descricao) {
-                    <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ p.descricao }}</p>
-                  }
-                  <div class="flex items-center justify-between">
-                    <span class="font-bold text-base" style="color:var(--color-brand)">R$ {{ p.preco | number:'1.2-2' }}</span>
-                    <span class="text-xs text-gray-400">{{ p.tempo_preparo_min }}min</span>
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-        </section>
-      }
+    }
 
-      <!-- Todos disponíveis -->
-      <section>
-        <h2 class="text-lg font-bold text-gray-900 mb-4">Cardápio</h2>
+    @if (auth.isAuthenticated()) {
+      @if (produtosLoading()) {
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          @for (p of disponiveis(); track p.uuid) {
-            <div (click)="selecionarProduto(p)"
-                 class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer
-                        hover:shadow-md hover:-translate-y-0.5 transition-all group">
-              <div class="relative h-36 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-                @if (p.imagem_url) {
-                  <img [src]="p.imagem_url" [alt]="p.nome"
-                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
-                } @else {
-                  <div class="w-full h-full flex items-center justify-center text-3xl opacity-30">🍴</div>
-                }
-                @if (p.destaque) {
-                  <span class="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">★</span>
-                }
-              </div>
-              <div class="p-4">
-                <h3 class="font-semibold text-gray-900 text-sm leading-tight mb-1">{{ p.nome }}</h3>
-                @if (p.descricao) {
-                  <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ p.descricao }}</p>
-                }
-                <div class="flex items-center justify-between">
-                  <span class="font-bold" style="color:var(--color-brand)">R$ {{ p.preco | number:'1.2-2' }}</span>
-                  <span class="text-xs text-gray-400">{{ p.tempo_preparo_min }}min</span>
-                </div>
+          @for (_ of skeletons; track $index) {
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div class="h-36 skeleton bg-gray-200"></div>
+              <div class="p-4 space-y-2">
+                <div class="h-4 skeleton bg-gray-200 rounded w-3/4"></div>
+                <div class="h-3 skeleton bg-gray-100 rounded w-full"></div>
+                <div class="h-5 skeleton bg-gray-100 rounded w-1/3 mt-2"></div>
               </div>
             </div>
           }
         </div>
-      </section>
+      } @else if (produtos().length === 0) {
+        <div class="text-center py-16">
+          <div class="text-5xl mb-3">🍽️</div>
+          <h2 class="text-lg font-semibold text-gray-800 mb-1">Cardápio vazio</h2>
+          <p class="text-gray-500 text-sm">Esta loja ainda não adicionou produtos.</p>
+        </div>
+      } @else {
+        <!-- Destaques -->
+        @if (destaques().length > 0) {
+          <section class="mb-10">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">⭐ Destaques</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (p of destaques(); track p.uuid) {
+                <div (click)="selecionarProduto(p)"
+                     class="bg-white rounded-2xl shadow-sm border-2 border-orange-100 overflow-hidden cursor-pointer
+                            hover:shadow-md hover:-translate-y-0.5 transition-all group">
+                  <div class="relative h-40 overflow-hidden">
+                    @if (p.imagem_url) {
+                      <img [src]="p.imagem_url" [alt]="p.nome"
+                           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                    } @else {
+                      <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center text-4xl opacity-50">🍴</div>
+                    }
+                  </div>
+                  <div class="p-4">
+                    <h3 class="font-semibold text-gray-900 text-sm mb-1">{{ p.nome }}</h3>
+                    @if (p.descricao) {
+                      <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ p.descricao }}</p>
+                    }
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-base" style="color:var(--color-brand)">R$ {{ p.preco | number:'1.2-2' }}</span>
+                      <span class="text-xs text-gray-400">{{ p.tempo_preparo_min }}min</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- Produtos por Categoria -->
+        @if (produtosPorCategoria().length > 0) {
+          @for (group of produtosPorCategoria(); track group.categoria.uuid) {
+            <section class="mb-10">
+              <h2 class="text-lg font-bold text-gray-900 mb-4">
+                {{ group.categoria.nome }}
+                @if (group.categoria.descricao) {
+                  <span class="text-sm font-normal text-gray-500 ml-2">— {{ group.categoria.descricao }}</span>
+                }
+              </h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @for (p of group.produtos; track p.uuid) {
+                  <div (click)="selecionarProduto(p)"
+                       class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer
+                              hover:shadow-md hover:-translate-y-0.5 transition-all group">
+                    <div class="relative h-36 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                      @if (p.imagem_url) {
+                        <img [src]="p.imagem_url" [alt]="p.nome"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                      } @else {
+                        <div class="w-full h-full flex items-center justify-center text-3xl opacity-30">🍴</div>
+                      }
+                      @if (p.destaque) {
+                        <span class="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">★</span>
+                      }
+                    </div>
+                    <div class="p-4">
+                      <h3 class="font-semibold text-gray-900 text-sm leading-tight mb-1">{{ p.nome }}</h3>
+                      @if (p.descricao) {
+                        <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ p.descricao }}</p>
+                      }
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold" style="color:var(--color-brand)">R$ {{ p.preco | number:'1.2-2' }}</span>
+                        <span class="text-xs text-gray-400">{{ p.tempo_preparo_min }}min</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        } @else {
+          <!-- Todos disponíveis (sem categorias) -->
+          <section>
+            <h2 class="text-lg font-bold text-gray-900 mb-4">Cardápio</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (p of disponiveis(); track p.uuid) {
+                <div (click)="selecionarProduto(p)"
+                     class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer
+                            hover:shadow-md hover:-translate-y-0.5 transition-all group">
+                  <div class="relative h-36 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                    @if (p.imagem_url) {
+                      <img [src]="p.imagem_url" [alt]="p.nome"
+                           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"/>
+                    } @else {
+                      <div class="w-full h-full flex items-center justify-center text-3xl opacity-30">🍴</div>
+                    }
+                    @if (p.destaque) {
+                      <span class="absolute top-2 right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full">★</span>
+                    }
+                  </div>
+                  <div class="p-4">
+                    <h3 class="font-semibold text-gray-900 text-sm leading-tight mb-1">{{ p.nome }}</h3>
+                    @if (p.descricao) {
+                      <p class="text-xs text-gray-500 line-clamp-2 mb-3">{{ p.descricao }}</p>
+                    }
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold" style="color:var(--color-brand)">R$ {{ p.preco | number:'1.2-2' }}</span>
+                      <span class="text-xs text-gray-400">{{ p.tempo_preparo_min }}min</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </section>
+        }
+      }
     }
   </main>
 }

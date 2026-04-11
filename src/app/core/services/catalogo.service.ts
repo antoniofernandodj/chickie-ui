@@ -132,6 +132,7 @@ export class CatalogoService {
     return this.http.get<Produto[]>(this.prodBase);
   }
 
+  /** Público — listar produtos por loja */
   listarProdutosPorLoja(lojaUuid: string): Observable<Produto[]> {
     return this.http.get<Produto[]>(`${this.prodBase}/listar/${lojaUuid}`);
   }

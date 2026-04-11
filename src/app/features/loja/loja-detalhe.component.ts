@@ -4,10 +4,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { switchMap, catchError, of, map, tap, forkJoin } from 'rxjs';
 import { LojaService } from '../../core/services/loja.service';
-import { ProdutoService } from '../../core/services/produto.service';
+import { CatalogoService } from '../../core/services/catalogo.service';
+import { HorarioService } from '../../core/services/horario.service';
 import { FavoritosService } from '../../core/services/favoritos.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Produto } from '../../core/models';
+import { Produto, CategoriaProdutos, HorarioFuncionamento } from '../../core/models';
 
 @Component({
   selector: 'app-loja-detalhe',
@@ -17,7 +18,8 @@ import { Produto } from '../../core/models';
 export class LojaDetalheComponent {
   private route = inject(ActivatedRoute);
   private lojaService = inject(LojaService);
-  private produtoService = inject(ProdutoService);
+  private catalogoService = inject(CatalogoService);
+  private horarioService = inject(HorarioService);
   private favService = inject(FavoritosService);
   readonly auth = inject(AuthService);
 
@@ -45,14 +47,78 @@ export class LojaDetalheComponent {
 
   readonly lojaLoading = computed(() => this.loja() === undefined);
 
+  // Horários de funcionamento
+  readonly _horarios = toSignal(
+    this.route.paramMap.pipe(
+      map((p) => p.get('slug')!),
+      switchMap((slug) =>
+        this.lojaService.buscarPorSlug(slug).pipe(
+          switchMap((loja) =>
+            this.horarioService.listarPorLoja(loja.uuid).pipe(
+              catchError(() => of([])),
+            ),
+          ),
+          catchError(() => of([])),
+        ),
+      ),
+    ),
+  );
+
+  readonly horarios = computed(() => this._horarios() ?? []);
+  readonly diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+  // Catálogo: Categorias e Produtos
+  readonly _categorias = toSignal(
+    this.route.paramMap.pipe(
+      map((p) => p.get('slug')!),
+      switchMap((slug) =>
+        this.lojaService.buscarPorSlug(slug).pipe(
+          switchMap((loja) =>
+            this.catalogoService.listarCategorias(loja.uuid).pipe(
+              catchError(() => of([])),
+            ),
+          ),
+          catchError(() => of([])),
+        ),
+      ),
+    ),
+  );
+
+  readonly categorias = computed(() => (this._categorias() ?? []).sort((a, b) => a.ordem - b.ordem));
+
   readonly _produtos = toSignal(
-    this.produtoService.listar().pipe(catchError(() => of([]))),
+    this.route.paramMap.pipe(
+      map((p) => p.get('slug')!),
+      switchMap((slug) =>
+        this.lojaService.buscarPorSlug(slug).pipe(
+          switchMap((loja) =>
+            this.catalogoService.listarProdutosPorLoja(loja.uuid).pipe(
+              catchError(() => of([])),
+            ),
+          ),
+          catchError(() => of([])),
+        ),
+      ),
+    ),
   );
 
   readonly produtosLoading = computed(() => this._produtos() === undefined);
   readonly produtos = computed(() => this._produtos() ?? []);
   readonly destaques = computed(() => this.produtos().filter((p) => p.destaque && p.disponivel));
   readonly disponiveis = computed(() => this.produtos().filter((p) => p.disponivel));
+
+  // Agrupar produtos por categoria
+  readonly produtosPorCategoria = computed(() => {
+    const cats = this.categorias();
+    const prods = this.produtos().filter((p) => p.disponivel);
+    
+    return cats
+      .map((cat) => ({
+        categoria: cat,
+        produtos: prods.filter((p) => p.categoria_uuid === cat.uuid),
+      }))
+      .filter((group) => group.produtos.length > 0);
+  });
 
   toggleFav() {
     const l = this.loja();
@@ -69,5 +135,9 @@ export class LojaDetalheComponent {
   selecionarProduto(p: Produto) {
     // TODO: modal de carrinho
     console.log('Produto selecionado:', p.nome);
+  }
+
+  formatarDia(dia: number): string {
+    return this.diasSemana[dia] || '';
   }
 }
