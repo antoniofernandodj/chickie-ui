@@ -1164,6 +1164,9 @@ export class AdminComponent {
     this.cupomLoadingSubmit.set(true);
     this.cupomError.set('');
     const fv = this.cupomForm.value;
+    // Convert date string (YYYY-MM-DD) to ISO 8601 format with end of day time
+    const dataValidadeIso = fv.data_validade ? `${fv.data_validade}T23:59:59Z` : undefined;
+    
     this.marketingService.criarCupom({
       loja_uuid: loja.uuid,
       codigo: fv.codigo!,
@@ -1171,7 +1174,7 @@ export class AdminComponent {
       tipo_desconto: fv.tipo_desconto!,
       valor_desconto: fv.valor_desconto!,
       valor_minimo: fv.valor_minimo!,
-      data_validade: fv.data_validade!,
+      data_validade: dataValidadeIso!,
       limite_uso: fv.limite_uso!,
     }).subscribe({
       next: () => {
@@ -1216,13 +1219,16 @@ export class AdminComponent {
     this.cupomLoadingSubmit.set(true);
     this.cupomError.set('');
     const fv = this.cupomForm.value;
+    // Convert date string (YYYY-MM-DD) to ISO 8601 format with end of day time
+    const dataValidadeIso = fv.data_validade ? `${fv.data_validade}T23:59:59Z` : undefined;
+    
     const updateRequest: UpdateCupomRequest = {
       codigo: fv.codigo ?? undefined,
       descricao: fv.descricao ?? undefined,
       tipo_desconto: fv.tipo_desconto ?? undefined,
       valor_desconto: fv.valor_desconto ?? undefined,
       valor_minimo: fv.valor_minimo ?? undefined,
-      data_validade: fv.data_validade ?? undefined,
+      data_validade: dataValidadeIso,
       limite_uso: fv.limite_uso ?? undefined,
     };
     this.marketingService.atualizarCupom(uuid, updateRequest).subscribe({
