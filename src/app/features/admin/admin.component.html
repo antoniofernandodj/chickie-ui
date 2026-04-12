@@ -2,200 +2,69 @@
 
   <ngx-sonner-toaster />
 
-  <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold text-gray-900">Painel Admin</h1>
-    <p class="text-gray-500 text-sm mt-1">Gerencie lojas, equipe e catálogo</p>
-  </div>
-
-  <!-- Tabs -->
-  <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8 overflow-x-auto">
-    @for (tab of tabs; track tab.id) {
-      <button
-        (click)="aba.set(tab.id)"
-        class="shrink-0 py-2 px-4 rounded-lg text-sm font-medium transition-all"
-        [class.bg-white]="aba() === tab.id"
-        [class.shadow-sm]="aba() === tab.id"
-        [class.text-gray-900]="aba() === tab.id"
-        [class.text-gray-500]="aba() !== tab.id"
-      >{{ tab.label }}</button>
-    }
-  </div>
-
-  <!-- ── ABA: LOJAS ──────────────────────────────────────────────────── -->
-  @if (aba() === 'lojas') {
-    <div class="grid lg:grid-cols-2 gap-8">
-      <!-- Criar loja -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-base font-semibold text-gray-900 mb-5">Criar nova loja</h2>
-        <form [formGroup]="lojaForm" (ngSubmit)="criarLoja()" class="space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Nome *</label>
-              <input type="text" formControlName="nome"
-                     [class.border-red-400]="fl.nome.invalid && fl.nome.touched"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-              @if (fl.nome.invalid && fl.nome.touched) {
-                <p class="text-xs text-red-600 mt-1">Nome é obrigatório (mín. 3 caracteres).</p>
-              }
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Slug *</label>
-              <input type="text" formControlName="slug"
-                     [class.border-red-400]="fl.slug.invalid && fl.slug.touched"
-                     [class.border-green-400]="slugAvailable() === true"
-                     placeholder="minha-loja"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-              @if (fl.slug.invalid && fl.slug.touched) {
-                <p class="text-xs text-red-600 mt-1">Slug é obrigatório (apenas letras minúsculas, números e hífen).</p>
-              }
-              @if (!fl.slug.invalid && slugChecking()) {
-                <p class="text-xs text-gray-500 mt-1">
-                  <span class="inline-flex items-center gap-1">
-                    <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Verificando...
-                  </span>
-                </p>
-              }
-              @if (!fl.slug.invalid && !slugChecking() && slugAvailable() === true) {
-                <p class="text-xs text-green-600 mt-1">✅ {{ slugMessage() }}</p>
-              }
-              @if (!fl.slug.invalid && !slugChecking() && slugAvailable() === false) {
-                <p class="text-xs text-red-600 mt-1">❌ {{ slugMessage() }}</p>
-              }
-              @if (!fl.slug.invalid && !slugChecking() && slugAvailable() === null && slugMessage()) {
-                <p class="text-xs text-red-600 mt-1">{{ slugMessage() }}</p>
-              }
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">E-mail de contato *</label>
-              <input type="email" formControlName="email_contato"
-                     [class.border-red-400]="fl.email_contato.invalid && fl.email_contato.touched"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-              @if (fl.email_contato.invalid && fl.email_contato.touched) {
-                <p class="text-xs text-red-600 mt-1">E-mail é obrigatório e deve ser válido.</p>
-              }
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Celular *</label>
-              <input type="tel" formControlName="celular"
-                     placeholder="21 9 9999-9999"
-                     appPhoneMask
-                     [class.border-red-400]="fl.celular.invalid && fl.celular.touched"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-              @if (fl.celular.invalid && fl.celular.touched) {
-                <p class="text-xs text-red-600 mt-1">
-                  @if (fl.celular.errors?.['required']) { Celular é obrigatório. }
-                  @else if (fl.celular.errors?.['pattern']) { Celular deve ter 11 dígitos. }
-                </p>
-              }
-            </div>
-            <div class="col-span-2">
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Descrição</label>
-              <textarea formControlName="descricao" rows="2"
-                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 resize-none"></textarea>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Taxa entrega (R$)</label>
-              <input type="number" formControlName="taxa_entrega_base" min="0" step="0.5"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Pedido mínimo (R$)</label>
-              <input type="number" formControlName="pedido_minimo" min="0" step="1"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Tempo médio (min)</label>
-              <input type="number" formControlName="tempo_medio" min="1"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1.5">Máx. partes</label>
-              <input type="number" formControlName="max_partes" min="1" max="8"
-                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
-            </div>
-          </div>
-
-          @if (lojaError()) {
-            <p class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ lojaError() }}</p>
-          }
-          @if (lojaSuccess()) {
-            <p class="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">✅ {{ lojaSuccess() }}</p>
-          }
-
-          <button type="submit" [disabled]="lojaLoading() || lojaForm.invalid"
-                  class="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
-                  style="background:var(--color-brand)">
-            @if (lojaLoading()) { Criando... } @else { Criar loja }
-          </button>
-        </form>
-      </div>
-
-      <!-- Lista de lojas -->
-      <div>
-        <h2 class="text-base font-semibold text-gray-900 mb-4">Lojas cadastradas</h2>
-        @if (lojasLoading()) {
-          <div class="space-y-3">
-            @for (_ of [1,2,3]; track $index) {
-              <div class="bg-white rounded-2xl h-20 skeleton"></div>
-            }
-          </div>
-        } @else if (lojas().length === 0) {
-          <div class="text-center py-10 text-gray-400 text-sm">Nenhuma loja cadastrada.</div>
-        } @else {
-          <div class="space-y-3">
-            @for (loja of lojas(); track loja.uuid) {
-              <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4
-                          flex items-center gap-4 cursor-pointer hover:border-orange-200 transition-colors"
-                   (click)="selecionarLoja(loja)">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-                     style="background:var(--color-brand)">
-                  {{ loja.nome.charAt(0) }}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-gray-900 text-sm truncate">{{ loja.nome }}</p>
-                  <p class="text-xs text-gray-500">{{ loja.slug }} · R$ {{ loja.taxa_entrega | number:'1.2-2' }} entrega</p>
-                </div>
-                <span class="shrink-0 text-xs px-2 py-1 rounded-full font-medium"
-                      [class.bg-green-100]="loja.ativa"
-                      [class.text-green-700]="loja.ativa"
-                      [class.bg-gray-100]="!loja.ativa"
-                      [class.text-gray-500]="!loja.ativa">
-                  {{ loja.ativa ? 'Ativa' : 'Inativa' }}
-                </span>
-              </div>
-            }
-          </div>
-        }
+  <!-- Loading -->
+  @if (lojaLoading()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <svg class="animate-spin h-10 w-10 mx-auto mb-4" style="color:var(--color-brand)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-500 text-sm">Carregando painel da empresa...</p>
       </div>
     </div>
-  }
-
-  <!-- ── ABA: EQUIPE ─────────────────────────────────────────────────── -->
-  @if (aba() === 'equipe') {
-    @if (!lojaSelecionada()) {
-      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <div class="text-5xl mb-3">🏪</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Selecione uma loja</h2>
-        <p class="text-gray-500 text-sm">Vá para a aba <strong>Lojas</strong> e clique em uma loja para gerenciar sua equipe.</p>
+  } @else if (!lojaSelecionada()) {
+    <!-- Loja não encontrada -->
+    <div class="min-h-[60vh] flex items-center justify-center text-center px-4">
+      <div>
+        <div class="text-5xl mb-4">😕</div>
+        <h1 class="text-xl font-bold text-gray-800 mb-2">Empresa não encontrada</h1>
+        <p class="text-gray-500 text-sm mb-6">A empresa que você busca não existe ou foi removida.</p>
+        <button (click)="voltar()"
+                class="px-5 py-2.5 rounded-xl font-semibold text-sm text-white"
+                style="background:var(--color-brand)">
+          ← Voltar para Minhas Empresas
+        </button>
       </div>
-    } @else {
-      <div class="mb-6 flex items-center gap-3">
+    </div>
+  } @else {
+    <!-- Header com breadcrumb -->
+    <div class="mb-6">
+      <button (click)="voltar()"
+              class="text-sm text-gray-500 hover:text-gray-800 mb-3 flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Minhas Empresas
+      </button>
+      <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
              style="background:var(--color-brand)">
           {{ lojaSelecionada()!.nome.charAt(0) }}
         </div>
         <div>
-          <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
-          <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
+          <h1 class="text-xl font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</h1>
+          <p class="text-gray-500 text-sm">{{ lojaSelecionada()!.slug }}</p>
         </div>
-        <button (click)="lojaSelecionada.set(null)" class="ml-auto text-xs text-gray-400 hover:text-gray-700">Trocar loja</button>
       </div>
+    </div>
 
+    <!-- Tabs -->
+    <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8 overflow-x-auto">
+      @for (tab of tabs; track tab.id) {
+        <button
+          (click)="aba.set(tab.id)"
+          class="shrink-0 py-2 px-4 rounded-lg text-sm font-medium transition-all"
+          [class.bg-white]="aba() === tab.id"
+          [class.shadow-sm]="aba() === tab.id"
+          [class.text-gray-900]="aba() === tab.id"
+          [class.text-gray-500]="aba() !== tab.id"
+        >{{ tab.label }}</button>
+      }
+    </div>
+
+  <!-- ── ABA: EQUIPE ─────────────────────────────────────────────────── -->
+  @if (aba() === 'equipe') {
       <div class="grid md:grid-cols-2 gap-6">
         <!-- Funcionário -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -646,24 +515,16 @@
 
   <!-- ── ABA: CATÁLOGO ───────────────────────────────────────────────── -->
   @if (aba() === 'catalogo') {
-    @if (!lojaSelecionada()) {
-      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <div class="text-5xl mb-3">🏪</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Selecione uma loja</h2>
-        <p class="text-gray-500 text-sm">Vá para a aba <strong>Lojas</strong> e clique em uma loja para gerenciar o catálogo.</p>
+    <div class="mb-6 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
+           style="background:var(--color-brand)">
+        {{ lojaSelecionada()!.nome.charAt(0) }}
       </div>
-    } @else {
-      <div class="mb-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-             style="background:var(--color-brand)">
-          {{ lojaSelecionada()!.nome.charAt(0) }}
-        </div>
-        <div>
-          <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
-          <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
-        </div>
-        <button (click)="lojaSelecionada.set(null)" class="ml-auto text-xs text-gray-400 hover:text-gray-700">Trocar loja</button>
+      <div>
+        <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
+        <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
       </div>
+    </div>
 
       <div class="grid lg:grid-cols-2 gap-8">
         <!-- Categorias -->
@@ -924,29 +785,20 @@
           </form>
         </div>
       </div>
-    }
   }
 
   <!-- ── ABA: ADICIONAIS ───────────────────────────────────────────────── -->
   @if (aba() === 'adicionais') {
-    @if (!lojaSelecionada()) {
-      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <div class="text-5xl mb-3">🏪</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Selecione uma loja</h2>
-        <p class="text-gray-500 text-sm">Vá para a aba <strong>Lojas</strong> e clique em uma loja para gerenciar os adicionais.</p>
+    <div class="mb-6 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
+           style="background:var(--color-brand)">
+        {{ lojaSelecionada()!.nome.charAt(0) }}
       </div>
-    } @else {
-      <div class="mb-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-             style="background:var(--color-brand)">
-          {{ lojaSelecionada()!.nome.charAt(0) }}
-        </div>
-        <div>
-          <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
-          <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
-        </div>
-        <button (click)="lojaSelecionada.set(null)" class="ml-auto text-xs text-gray-400 hover:text-gray-700">Trocar loja</button>
+      <div>
+        <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
+        <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
       </div>
+    </div>
 
       <div class="grid lg:grid-cols-2 gap-8">
         <!-- Lista de adicionais -->
@@ -1077,29 +929,20 @@
           </form>
         </div>
       </div>
-    }
   }
 
   <!-- ── ABA: CUPONS ──────────────────────────────────────────────────── -->
   @if (aba() === 'cupons') {
-    @if (!lojaSelecionada()) {
-      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <div class="text-5xl mb-3">🏪</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Selecione uma loja</h2>
-        <p class="text-gray-500 text-sm">Vá para a aba <strong>Lojas</strong> e clique em uma loja para gerenciar seus cupons.</p>
+    <div class="mb-6 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
+           style="background:var(--color-brand)">
+        {{ lojaSelecionada()!.nome.charAt(0) }}
       </div>
-    } @else {
-      <div class="mb-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-             style="background:var(--color-brand)">
-          {{ lojaSelecionada()!.nome.charAt(0) }}
-        </div>
-        <div>
-          <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
-          <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
-        </div>
-        <button (click)="lojaSelecionada.set(null)" class="ml-auto text-xs text-gray-400 hover:text-gray-700">Trocar loja</button>
+      <div>
+        <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
+        <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
       </div>
+    </div>
 
       <div class="grid lg:grid-cols-2 gap-8">
         <!-- Formulário de Cupom -->
@@ -1306,29 +1149,20 @@
           }
         </div>
       </div>
-    }
   }
 
   <!-- ── ABA: AVALIAÇÕES ──────────────────────────────────────────────── -->
   @if (aba() === 'avaliacoes') {
-    @if (!lojaSelecionada()) {
-      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <div class="text-5xl mb-3">🏪</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Selecione uma loja</h2>
-        <p class="text-gray-500 text-sm">Vá para a aba <strong>Lojas</strong> e clique em uma loja para gerenciar suas avaliações.</p>
+    <div class="mb-6 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
+           style="background:var(--color-brand)">
+        {{ lojaSelecionada()!.nome.charAt(0) }}
       </div>
-    } @else {
-      <div class="mb-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-             style="background:var(--color-brand)">
-          {{ lojaSelecionada()!.nome.charAt(0) }}
-        </div>
-        <div>
-          <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
-          <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
-        </div>
-        <button (click)="lojaSelecionada.set(null)" class="ml-auto text-xs text-gray-400 hover:text-gray-700">Trocar loja</button>
+      <div>
+        <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
+        <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
       </div>
+    </div>
 
       <!-- Resumo da Nota Média -->
       @if (avaliacoesLoading()) {
@@ -1419,29 +1253,20 @@
           }
         </div>
       }
-    }
   }
 
   <!-- ── ABA: CONFIG PEDIDO ───────────────────────────────────────────── -->
   @if (aba() === 'config-pedido') {
-    @if (!lojaSelecionada()) {
-      <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <div class="text-5xl mb-3">🏪</div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Selecione uma loja</h2>
-        <p class="text-gray-500 text-sm">Vá para a aba <strong>Lojas</strong> e clique em uma loja para configurar os pedidos.</p>
+    <div class="mb-6 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
+           style="background:var(--color-brand)">
+        {{ lojaSelecionada()!.nome.charAt(0) }}
       </div>
-    } @else {
-      <div class="mb-6 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-             style="background:var(--color-brand)">
-          {{ lojaSelecionada()!.nome.charAt(0) }}
-        </div>
-        <div>
-          <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
-          <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
-        </div>
-        <button (click)="lojaSelecionada.set(null)" class="ml-auto text-xs text-gray-400 hover:text-gray-700">Trocar loja</button>
+      <div>
+        <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
+        <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
       </div>
+    </div>
 
       <div class="max-w-2xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 class="text-base font-semibold text-gray-900 mb-5">⚙️ Configuração de Pedidos</h3>
@@ -1490,7 +1315,6 @@
         }
       </div>
     }
-  }
 
   <!-- ── ABA: ENDEREÇOS ──────────────────────────────────────────────────── -->
   @if (aba() === 'enderecos') {

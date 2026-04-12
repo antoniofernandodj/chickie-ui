@@ -1,9 +1,9 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { BehaviorSubject, catchError, of, switchMap, debounceTime, distinctUntilChanged, filter } from 'rxjs';
+import { BehaviorSubject, catchError, of, switchMap, debounceTime, distinctUntilChanged, filter, tap, map, Observable } from 'rxjs';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -20,6 +20,8 @@ import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCatego
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private adminService = inject(AdminService);
   private catalogoService = inject(CatalogoService);
   private lojaService = inject(LojaService);
@@ -28,9 +30,8 @@ export class AdminComponent {
   private configPedidoService = inject(ConfigPedidoService);
   private fb = inject(FormBuilder);
 
-  readonly aba  = signal('lojas');
+  readonly aba  = signal('equipe');
   readonly tabs = [
-    { id: 'lojas',       label: '🏪 Lojas'     },
     { id: 'equipe',      label: '👥 Equipe'    },
     { id: 'catalogo',    label: '📦 Catálogo'  },
     { id: 'adicionais',  label: '🧀 Adicionais' },
@@ -41,105 +42,36 @@ export class AdminComponent {
     { id: 'horarios',    label: '🕐 Horários'  },
   ];
 
-  // ── Lojas ──────────────────────────────────────────────────────────────────
+  // ── Loja (carregada via URL) ──────────────────────────────────────────────
 
-  lojaForm = this.fb.group({
-    nome: ['', [Validators.required, Validators.minLength(3)]],
-    slug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
-    email_contato: ['', [Validators.required, Validators.email]],
-    celular: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
-    descricao: [''],
-    taxa_entrega_base: [5, [Validators.min(0)]],
-    pedido_minimo: [20, [Validators.min(0)]],
-    tempo_medio: [30, [Validators.min(1)]],
-    max_partes: [4, [Validators.min(1), Validators.max(8)]],
-  });
+  readonly lojaUuid$ = this.route.paramMap.pipe(
+    map((params) => params.get('loja_uuid')),
+    filter((uuid): uuid is string => uuid !== null),
+  );
 
-  // ── Slug verification ──────────────────────────────────────────────
-  slugChecking = signal(false);
-  slugAvailable = signal<boolean | null>(null);
-  slugMessage = signal('');
-
-  lojaLoading = signal(false);
-  lojaError   = signal('');
-  lojaSuccess = signal('');
-
-  lojaSelecionada = signal<Loja | null>(null);
-
-  private readonly refreshTrigger = new BehaviorSubject<void>(undefined);
-
-  private readonly _lojas = toSignal(
-    this.refreshTrigger.pipe(
-      switchMap(() => this.adminService.listarLojas()),
-      catchError(() => of([])),
+  readonly lojaSelecionada = toSignal<Loja | null>(
+    this.lojaUuid$.pipe(
+      switchMap((uuid) =>
+        this.lojaService.buscarPorUuid(uuid).pipe(
+          tap((loja) => {
+            if (loja) {
+              this.refreshFuncionarios();
+              this.refreshEntregadores();
+              this.refreshAdicionais();
+              this.refreshCategorias();
+              this.refreshEnderecos();
+              this.refreshHorarios();
+              this.refreshCupons();
+              this.refreshAvaliacoes();
+            }
+          }),
+          catchError(() => of(null)),
+        ),
+      ),
     ),
   );
-  readonly lojasLoading = computed(() => this._lojas() === undefined);
-  readonly lojas        = computed(() => this._lojas() ?? []);
 
-  private refreshLojas() {
-    this.refreshTrigger.next();
-  }
-
-  get fl() {
-    return this.lojaForm.controls;
-  }
-
-  criarLoja() {
-    if (this.lojaForm.invalid) {
-      this.lojaForm.markAllAsTouched();
-      this.lojaError.set('Preencha todos os campos obrigatórios corretamente.');
-      return;
-    }
-    this.lojaLoading.set(true);
-    this.lojaError.set('');
-    this.lojaSuccess.set('');
-    const fv = this.lojaForm.value;
-    this.adminService.criarLoja({
-      nome: fv.nome!,
-      slug: fv.slug!,
-      email_contato: fv.email_contato!,
-      celular: fv.celular!,
-      descricao: fv.descricao || null,
-      taxa_entrega_base: fv.taxa_entrega_base ?? 5,
-      pedido_minimo: fv.pedido_minimo ?? 20,
-      tempo_medio: fv.tempo_medio ?? 30,
-      nota_media: 0,
-      max_partes: fv.max_partes ?? 4,
-    }).subscribe({
-      next: (l) => {
-        this.lojaLoading.set(false);
-        this.lojaSuccess.set(`Loja "${l.nome}" criada com sucesso!`);
-        this.lojaForm.reset({
-          taxa_entrega_base: 5,
-          pedido_minimo: 20,
-          tempo_medio: 30,
-          max_partes: 4,
-        });
-        this.slugChecking.set(false);
-        this.slugAvailable.set(null);
-        this.slugMessage.set('');
-        this.refreshLojas();
-      },
-      error: (e) => {
-        this.lojaLoading.set(false);
-        this.lojaError.set(e?.error?.error ?? 'Erro ao criar loja.');
-      },
-    });
-  }
-
-  selecionarLoja(l: Loja) {
-    this.lojaSelecionada.set(l);
-    this.aba.set('equipe');
-    this.refreshFuncionarios();
-    this.refreshEntregadores();
-    this.refreshAdicionais();
-    this.refreshCategorias();
-    this.refreshEnderecos();
-    this.refreshHorarios();
-    this.refreshCupons();
-    this.refreshAvaliacoes();
-  }
+  readonly lojaLoading = computed(() => this.lojaSelecionada() === undefined);
 
   // ── Avaliações de Loja ──────────────────────────────────────────────────
 
@@ -361,34 +293,6 @@ export class AdminComponent {
       ).subscribe(result => {
         this.entregUsernameChecking.set(false);
         this.entregUsernameAvailable.set(result.disponivel);
-      });
-    }
-
-    // Monitor slug field changes with debounce
-    const slugControl = this.lojaForm.get('slug');
-    if (slugControl) {
-      slugControl.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged(),
-        filter((slug): slug is string => slug != null && slug.length > 0),
-        switchMap(slug => {
-          this.slugChecking.set(true);
-          this.slugAvailable.set(null);
-          this.slugMessage.set('');
-          return this.lojaService.verificarSlug(slug).pipe(
-            catchError(() => {
-              this.slugChecking.set(false);
-              this.slugAvailable.set(null);
-              this.slugMessage.set('Erro ao verificar slug.');
-              return of(null);
-            })
-          );
-        }),
-        filter((result): result is { disponivel: boolean; slug: string } => result !== null)
-      ).subscribe(result => {
-        this.slugChecking.set(false);
-        this.slugAvailable.set(result.disponivel);
-        this.slugMessage.set(result.disponivel ? 'Slug disponível!' : 'Slug já está em uso.');
       });
     }
 
@@ -1731,12 +1635,15 @@ export class AdminComponent {
 
   // Helper para obter nome do usuário a partir do JWT (fallback)
   getNomeUsuario(usuarioUuid: string): string {
-    // Tenta obter do localStorage ou retorna UUID curto
     return `Usuário (${usuarioUuid.slice(0, 8)}...)`;
   }
 
   // Helper para converter nota (pode ser string ou number)
   toNumber(value: number | string): number {
     return typeof value === 'string' ? parseFloat(value) : value;
+  }
+
+  voltar() {
+    this.router.navigate(['/admin']);
   }
 }

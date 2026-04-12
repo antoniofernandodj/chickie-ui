@@ -34,6 +34,11 @@ export class AdminService {
     return this.http.get<Loja[]>(`${this.base}/lojas/minhas-lojas`);
   }
 
+  /** Alias semântico para listagem de lojas do admin logado */
+  listarMinhasLojas(): Observable<Loja[]> {
+    return this.listarLojas();
+  }
+
   adicionarFuncionario(
     lojaUuid: string,
     body: CreateFuncionarioRequest,

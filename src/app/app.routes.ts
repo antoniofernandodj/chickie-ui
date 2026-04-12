@@ -72,6 +72,15 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [authGuard],
     loadComponent: () =>
+      import('./features/admin/admin-empresas-list.component').then(
+        (m) => m.AdminEmpresasListComponent,
+      ),
+    title: 'Minhas Empresas — Chickie',
+  },
+  {
+    path: 'admin/:loja_uuid',
+    canActivate: [authGuard],
+    loadComponent: () =>
       import('./features/admin/admin.component').then(
         (m) => m.AdminComponent,
       ),
