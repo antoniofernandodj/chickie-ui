@@ -404,23 +404,12 @@ export class AdminComponent {
     });
 
     // Auto-load config-pedido when tab changes to 'config-pedido'
-    let lastConfigLoadTab = '';
+    let configPedidoLoaded = false;
     effect(() => {
       const aba = this.aba();
-      if (aba === 'config-pedido' && aba !== lastConfigLoadTab) {
-        lastConfigLoadTab = aba;
-        this.refreshConfigPedido();
-      }
-    });
-
-    // Auto-patch form when config-pedido data loads
-    let lastConfigLoaded: any = null;
-    effect(() => {
-      const aba = this.aba();
-      const config = this._configPedido();
-      if (aba === 'config-pedido' && config !== undefined && config !== lastConfigLoaded) {
-        lastConfigLoaded = config;
-        this.carregarConfigPedidoForm(config);
+      if (aba === 'config-pedido' && !configPedidoLoaded) {
+        configPedidoLoaded = true;
+        this.carregarConfigPedido();
       }
     });
   }
@@ -1346,26 +1335,8 @@ export class AdminComponent {
 
   // ── Configuração de Pedidos ────────────────────────────────────────────────
 
-  private readonly refreshConfigPedidoTrigger = new BehaviorSubject<void>(undefined);
-
-  private readonly _configPedido = toSignal(
-    this.refreshConfigPedidoTrigger.pipe(
-      switchMap(() => {
-        const loja = this.lojaSelecionada();
-        if (!loja) return of(null as ConfiguracaoDePedidosLoja | null);
-        return this.configPedidoService.getConfigPedido(loja.uuid).pipe(
-          catchError(() => of(null as ConfiguracaoDePedidosLoja | null)),
-        );
-      }),
-    ),
-    { initialValue: null as ConfiguracaoDePedidosLoja | null },
-  );
-  readonly configPedidoLoading = computed(() => this._configPedido() === undefined);
-  readonly configPedido = computed(() => this._configPedido());
-
-  private refreshConfigPedido() {
-    this.refreshConfigPedidoTrigger.next();
-  }
+  configPedidoData = signal<ConfiguracaoDePedidosLoja | null>(null);
+  configPedidoLoading = signal(false);
 
   configPedidoForm = this.fb.group({
     max_partes: [4, [Validators.required, Validators.min(1), Validators.max(8)]],
@@ -1377,6 +1348,33 @@ export class AdminComponent {
 
   get fcp() {
     return this.configPedidoForm.controls;
+  }
+
+  carregarConfigPedido() {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    
+    this.configPedidoLoading.set(true);
+    this.configPedidoError.set('');
+    
+    this.configPedidoService.getConfigPedido(loja.uuid).subscribe({
+      next: (config) => {
+        this.configPedidoData.set(config);
+        this.configPedidoForm.patchValue({
+          max_partes: config.max_partes,
+          tipo_calculo: config.tipo_calculo,
+        });
+        this.configPedidoLoading.set(false);
+      },
+      error: () => {
+        this.configPedidoData.set(null);
+        this.configPedidoForm.reset({
+          max_partes: 4,
+          tipo_calculo: 'mais_caro',
+        });
+        this.configPedidoLoading.set(false);
+      },
+    });
   }
 
   salvarConfigPedido() {
@@ -1400,19 +1398,13 @@ export class AdminComponent {
       next: () => {
         this.configPedidoLoadingSubmit.set(false);
         toast.success('Configuração de pedidos salva com sucesso!');
-        this.refreshConfigPedido();
+        // Re-fetch and update form
+        this.carregarConfigPedido();
       },
       error: (e) => {
         this.configPedidoLoadingSubmit.set(false);
         this.configPedidoError.set(e?.error?.error ?? 'Erro ao salvar configuração.');
       },
-    });
-  }
-
-  carregarConfigPedidoForm(config: ConfiguracaoDePedidosLoja | null) {
-    this.configPedidoForm.patchValue({
-      max_partes: config?.max_partes ?? 4,
-      tipo_calculo: config?.tipo_calculo ?? 'mais_caro',
     });
   }
 
