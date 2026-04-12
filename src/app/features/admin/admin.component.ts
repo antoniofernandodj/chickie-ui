@@ -1143,7 +1143,6 @@ export class AdminComponent {
   // ── Cupons de Desconto ────────────────────────────────────────────────────
 
   private readonly refreshCupomTrigger = new BehaviorSubject<void>(undefined);
-  private readonly optimisticCuponsStatus = signal<Map<string, StatusCupom>>(new Map());
 
   private readonly _cupons = toSignal(
     this.refreshCupomTrigger.pipe(
@@ -1156,17 +1155,7 @@ export class AdminComponent {
     { initialValue: [] as Cupom[] },
   );
   readonly cupomLoading = computed(() => this._cupons() === undefined);
-  readonly cupons = computed(() => {
-    const serverCupons = this._cupons() ?? [];
-    const optimistics = this.optimisticCuponsStatus();
-    
-    if (optimistics.size === 0) return serverCupons;
-    
-    return serverCupons.map(c => {
-      const optimisticStatus = optimistics.get(c.uuid);
-      return optimisticStatus ? { ...c, status: optimisticStatus } : c;
-    });
-  });
+  readonly cupons = computed(() => this._cupons() ?? []);
 
   private refreshCupons() {
     this.refreshCupomTrigger.next();
@@ -1319,26 +1308,13 @@ export class AdminComponent {
 
   toggleStatusCupom(cupom: Cupom) {
     const novoStatus = cupom.status === 'Ativo' ? 'Inativo' : 'Ativo';
-    
-    // Optimistic update: update UI immediately
-    const currentOptimistics = new Map(this.optimisticCuponsStatus());
-    currentOptimistics.set(cupom.uuid, novoStatus);
-    this.optimisticCuponsStatus.set(currentOptimistics);
-    
     this.marketingService.atualizarStatusCupom(cupom.uuid, novoStatus === 'Ativo').subscribe({
       next: () => {
-        // Remove optimistic update after server confirms
-        const updatedOptimistics = new Map(this.optimisticCuponsStatus());
-        updatedOptimistics.delete(cupom.uuid);
-        this.optimisticCuponsStatus.set(updatedOptimistics);
-        
         const statusTexto = novoStatus === 'Ativo' ? 'ativo' : 'inativo';
         toast.success(`Cupom "${cupom.codigo}" agora está ${statusTexto}.`);
         this.refreshCupons();
       },
       error: (e) => {
-        // Revert optimistic update on error
-        this.refreshCupons();
         toast.error(e?.error?.error ?? 'Erro ao alterar status do cupom.');
       },
     });
