@@ -1391,9 +1391,12 @@ export class AdminComponent {
     this.configPedidoLoadingSubmit.set(true);
     this.configPedidoError.set('');
 
+    // Convert PascalCase to snake_case for backend
+    const tipoCalculoBackend = fv.tipo_calculo === 'MaisCaro' ? 'mais_caro' : 'media_ponderada';
+
     this.configPedidoService.saveConfigPedido(loja.uuid, {
       max_partes: fv.max_partes!,
-      tipo_calculo: fv.tipo_calculo!,
+      tipo_calculo: tipoCalculoBackend as any,
     }).subscribe({
       next: () => {
         this.configPedidoLoadingSubmit.set(false);

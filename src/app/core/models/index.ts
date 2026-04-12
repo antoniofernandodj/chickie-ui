@@ -32,7 +32,7 @@ export interface ConfiguracaoDePedidosLoja {
 
 export interface UpdateConfigPedidoRequest {
   max_partes?:   number;
-  tipo_calculo?: TipoCalculoPedido;
+  tipo_calculo?: string;
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
