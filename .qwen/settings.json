@@ -3,7 +3,14 @@
     "allow": [
       "Bash(git push *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(git *)",
+      "Bash(find *)",
+      "Bash(cargo check)",
+      "Bash(sed *)",
+      "Bash(cargo run *)",
+      "Bash(mkdir *)",
+      "Bash(wc *)"
     ]
   },
   "$version": 3
