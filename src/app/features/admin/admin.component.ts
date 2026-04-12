@@ -414,21 +414,13 @@ export class AdminComponent {
     });
 
     // Auto-patch form when config-pedido data loads
+    let lastConfigLoaded: any = null;
     effect(() => {
       const aba = this.aba();
       const config = this._configPedido();
-      if (aba === 'config-pedido' && config !== undefined) {
-        if (config) {
-          this.configPedidoForm.patchValue({
-            max_partes: config.max_partes,
-            tipo_calculo: config.tipo_calculo,
-          }, { emitEvent: false });
-        } else {
-          this.configPedidoForm.reset({
-            max_partes: 4,
-            tipo_calculo: 'mais_caro',
-          }, { emitEvent: false });
-        }
+      if (aba === 'config-pedido' && config !== undefined && config !== lastConfigLoaded) {
+        lastConfigLoaded = config;
+        this.carregarConfigPedidoForm(config);
       }
     });
   }
@@ -1397,9 +1389,9 @@ export class AdminComponent {
       this.configPedidoForm.markAllAsTouched();
       return;
     }
+    const fv = this.configPedidoForm.getRawValue();
     this.configPedidoLoadingSubmit.set(true);
     this.configPedidoError.set('');
-    const fv = this.configPedidoForm.value;
 
     this.configPedidoService.saveConfigPedido(loja.uuid, {
       max_partes: fv.max_partes!,
@@ -1417,19 +1409,11 @@ export class AdminComponent {
     });
   }
 
-  carregarConfigPedidoForm() {
-    const config = this._configPedido();
-    if (config) {
-      this.configPedidoForm.patchValue({
-        max_partes: config.max_partes,
-        tipo_calculo: config.tipo_calculo,
-      });
-    } else {
-      this.configPedidoForm.reset({
-        max_partes: 4,
-        tipo_calculo: 'mais_caro',
-      });
-    }
+  carregarConfigPedidoForm(config: ConfiguracaoDePedidosLoja | null) {
+    this.configPedidoForm.patchValue({
+      max_partes: config?.max_partes ?? 4,
+      tipo_calculo: config?.tipo_calculo ?? 'mais_caro',
+    });
   }
 
   // ── Endereços da Loja ─────────────────────────────────────────────────────
