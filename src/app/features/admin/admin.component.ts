@@ -163,7 +163,7 @@ export class AdminComponent {
   readonly notaMedia = computed(() => {
     const avaliacoes = this.avaliacoes();
     if (!avaliacoes || avaliacoes.length === 0) return null;
-    const soma = avaliacoes.reduce((acc, a) => acc + a.nota, 0);
+    const soma = avaliacoes.reduce((acc, a) => acc + this.toNumber(a.nota), 0);
     return parseFloat((soma / avaliacoes.length).toFixed(1));
   });
 
@@ -172,7 +172,8 @@ export class AdminComponent {
     if (!avaliacoes || avaliacoes.length === 0) return null;
     const distribuicao = [0, 0, 0, 0, 0]; // 1-5 estrelas
     avaliacoes.forEach((a) => {
-      const idx = Math.round(a.nota) - 1;
+      const nota = Math.round(this.toNumber(a.nota));
+      const idx = nota - 1;
       if (idx >= 0 && idx < 5) distribuicao[idx]++;
     });
     return distribuicao;
@@ -1732,5 +1733,10 @@ export class AdminComponent {
   getNomeUsuario(usuarioUuid: string): string {
     // Tenta obter do localStorage ou retorna UUID curto
     return `Usuário (${usuarioUuid.slice(0, 8)}...)`;
+  }
+
+  // Helper para converter nota (pode ser string ou number)
+  toNumber(value: number | string): number {
+    return typeof value === 'string' ? parseFloat(value) : value;
   }
 }

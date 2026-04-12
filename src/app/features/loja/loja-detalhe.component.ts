@@ -38,7 +38,7 @@ export class LojaDetalheComponent {
   readonly notaMedia = computed(() => {
     const avaliacoes = this.todasAvaliacoes();
     if (!avaliacoes || avaliacoes.length === 0) return null;
-    const soma = avaliacoes.reduce((acc, a) => acc + a.nota, 0);
+    const soma = avaliacoes.reduce((acc, a) => acc + this.toNumber(a.nota), 0);
     return parseFloat((soma / avaliacoes.length).toFixed(1));
   });
 
@@ -47,7 +47,8 @@ export class LojaDetalheComponent {
     if (!avaliacoes || avaliacoes.length === 0) return null;
     const distribuicao = [0, 0, 0, 0, 0]; // 1-5 estrelas
     avaliacoes.forEach((a) => {
-      const idx = Math.round(a.nota) - 1;
+      const nota = Math.round(this.toNumber(a.nota));
+      const idx = nota - 1;
       if (idx >= 0 && idx < 5) distribuicao[idx]++;
     });
     return {
@@ -303,5 +304,10 @@ export class LojaDetalheComponent {
 
   fecharFormularioAvaliacao(): void {
     this.mostrandoFormulario.set(false);
+  }
+
+  // Helper para converter nota (pode ser string ou number)
+  toNumber(value: number | string): number {
+    return typeof value === 'string' ? parseFloat(value) : value;
   }
 }

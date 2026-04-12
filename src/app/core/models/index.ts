@@ -518,12 +518,14 @@ export interface UpdateCupomRequest {
 // ─── Avaliação ────────────────────────────────────────────────────────────────
 
 export interface AvaliacaoDeLoja {
-  uuid:         string;
-  loja_uuid:    string;
-  usuario_uuid: string;
-  nota:         number;
-  comentario:   string | null;
-  criado_em:    string;
+  uuid:            string;
+  loja_uuid:       string;
+  usuario_uuid:    string;
+  usuario_nome?:   string;
+  usuario_email?:  string;
+  nota:            number | string;
+  comentario:      string | null;
+  criado_em:       string;
 }
 
 export interface AvaliarLojaRequest {

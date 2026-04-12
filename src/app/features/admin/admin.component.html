@@ -1343,7 +1343,7 @@
               </div>
               <div class="flex gap-0.5 mt-2 justify-center">
                 @for (star of [1,2,3,4,5]; track star) {
-                  <svg class="w-6 h-6" [class]="star <= (notaMedia() ?? 0) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'" viewBox="0 0 24 24">
+                  <svg class="w-6 h-6" [class]="star <= toNumber(notaMedia() ?? 0) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'" viewBox="0 0 24 24">
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                   </svg>
                 }
@@ -1385,16 +1385,23 @@
               <div class="flex items-start gap-4 mb-3">
                 <div class="flex-1">
                   <div class="flex items-center gap-3 mb-2">
-                    <span class="text-sm font-medium text-gray-700">
-                      {{ getNomeUsuario(avaliacao.usuario_uuid) }}
-                    </span>
+                    <div>
+                      <span class="text-sm font-medium text-gray-900">
+                        {{ avaliacao.usuario_nome || 'Usuário não informado' }}
+                      </span>
+                      @if (avaliacao.usuario_email) {
+                        <span class="text-xs text-gray-500 ml-2">
+                          ({{ avaliacao.usuario_email }})
+                        </span>
+                      }
+                    </div>
                     <span class="text-xs text-gray-400">
                       {{ avaliacao.criado_em | date:'dd/MM/yyyy HH:mm' }}
                     </span>
                   </div>
                   <div class="flex gap-0.5">
                     @for (star of [1,2,3,4,5]; track star) {
-                      <svg class="w-4 h-4" [class]="star <= avaliacao.nota ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'" viewBox="0 0 24 24">
+                      <svg class="w-4 h-4" [class]="star <= toNumber(avaliacao.nota) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'" viewBox="0 0 24 24">
                         <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
                       </svg>
                     }
