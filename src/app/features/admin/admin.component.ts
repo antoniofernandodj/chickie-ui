@@ -404,11 +404,31 @@ export class AdminComponent {
     });
 
     // Auto-load config-pedido when tab changes to 'config-pedido'
+    let lastConfigLoadTab = '';
     effect(() => {
       const aba = this.aba();
-      if (aba === 'config-pedido') {
+      if (aba === 'config-pedido' && aba !== lastConfigLoadTab) {
+        lastConfigLoadTab = aba;
         this.refreshConfigPedido();
-        this.carregarConfigPedidoForm();
+      }
+    });
+
+    // Auto-patch form when config-pedido data loads
+    effect(() => {
+      const aba = this.aba();
+      const config = this._configPedido();
+      if (aba === 'config-pedido' && config !== undefined) {
+        if (config) {
+          this.configPedidoForm.patchValue({
+            max_partes: config.max_partes,
+            tipo_calculo: config.tipo_calculo,
+          }, { emitEvent: false });
+        } else {
+          this.configPedidoForm.reset({
+            max_partes: 4,
+            tipo_calculo: 'mais_caro',
+          }, { emitEvent: false });
+        }
       }
     });
   }
@@ -1398,7 +1418,7 @@ export class AdminComponent {
   }
 
   carregarConfigPedidoForm() {
-    const config = this.configPedido();
+    const config = this._configPedido();
     if (config) {
       this.configPedidoForm.patchValue({
         max_partes: config.max_partes,
