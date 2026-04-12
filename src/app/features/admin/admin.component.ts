@@ -1306,9 +1306,12 @@ export class AdminComponent {
     });
   }
 
-  toggleStatusCupom(uuid: string, codigo: string, statusAtual: StatusCupom) {
+  toggleStatusCupom(uuid: string, codigo: string, statusAtual: StatusCupom, lojaUuid?: string) {
     const novoStatus = statusAtual === 'Ativo' ? 'Inativo' : 'Ativo';
-    const updateRequest: UpdateCupomRequest = { status: novoStatus };
+    const updateRequest: UpdateCupomRequest = {
+      loja_uuid: lojaUuid,
+      status: novoStatus,
+    };
     this.marketingService.atualizarCupom(uuid, updateRequest).subscribe({
       next: () => {
         toast.success(`Cupom "${codigo}" agora está ${novoStatus === 'Ativo' ? 'ativo' : 'inativo'}.`);

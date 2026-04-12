@@ -489,6 +489,7 @@ export interface CreateCupomRequest {
 }
 
 export interface UpdateCupomRequest {
+  loja_uuid?:       string;
   codigo?:          string;
   descricao?:       string;
   tipo_desconto?:   TipoDesconto;
