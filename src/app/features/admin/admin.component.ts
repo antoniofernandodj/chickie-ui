@@ -1340,7 +1340,7 @@ export class AdminComponent {
 
   configPedidoForm = this.fb.group({
     max_partes: [4, [Validators.required, Validators.min(1), Validators.max(8)]],
-    tipo_calculo: ['mais_caro' as TipoCalculoPedido, Validators.required],
+    tipo_calculo: ['MaisCaro' as TipoCalculoPedido, Validators.required],
   });
 
   configPedidoLoadingSubmit = signal(false);
@@ -1370,7 +1370,7 @@ export class AdminComponent {
         this.configPedidoData.set(null);
         this.configPedidoForm.reset({
           max_partes: 4,
-          tipo_calculo: 'mais_caro',
+          tipo_calculo: 'MaisCaro',
         });
         this.configPedidoLoading.set(false);
       },
