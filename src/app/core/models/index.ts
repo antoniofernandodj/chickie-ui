@@ -19,6 +19,21 @@ export type StatusPedido =
 export type TipoDesconto = 'percentual' | 'valor_fixo' | 'frete_gratis';
 export type TipoEscopo   = 'loja' | 'produto' | 'categoria';
 export type StatusCupom  = 'Ativo' | 'Inativo' | 'Expirado';
+export type TipoCalculoPedido = 'mais_caro' | 'media_ponderada';
+
+// ─── Configuração de Pedidos ─────────────────────────────────────────────────
+
+export interface ConfiguracaoDePedidosLoja {
+  uuid:         string;
+  loja_uuid:    string;
+  max_partes:   number;
+  tipo_calculo: TipoCalculoPedido;
+}
+
+export interface UpdateConfigPedidoRequest {
+  max_partes?:   number;
+  tipo_calculo?: TipoCalculoPedido;
+}
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 

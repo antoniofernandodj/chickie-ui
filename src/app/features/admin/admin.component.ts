@@ -10,8 +10,9 @@ import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MarketingService } from '../../core/services/marketing.service';
+import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -24,6 +25,7 @@ export class AdminComponent {
   private lojaService = inject(LojaService);
   private authService = inject(AuthService);
   private marketingService = inject(MarketingService);
+  private configPedidoService = inject(ConfigPedidoService);
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('lojas');
@@ -33,6 +35,7 @@ export class AdminComponent {
     { id: 'catalogo',    label: '📦 Catálogo'  },
     { id: 'adicionais',  label: '🧀 Adicionais' },
     { id: 'cupons',      label: '🎟️ Cupons'    },
+    { id: 'config-pedido', label: '⚙️ Config Pedido' },
     { id: 'enderecos',   label: '📍 Endereços' },
     { id: 'horarios',    label: '🕐 Horários'  },
   ];
@@ -397,6 +400,15 @@ export class AdminComponent {
       const aba = this.aba();
       if (aba === 'cupons') {
         this.refreshCupons();
+      }
+    });
+
+    // Auto-load config-pedido when tab changes to 'config-pedido'
+    effect(() => {
+      const aba = this.aba();
+      if (aba === 'config-pedido') {
+        this.refreshConfigPedido();
+        this.carregarConfigPedidoForm();
       }
     });
   }
@@ -1318,6 +1330,86 @@ export class AdminComponent {
         toast.error(e?.error?.error ?? 'Erro ao alterar status do cupom.');
       },
     });
+  }
+
+  // ── Configuração de Pedidos ────────────────────────────────────────────────
+
+  private readonly refreshConfigPedidoTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _configPedido = toSignal(
+    this.refreshConfigPedidoTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of(null as ConfiguracaoDePedidosLoja | null);
+        return this.configPedidoService.getConfigPedido(loja.uuid).pipe(
+          catchError(() => of(null as ConfiguracaoDePedidosLoja | null)),
+        );
+      }),
+    ),
+    { initialValue: null as ConfiguracaoDePedidosLoja | null },
+  );
+  readonly configPedidoLoading = computed(() => this._configPedido() === undefined);
+  readonly configPedido = computed(() => this._configPedido());
+
+  private refreshConfigPedido() {
+    this.refreshConfigPedidoTrigger.next();
+  }
+
+  configPedidoForm = this.fb.group({
+    max_partes: [4, [Validators.required, Validators.min(1), Validators.max(8)]],
+    tipo_calculo: ['mais_caro' as TipoCalculoPedido, Validators.required],
+  });
+
+  configPedidoLoadingSubmit = signal(false);
+  configPedidoError = signal('');
+
+  get fcp() {
+    return this.configPedidoForm.controls;
+  }
+
+  salvarConfigPedido() {
+    const loja = this.lojaSelecionada();
+    if (!loja) {
+      this.configPedidoError.set('Selecione uma loja primeiro.');
+      return;
+    }
+    if (this.configPedidoForm.invalid) {
+      this.configPedidoForm.markAllAsTouched();
+      return;
+    }
+    this.configPedidoLoadingSubmit.set(true);
+    this.configPedidoError.set('');
+    const fv = this.configPedidoForm.value;
+
+    this.configPedidoService.saveConfigPedido(loja.uuid, {
+      max_partes: fv.max_partes!,
+      tipo_calculo: fv.tipo_calculo!,
+    }).subscribe({
+      next: () => {
+        this.configPedidoLoadingSubmit.set(false);
+        toast.success('Configuração de pedidos salva com sucesso!');
+        this.refreshConfigPedido();
+      },
+      error: (e) => {
+        this.configPedidoLoadingSubmit.set(false);
+        this.configPedidoError.set(e?.error?.error ?? 'Erro ao salvar configuração.');
+      },
+    });
+  }
+
+  carregarConfigPedidoForm() {
+    const config = this.configPedido();
+    if (config) {
+      this.configPedidoForm.patchValue({
+        max_partes: config.max_partes,
+        tipo_calculo: config.tipo_calculo,
+      });
+    } else {
+      this.configPedidoForm.reset({
+        max_partes: 4,
+        tipo_calculo: 'mais_caro',
+      });
+    }
   }
 
   // ── Endereços da Loja ─────────────────────────────────────────────────────
