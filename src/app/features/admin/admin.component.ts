@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -35,6 +35,7 @@ export class AdminComponent {
     { id: 'catalogo',    label: '📦 Catálogo'  },
     { id: 'adicionais',  label: '🧀 Adicionais' },
     { id: 'cupons',      label: '🎟️ Cupons'    },
+    { id: 'avaliacoes',  label: '⭐ Avaliações' },
     { id: 'config-pedido', label: '⚙️ Config Pedido' },
     { id: 'enderecos',   label: '📍 Endereços' },
     { id: 'horarios',    label: '🕐 Horários'  },
@@ -137,6 +138,48 @@ export class AdminComponent {
     this.refreshEnderecos();
     this.refreshHorarios();
     this.refreshCupons();
+    this.refreshAvaliacoes();
+  }
+
+  // ── Avaliações de Loja ──────────────────────────────────────────────────
+
+  private readonly refreshAvaliacoesTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _avaliacoes = toSignal(
+    this.refreshAvaliacoesTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as AvaliacaoDeLoja[]);
+        return this.marketingService.listarAvaliacoesLoja(loja.uuid).pipe(
+          catchError(() => of([] as AvaliacaoDeLoja[])),
+        );
+      }),
+    ),
+    { initialValue: [] as AvaliacaoDeLoja[] },
+  );
+  readonly avaliacoesLoading = computed(() => this._avaliacoes() === undefined);
+  readonly avaliacoes = computed(() => this._avaliacoes() ?? []);
+
+  readonly notaMedia = computed(() => {
+    const avaliacoes = this.avaliacoes();
+    if (!avaliacoes || avaliacoes.length === 0) return null;
+    const soma = avaliacoes.reduce((acc, a) => acc + a.nota, 0);
+    return parseFloat((soma / avaliacoes.length).toFixed(1));
+  });
+
+  readonly distribuicaoNotas = computed(() => {
+    const avaliacoes = this.avaliacoes();
+    if (!avaliacoes || avaliacoes.length === 0) return null;
+    const distribuicao = [0, 0, 0, 0, 0]; // 1-5 estrelas
+    avaliacoes.forEach((a) => {
+      const idx = Math.round(a.nota) - 1;
+      if (idx >= 0 && idx < 5) distribuicao[idx]++;
+    });
+    return distribuicao;
+  });
+
+  private refreshAvaliacoes() {
+    this.refreshAvaliacoesTrigger.next();
   }
 
   // ── Equipe: Funcionários ──────────────────────────────────────────────────
@@ -400,6 +443,15 @@ export class AdminComponent {
       const aba = this.aba();
       if (aba === 'cupons') {
         this.refreshCupons();
+      }
+    });
+
+    // Auto-load avaliacoes when tab changes to 'avaliacoes'
+    effect(() => {
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'avaliacoes' && loja) {
+        this.refreshAvaliacoes();
       }
     });
 
@@ -1674,5 +1726,30 @@ export class AdminComponent {
         toast.error(e?.error?.error ?? 'Erro ao deletar horário.');
       },
     });
+  }
+
+  // ── Avaliações: Deletar ──────────────────────────────────────────────────
+
+  deletarAvaliacao(uuid: string): void {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+
+    if (!confirm('Tem certeza que deseja deletar esta avaliação?')) return;
+
+    this.marketingService.deletarAvaliacaoLoja(uuid).subscribe({
+      next: () => {
+        toast.success('Avaliação deletada com sucesso!');
+        this.refreshAvaliacoes();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar avaliação.');
+      },
+    });
+  }
+
+  // Helper para obter nome do usuário a partir do JWT (fallback)
+  getNomeUsuario(usuarioUuid: string): string {
+    // Tenta obter do localStorage ou retorna UUID curto
+    return `Usuário (${usuarioUuid.slice(0, 8)}...)`;
   }
 }
