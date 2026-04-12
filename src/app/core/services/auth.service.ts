@@ -138,4 +138,24 @@ export class AuthService {
     this.removeItem('chickie_classe');
     this._token.set(null);
   }
+
+  /** Extrai o UUID do usuário do token JWT */
+  getUsuarioUuid(): string | null {
+    const token = this._token();
+    if (!token) return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padLength = (4 - (base64.length % 4)) % 4;
+      const padded = base64 + '='.repeat(padLength);
+
+      const payload = JSON.parse(atob(padded));
+      return payload?.sub ?? payload?.uuid ?? payload?.user_uuid ?? null;
+    } catch (e) {
+      console.warn('Failed to extract usuario_uuid from JWT:', e);
+      return null;
+    }
+  }
 }

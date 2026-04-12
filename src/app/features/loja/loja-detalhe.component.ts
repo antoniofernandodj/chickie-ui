@@ -1,18 +1,20 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, DatePipe } from '@angular/common';
 import { switchMap, catchError, of, map, tap, forkJoin } from 'rxjs';
 import { LojaService } from '../../core/services/loja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { HorarioService } from '../../core/services/horario.service';
 import { FavoritosService } from '../../core/services/favoritos.service';
+import { MarketingService } from '../../core/services/marketing.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Produto, CategoriaProdutos, HorarioFuncionamento } from '../../core/models';
+import { Produto, CategoriaProdutos, HorarioFuncionamento, AvaliacaoDeLoja, AvaliarLojaRequest } from '../../core/models';
+import { AvaliacaoLojaFormComponent } from './avaliacao-loja-form.component';
 
 @Component({
   selector: 'app-loja-detalhe',
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, DatePipe, AvaliacaoLojaFormComponent],
   templateUrl: './loja-detalhe.component.html',
 })
 export class LojaDetalheComponent {
@@ -21,10 +23,38 @@ export class LojaDetalheComponent {
   private catalogoService = inject(CatalogoService);
   private horarioService = inject(HorarioService);
   private favService = inject(FavoritosService);
+  private marketingService = inject(MarketingService);
   readonly auth = inject(AuthService);
 
   readonly skeletons = Array(6);
   readonly favorita  = signal(false);
+
+  // ── Avaliação de Loja ──────────────────────────────────────────────────────
+  readonly avaliacaoDoUsuario = signal<AvaliacaoDeLoja | null>(null);
+  readonly todasAvaliacoes = signal<AvaliacaoDeLoja[] | null>(null);
+  readonly avaliacaoLoading = signal(false);
+  readonly mostrandoFormulario = signal(false);
+
+  readonly notaMedia = computed(() => {
+    const avaliacoes = this.todasAvaliacoes();
+    if (!avaliacoes || avaliacoes.length === 0) return null;
+    const soma = avaliacoes.reduce((acc, a) => acc + a.nota, 0);
+    return parseFloat((soma / avaliacoes.length).toFixed(1));
+  });
+
+  readonly avaliacaoStats = computed(() => {
+    const avaliacoes = this.todasAvaliacoes();
+    if (!avaliacoes || avaliacoes.length === 0) return null;
+    const distribuicao = [0, 0, 0, 0, 0]; // 1-5 estrelas
+    avaliacoes.forEach((a) => {
+      const idx = Math.round(a.nota) - 1;
+      if (idx >= 0 && idx < 5) distribuicao[idx]++;
+    });
+    return {
+      total: avaliacoes.length,
+      distribuicao,
+    };
+  });
 
   readonly loja = toSignal(
     this.route.paramMap.pipe(
@@ -37,6 +67,14 @@ export class LojaDetalheComponent {
                 next: (res) => this.favorita.set(res.favorita ?? false),
                 error: () => this.favorita.set(false),
               });
+
+              // Carregar avaliação do usuário
+              this.carregarAvaliacaoDoUsuario(loja.uuid);
+
+              // Se admin, carregar todas as avaliações
+              if (this.auth.isAdmin()) {
+                this.carregarTodasAvaliacoes(loja.uuid);
+              }
             }
           }),
           catchError(() => of(null)),
@@ -187,5 +225,83 @@ export class LojaDetalheComponent {
 
   formatarDia(dia: number): string {
     return this.diasSemana[dia] || '';
+  }
+
+  // ── Avaliação de Loja ──────────────────────────────────────────────────────
+
+  private carregarAvaliacaoDoUsuario(lojaUuid: string): void {
+    // Verificar se o usuário já tem uma avaliação salva localmente
+    const key = `avaliacao_loja_${lojaUuid}`;
+    const avaliacaoLocal = localStorage.getItem(key);
+
+    if (avaliacaoLocal) {
+      try {
+        const avaliacao: AvaliacaoDeLoja = JSON.parse(avaliacaoLocal);
+        // Buscar a avaliação atualizada por UUID
+        this.marketingService.buscarAvaliacaoLoja(avaliacao.uuid).subscribe({
+          next: (avaliacao) => {
+            this.avaliacaoDoUsuario.set(avaliacao);
+          },
+          error: () => {
+            // Se não encontrou, limpar localStorage
+            localStorage.removeItem(key);
+            this.avaliacaoDoUsuario.set(null);
+          },
+        });
+      } catch (e) {
+        localStorage.removeItem(key);
+      }
+    }
+  }
+
+  private carregarTodasAvaliacoes(lojaUuid: string): void {
+    this.marketingService.listarAvaliacoesLoja(lojaUuid).subscribe({
+      next: (avaliacoes) => {
+        this.todasAvaliacoes.set(avaliacoes);
+      },
+      error: () => {
+        this.todasAvaliacoes.set(null);
+      },
+    });
+  }
+
+  salvarAvaliacao(nota: number, comentario: string | null): void {
+    const loja = this.loja();
+    if (!loja) return;
+
+    this.avaliacaoLoading.set(true);
+
+    const body: AvaliarLojaRequest = { nota, comentario };
+
+    this.marketingService
+      .upsertAvaliacaoLoja(loja.uuid, body, this.avaliacaoDoUsuario() ?? undefined)
+      .subscribe({
+        next: (avaliacao) => {
+          this.avaliacaoDoUsuario.set(avaliacao);
+          this.avaliacaoLoading.set(false);
+          this.mostrandoFormulario.set(false);
+
+          // Salvar no localStorage para recuperação futura
+          const key = `avaliacao_loja_${loja.uuid}`;
+          localStorage.setItem(key, JSON.stringify({ uuid: avaliacao.uuid }));
+
+          // Recarregar todas as avaliações se for admin
+          if (this.auth.isAdmin()) {
+            this.carregarTodasAvaliacoes(loja.uuid);
+          }
+        },
+        error: (err) => {
+          console.error('Erro ao salvar avaliação:', err);
+          this.avaliacaoLoading.set(false);
+        },
+      });
+  }
+
+  abrirFormularioAvaliacao(): void {
+    this.mostrandoFormulario.set(true);
+  }
+
+  fecharFormularioAvaliacao(): void {
+    this.mostrandoFormulario.set(false);
   }
 }

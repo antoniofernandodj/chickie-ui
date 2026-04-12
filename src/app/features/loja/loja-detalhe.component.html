@@ -95,6 +95,130 @@
       <p class="text-gray-500 text-sm mb-8 leading-relaxed max-w-2xl">{{ loja()!.descricao }}</p>
     }
 
+    <!-- Avaliação de Loja -->
+    @if (auth.isAuthenticated()) {
+      <section class="mb-10">
+        <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          ⭐ Avalie esta Loja
+        </h2>
+
+        <!-- Resumo da Nota Média (visível para todos) -->
+        @if (auth.isAdmin() && notaMedia() !== null) {
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div class="flex items-start gap-6">
+              <div class="text-center">
+                <div class="text-5xl font-bold" style="color:var(--color-brand)">
+                  {{ notaMedia() }}
+                </div>
+                <div class="flex gap-0.5 mt-2">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <svg class="w-5 h-5" [class]="star <= (notaMedia() ?? 0) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  }
+                </div>
+                <div class="text-sm text-gray-500 mt-1">{{ avaliacaoStats()?.total }} avaliação(ões)</div>
+              </div>
+
+              <!-- Distribuição de Notas -->
+              @if (avaliacaoStats()) {
+                <div class="flex-1">
+                  @for (nota of [5,4,3,2,1]; track nota; let idx = $index) {
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="text-sm text-gray-600 w-8">{{ nota }} ★</span>
+                      <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-yellow-400 h-full rounded-full transition-all"
+                             [style.width]="(avaliacaoStats()!.distribuicao[nota-1] / avaliacaoStats()!.total * 100) + '%'">
+                        </div>
+                      </div>
+                      <span class="text-sm text-gray-500 w-8 text-right">{{ avaliacaoStats()!.distribuicao[nota-1] }}</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Avaliação do Usuário -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          @if (avaliacaoDoUsuario() && !mostrandoFormulario()) {
+            <!-- Mostrar avaliação existente -->
+            <div>
+              <div class="flex items-start justify-between mb-4">
+                <div>
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">Sua avaliação:</h3>
+                  <div class="flex gap-0.5">
+                    @for (star of [1,2,3,4,5]; track star) {
+                      <svg class="w-5 h-5" [class]="star <= avaliacaoDoUsuario()!.nota ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'" viewBox="0 0 24 24">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                      </svg>
+                    }
+                  </div>
+                </div>
+                <button (click)="abrirFormularioAvaliacao()"
+                        class="text-sm font-medium hover:underline"
+                        style="color:var(--color-brand)">
+                  Editar
+                </button>
+              </div>
+
+              @if (avaliacaoDoUsuario()!.comentario) {
+                <p class="text-gray-600 text-sm leading-relaxed">
+                  {{ avaliacaoDoUsuario()!.comentario }}
+                </p>
+              }
+
+              <p class="text-xs text-gray-400 mt-4">
+                Publicada em {{ avaliacaoDoUsuario()!.criado_em | date:'dd/MM/yyyy' }}
+              </p>
+            </div>
+          } @else if (mostrandoFormulario()) {
+            <!-- Formulário de avaliação -->
+            <app-avaliacao-loja-form
+              [avaliacaoExistente]="!!avaliacaoDoUsuario()"
+              [loading]="avaliacaoLoading()"
+              (salvar)="salvarAvaliacao($event.nota, $event.comentario)"
+              (cancelar)="fecharFormularioAvaliacao()">
+            </app-avaliacao-loja-form>
+          } @else {
+            <!-- Botão para criar avaliação -->
+            <div class="text-center py-6">
+              <div class="text-4xl mb-3">⭐</div>
+              <h3 class="text-base font-semibold text-gray-800 mb-2">
+                Você ainda não avaliou esta loja
+              </h3>
+              <p class="text-gray-500 text-sm mb-4">
+                Compartilhe sua experiência com outros clientes!
+              </p>
+              <button (click)="abrirFormularioAvaliacao()"
+                      class="px-6 py-2.5 rounded-xl font-semibold text-sm text-white"
+                      style="background:var(--color-brand)">
+                Avaliar Loja
+              </button>
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    @if (!auth.isAuthenticated()) {
+      <div class="bg-orange-50 border border-orange-100 rounded-2xl p-8 text-center max-w-md mx-auto mb-10">
+        <div class="text-4xl mb-3">🔒</div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Faça login para avaliar a loja</h2>
+        <p class="text-gray-500 text-sm mb-5">Acesse sua conta para compartilhar sua experiência.</p>
+        <div class="flex justify-center gap-3">
+          <a routerLink="/auth/login"
+             class="px-5 py-2.5 rounded-xl font-semibold text-white text-sm"
+             style="background:var(--color-brand)">Entrar</a>
+          <a routerLink="/auth/signup"
+             class="px-5 py-2.5 rounded-xl font-semibold text-sm border border-gray-200 text-gray-700 hover:bg-gray-50">
+            Criar conta
+          </a>
+        </div>
+      </div>
+    }
+
     <!-- Horários de Funcionamento -->
     @if (horarios().length > 0) {
       <section class="mb-10">
