@@ -1307,23 +1307,11 @@ export class AdminComponent {
   }
 
   toggleStatusCupom(cupom: Cupom) {
-    const novoStatus = cupom.status === 'Ativo' ? 'Inativo' : 'Ativo';
-    const dataValidadeIso = cupom.data_validade ? `${cupom.data_validade.split('T')[0]}T23:59:59Z` : cupom.data_validade;
-    
-    const updateRequest: UpdateCupomRequest = {
-      loja_uuid: cupom.loja_uuid,
-      codigo: cupom.codigo,
-      descricao: cupom.descricao,
-      tipo_desconto: cupom.tipo_desconto,
-      valor_desconto: cupom.valor_desconto,
-      valor_minimo: cupom.valor_minimo,
-      data_validade: dataValidadeIso,
-      limite_uso: cupom.limite_uso,
-      status: novoStatus,
-    };
-    this.marketingService.atualizarCupom(cupom.uuid, updateRequest).subscribe({
+    const novoStatus = cupom.status === 'Ativo';
+    this.marketingService.atualizarStatusCupom(cupom.uuid, !novoStatus).subscribe({
       next: () => {
-        toast.success(`Cupom "${cupom.codigo}" agora está ${novoStatus === 'Ativo' ? 'ativo' : 'inativo'}.`);
+        const statusTexto = !novoStatus ? 'ativo' : 'inativo';
+        toast.success(`Cupom "${cupom.codigo}" agora está ${statusTexto}.`);
         this.refreshCupons();
       },
       error: (e) => {

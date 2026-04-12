@@ -41,6 +41,11 @@ export class MarketingService {
     return this.http.put<Cupom>(`${environment.apiUrl}/cupons/${uuid}`, body);
   }
 
+  /** Atualiza status do cupom (ativar/inativar) */
+  atualizarStatusCupom(uuid: string, ativo: boolean): Observable<void> {
+    return this.http.patch<void>(`${environment.apiUrl}/cupons/${uuid}/status`, { ativo });
+  }
+
   /** Deleta cupom por UUID */
   deletarCupom(uuid: string): Observable<void> {
     return this.http.delete<void>(`${environment.apiUrl}/cupons/${uuid}`);
