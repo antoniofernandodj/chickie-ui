@@ -64,7 +64,8 @@ import { FormsModule } from '@angular/forms';
         <button (click)="onSalvar()"
                 [disabled]="nota === 0 || loading()"
                 class="px-6 py-2.5 rounded-xl font-semibold text-sm text-white
-                       disabled:opacity-50 disabled:cursor-not-allowed">
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+                style="background:var(--color-brand)">
           @if (loading()) {
             <span class="flex items-center gap-2">
               <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
