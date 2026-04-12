@@ -488,6 +488,17 @@ export interface CreateCupomRequest {
   limite_uso:     number;
 }
 
+export interface UpdateCupomRequest {
+  codigo?:          string;
+  descricao?:       string;
+  tipo_desconto?:   TipoDesconto;
+  valor_desconto?:  number;
+  valor_minimo?:    number;
+  data_validade?:   string;
+  limite_uso?:      number;
+  status?:          StatusCupom;
+}
+
 // ─── Avaliação ────────────────────────────────────────────────────────────────
 
 export interface AvaliacaoDeLoja {

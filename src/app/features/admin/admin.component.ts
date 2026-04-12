@@ -9,8 +9,9 @@ import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
+import { MarketingService } from '../../core/services/marketing.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -22,6 +23,7 @@ export class AdminComponent {
   private catalogoService = inject(CatalogoService);
   private lojaService = inject(LojaService);
   private authService = inject(AuthService);
+  private marketingService = inject(MarketingService);
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('lojas');
@@ -30,6 +32,7 @@ export class AdminComponent {
     { id: 'equipe',      label: '👥 Equipe'    },
     { id: 'catalogo',    label: '📦 Catálogo'  },
     { id: 'adicionais',  label: '🧀 Adicionais' },
+    { id: 'cupons',      label: '🎟️ Cupons'    },
     { id: 'enderecos',   label: '📍 Endereços' },
     { id: 'horarios',    label: '🕐 Horários'  },
   ];
@@ -130,6 +133,7 @@ export class AdminComponent {
     this.refreshCategorias();
     this.refreshEnderecos();
     this.refreshHorarios();
+    this.refreshCupons();
   }
 
   // ── Equipe: Funcionários ──────────────────────────────────────────────────
@@ -357,6 +361,14 @@ export class AdminComponent {
       const loja = this.lojaSelecionada();
       if (aba === 'adicionais' && loja) {
         this.refreshAdicionais();
+      }
+    });
+
+    // Auto-load cupons when tab changes to 'cupons'
+    effect(() => {
+      const aba = this.aba();
+      if (aba === 'cupons') {
+        this.refreshCupons();
       }
     });
   }
@@ -1096,6 +1108,180 @@ export class AdminComponent {
       },
       error: (e) => {
         toast.error(e?.error?.error ?? 'Erro ao alterar disponibilidade do adicional.');
+      },
+    });
+  }
+
+  // ── Cupons de Desconto ────────────────────────────────────────────────────
+
+  private readonly refreshCupomTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _cupons = toSignal(
+    this.refreshCupomTrigger.pipe(
+      switchMap(() => {
+        return this.marketingService.listarCupons().pipe(
+          catchError(() => of([] as Cupom[])),
+        );
+      }),
+    ),
+    { initialValue: [] as Cupom[] },
+  );
+  readonly cupomLoading = computed(() => this._cupons() === undefined);
+  readonly cupons = computed(() => this._cupons() ?? []);
+
+  private refreshCupons() {
+    this.refreshCupomTrigger.next();
+  }
+
+  cupomForm = this.fb.group({
+    codigo: ['', [Validators.required, Validators.minLength(3)]],
+    descricao: ['', Validators.required],
+    tipo_desconto: ['percentual' as TipoDesconto, Validators.required],
+    valor_desconto: [0, [Validators.required, Validators.min(0)]],
+    valor_minimo: [0, [Validators.required, Validators.min(0)]],
+    data_validade: ['', Validators.required],
+    limite_uso: [0, [Validators.required, Validators.min(0)]],
+  });
+
+  cupomLoadingSubmit = signal(false);
+  cupomError = signal('');
+  cupomEditId = signal<string | null>(null);
+
+  get fcup() {
+    return this.cupomForm.controls;
+  }
+
+  criarCupom() {
+    const loja = this.lojaSelecionada();
+    if (!loja) {
+      this.cupomError.set('Selecione uma loja primeiro.');
+      return;
+    }
+    if (this.cupomForm.invalid) {
+      this.cupomForm.markAllAsTouched();
+      return;
+    }
+    this.cupomLoadingSubmit.set(true);
+    this.cupomError.set('');
+    const fv = this.cupomForm.value;
+    this.marketingService.criarCupom({
+      loja_uuid: loja.uuid,
+      codigo: fv.codigo!,
+      descricao: fv.descricao!,
+      tipo_desconto: fv.tipo_desconto!,
+      valor_desconto: fv.valor_desconto!,
+      valor_minimo: fv.valor_minimo!,
+      data_validade: fv.data_validade!,
+      limite_uso: fv.limite_uso!,
+    }).subscribe({
+      next: () => {
+        this.cupomLoadingSubmit.set(false);
+        toast.success('Cupom criado com sucesso!');
+        this.cupomForm.reset({
+          tipo_desconto: 'percentual',
+          valor_desconto: 0,
+          valor_minimo: 0,
+          limite_uso: 0,
+        });
+        this.refreshCupons();
+      },
+      error: (e) => {
+        this.cupomLoadingSubmit.set(false);
+        this.cupomError.set(e?.error?.error ?? 'Erro ao criar cupom.');
+      },
+    });
+  }
+
+  editarCupom(cupom: Cupom) {
+    this.cupomEditId.set(cupom.uuid);
+    this.cupomForm.patchValue({
+      codigo: cupom.codigo,
+      descricao: cupom.descricao,
+      tipo_desconto: cupom.tipo_desconto,
+      valor_desconto: cupom.valor_desconto,
+      valor_minimo: cupom.valor_minimo,
+      data_validade: cupom.data_validade,
+      limite_uso: cupom.limite_uso,
+    });
+    this.cupomError.set('');
+  }
+
+  salvarEdicaoCupom() {
+    const uuid = this.cupomEditId();
+    if (!uuid) return;
+    if (this.cupomForm.invalid) {
+      this.cupomForm.markAllAsTouched();
+      return;
+    }
+    this.cupomLoadingSubmit.set(true);
+    this.cupomError.set('');
+    const fv = this.cupomForm.value;
+    const updateRequest: UpdateCupomRequest = {
+      codigo: fv.codigo ?? undefined,
+      descricao: fv.descricao ?? undefined,
+      tipo_desconto: fv.tipo_desconto ?? undefined,
+      valor_desconto: fv.valor_desconto ?? undefined,
+      valor_minimo: fv.valor_minimo ?? undefined,
+      data_validade: fv.data_validade ?? undefined,
+      limite_uso: fv.limite_uso ?? undefined,
+    };
+    this.marketingService.atualizarCupom(uuid, updateRequest).subscribe({
+      next: () => {
+        this.cupomLoadingSubmit.set(false);
+        this.cupomEditId.set(null);
+        toast.success('Cupom atualizado com sucesso!');
+        this.cupomForm.reset({
+          tipo_desconto: 'percentual',
+          valor_desconto: 0,
+          valor_minimo: 0,
+          limite_uso: 0,
+        });
+        this.refreshCupons();
+      },
+      error: (e) => {
+        this.cupomLoadingSubmit.set(false);
+        this.cupomError.set(e?.error?.error ?? 'Erro ao atualizar cupom.');
+      },
+    });
+  }
+
+  cancelarEdicaoCupom() {
+    this.cupomEditId.set(null);
+    this.cupomForm.reset({
+      tipo_desconto: 'percentual',
+      valor_desconto: 0,
+      valor_minimo: 0,
+      limite_uso: 0,
+    });
+    this.cupomError.set('');
+  }
+
+  deletarCupom(uuid: string, codigo: string) {
+    if (!confirm(`Deletar cupom "${codigo}"? Esta ação não pode ser desfeita.`)) return;
+    this.marketingService.deletarCupom(uuid).subscribe({
+      next: () => {
+        toast.success('Cupom deletado com sucesso!');
+        if (this.cupomEditId() === uuid) {
+          this.cancelarEdicaoCupom();
+        }
+        this.refreshCupons();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar cupom.');
+      },
+    });
+  }
+
+  toggleStatusCupom(uuid: string, codigo: string, statusAtual: StatusCupom) {
+    const novoStatus = statusAtual === 'Ativo' ? 'Inativo' : 'Ativo';
+    const updateRequest: UpdateCupomRequest = { status: novoStatus };
+    this.marketingService.atualizarCupom(uuid, updateRequest).subscribe({
+      next: () => {
+        toast.success(`Cupom "${codigo}" agora está ${novoStatus === 'Ativo' ? 'ativo' : 'inativo'}.`);
+        this.refreshCupons();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao alterar status do cupom.');
       },
     });
   }

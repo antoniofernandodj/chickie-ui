@@ -11,6 +11,7 @@ import {
   CreatePromocaoRequest,
   Cupom,
   Promocao,
+  UpdateCupomRequest,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -20,15 +21,32 @@ export class MarketingService {
 
   // ── Cupons ──────────────────────────────────────────────────────────────────
 
-  criarCupom(lojaUuid: string, body: CreateCupomRequest): Observable<Cupom> {
-    return this.http.post<Cupom>(`${this.base}/${lojaUuid}/cupons`, body);
-  }
-
+  /** Lista todos os cupons (todas as lojas) */
   listarCupons(): Observable<Cupom[]> {
-    return this.http.get<Cupom[]>(`${this.base}/cupons`);
+    return this.http.get<Cupom[]>(`${environment.apiUrl}/cupons`);
   }
 
-  /** Público — valida cupom pelo código */
+  /** Busca cupom por UUID */
+  buscarCupom(uuid: string): Observable<Cupom> {
+    return this.http.get<Cupom>(`${environment.apiUrl}/cupons/${uuid}`);
+  }
+
+  /** Cria cupom genérico com loja_uuid no body */
+  criarCupom(body: CreateCupomRequest & { loja_uuid: string }): Observable<Cupom> {
+    return this.http.post<Cupom>(`${environment.apiUrl}/cupons`, body);
+  }
+
+  /** Atualiza cupom por UUID */
+  atualizarCupom(uuid: string, body: UpdateCupomRequest): Observable<Cupom> {
+    return this.http.put<Cupom>(`${environment.apiUrl}/cupons/${uuid}`, body);
+  }
+
+  /** Deleta cupom por UUID */
+  deletarCupom(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/cupons/${uuid}`);
+  }
+
+  /** Público — valida cupom pelo código (rota legada) */
   validarCupom(codigo: string): Observable<Cupom> {
     return this.http.get<Cupom>(`${this.base}/cupons/${codigo}`);
   }
