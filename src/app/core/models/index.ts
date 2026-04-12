@@ -16,7 +16,7 @@ export type StatusPedido =
   | 'saiu_para_entrega'
   | 'entregue';
 
-export type TipoDesconto = 'percentual' | 'fixo';
+export type TipoDesconto = 'percentual' | 'valor_fixo' | 'frete_gratis';
 export type TipoEscopo   = 'loja' | 'produto' | 'categoria';
 export type StatusCupom  = 'Ativo' | 'Inativo' | 'Expirado';
 

@@ -345,6 +345,34 @@ export class AdminComponent {
       });
     }
 
+    // Monitor tipo_desconto changes to handle frete_gratis
+    const tipoDescontoControl = this.cupomForm.get('tipo_desconto');
+    if (tipoDescontoControl) {
+      tipoDescontoControl.valueChanges.subscribe(tipo => {
+        const valorDescontoControl = this.cupomForm.get('valor_desconto');
+        const valorMinimoControl = this.cupomForm.get('valor_minimo');
+        
+        if (tipo === 'frete_gratis') {
+          // Set values to 0 and disable for frete_gratis
+          valorDescontoControl?.setValue(0);
+          valorMinimoControl?.setValue(0);
+          valorDescontoControl?.disable();
+          valorMinimoControl?.disable();
+          // Remove required validators for frete_gratis
+          valorDescontoControl?.clearValidators();
+          valorMinimoControl?.clearValidators();
+        } else {
+          // Enable and add validators for other types
+          valorDescontoControl?.enable();
+          valorMinimoControl?.enable();
+          valorDescontoControl?.setValidators([Validators.required, Validators.min(0)]);
+          valorMinimoControl?.setValidators([Validators.required, Validators.min(0)]);
+        }
+        valorDescontoControl?.updateValueAndValidity();
+        valorMinimoControl?.updateValueAndValidity();
+      });
+    }
+
     // Auto-load products when categories change
     effect(() => {
       const cats = this.categorias();
