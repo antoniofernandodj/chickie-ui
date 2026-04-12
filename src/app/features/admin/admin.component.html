@@ -1274,7 +1274,7 @@
                     </div>
 
                     <div class="flex gap-1.5">
-                      <button (click)="toggleStatusCupom(cupom.uuid, cupom.codigo, cupom.status, cupom.loja_uuid)"
+                      <button (click)="toggleStatusCupom(cupom)"
                               class="flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors"
                               [class.bg-green-100]="cupom.status !== 'Ativo'"
                               [class.text-green-700]="cupom.status !== 'Ativo'"

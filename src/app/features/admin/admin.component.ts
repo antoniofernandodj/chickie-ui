@@ -1306,15 +1306,24 @@ export class AdminComponent {
     });
   }
 
-  toggleStatusCupom(uuid: string, codigo: string, statusAtual: StatusCupom, lojaUuid?: string) {
-    const novoStatus = statusAtual === 'Ativo' ? 'Inativo' : 'Ativo';
+  toggleStatusCupom(cupom: Cupom) {
+    const novoStatus = cupom.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    const dataValidadeIso = cupom.data_validade ? `${cupom.data_validade.split('T')[0]}T23:59:59Z` : cupom.data_validade;
+    
     const updateRequest: UpdateCupomRequest = {
-      loja_uuid: lojaUuid,
+      loja_uuid: cupom.loja_uuid,
+      codigo: cupom.codigo,
+      descricao: cupom.descricao,
+      tipo_desconto: cupom.tipo_desconto,
+      valor_desconto: cupom.valor_desconto,
+      valor_minimo: cupom.valor_minimo,
+      data_validade: dataValidadeIso,
+      limite_uso: cupom.limite_uso,
       status: novoStatus,
     };
-    this.marketingService.atualizarCupom(uuid, updateRequest).subscribe({
+    this.marketingService.atualizarCupom(cupom.uuid, updateRequest).subscribe({
       next: () => {
-        toast.success(`Cupom "${codigo}" agora está ${novoStatus === 'Ativo' ? 'ativo' : 'inativo'}.`);
+        toast.success(`Cupom "${cupom.codigo}" agora está ${novoStatus === 'Ativo' ? 'ativo' : 'inativo'}.`);
         this.refreshCupons();
       },
       error: (e) => {
