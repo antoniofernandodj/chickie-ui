@@ -1728,25 +1728,6 @@ export class AdminComponent {
     });
   }
 
-  // ── Avaliações: Deletar ──────────────────────────────────────────────────
-
-  deletarAvaliacao(uuid: string): void {
-    const loja = this.lojaSelecionada();
-    if (!loja) return;
-
-    if (!confirm('Tem certeza que deseja deletar esta avaliação?')) return;
-
-    this.marketingService.deletarAvaliacaoLoja(uuid).subscribe({
-      next: () => {
-        toast.success('Avaliação deletada com sucesso!');
-        this.refreshAvaliacoes();
-      },
-      error: (e) => {
-        toast.error(e?.error?.error ?? 'Erro ao deletar avaliação.');
-      },
-    });
-  }
-
   // Helper para obter nome do usuário a partir do JWT (fallback)
   getNomeUsuario(usuarioUuid: string): string {
     // Tenta obter do localStorage ou retorna UUID curto
