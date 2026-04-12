@@ -31,31 +31,8 @@ export class LojaDetalheComponent {
 
   // ── Avaliação de Loja ──────────────────────────────────────────────────────
   readonly avaliacaoDoUsuario = signal<AvaliacaoDeLoja | null>(null);
-  readonly todasAvaliacoes = signal<AvaliacaoDeLoja[] | null>(null);
   readonly avaliacaoLoading = signal(false);
   readonly mostrandoFormulario = signal(false);
-
-  readonly notaMedia = computed(() => {
-    const avaliacoes = this.todasAvaliacoes();
-    if (!avaliacoes || avaliacoes.length === 0) return null;
-    const soma = avaliacoes.reduce((acc, a) => acc + this.toNumber(a.nota), 0);
-    return parseFloat((soma / avaliacoes.length).toFixed(1));
-  });
-
-  readonly avaliacaoStats = computed(() => {
-    const avaliacoes = this.todasAvaliacoes();
-    if (!avaliacoes || avaliacoes.length === 0) return null;
-    const distribuicao = [0, 0, 0, 0, 0]; // 1-5 estrelas
-    avaliacoes.forEach((a) => {
-      const nota = Math.round(this.toNumber(a.nota));
-      const idx = nota - 1;
-      if (idx >= 0 && idx < 5) distribuicao[idx]++;
-    });
-    return {
-      total: avaliacoes.length,
-      distribuicao,
-    };
-  });
 
   readonly loja = toSignal(
     this.route.paramMap.pipe(
@@ -71,11 +48,6 @@ export class LojaDetalheComponent {
 
               // Carregar avaliação do usuário
               this.carregarAvaliacaoDoUsuario(loja.uuid);
-
-              // Se admin, carregar todas as avaliações
-              if (this.auth.isAdmin()) {
-                this.carregarTodasAvaliacoes(loja.uuid);
-              }
             }
           }),
           catchError(() => of(null)),
@@ -255,17 +227,6 @@ export class LojaDetalheComponent {
     }
   }
 
-  private carregarTodasAvaliacoes(lojaUuid: string): void {
-    this.marketingService.listarAvaliacoesLoja(lojaUuid).subscribe({
-      next: (avaliacoes) => {
-        this.todasAvaliacoes.set(avaliacoes);
-      },
-      error: () => {
-        this.todasAvaliacoes.set(null);
-      },
-    });
-  }
-
   salvarAvaliacao(nota: number, comentario: string | null): void {
     const loja = this.loja();
     if (!loja) return;
@@ -285,11 +246,6 @@ export class LojaDetalheComponent {
           // Salvar no localStorage para recuperação futura
           const key = `avaliacao_loja_${loja.uuid}`;
           localStorage.setItem(key, JSON.stringify({ uuid: avaliacao.uuid }));
-
-          // Recarregar todas as avaliações se for admin
-          if (this.auth.isAdmin()) {
-            this.carregarTodasAvaliacoes(loja.uuid);
-          }
         },
         error: (err) => {
           console.error('Erro ao salvar avaliação:', err);

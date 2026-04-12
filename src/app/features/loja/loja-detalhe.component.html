@@ -102,44 +102,6 @@
           ⭐ Avalie esta Loja
         </h2>
 
-        <!-- Resumo da Nota Média (visível para todos) -->
-        @if (auth.isAdmin() && notaMedia() !== null) {
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-            <div class="flex items-start gap-6">
-              <div class="text-center">
-                <div class="text-5xl font-bold" style="color:var(--color-brand)">
-                  {{ notaMedia() }}
-                </div>
-                <div class="flex gap-0.5 mt-2">
-                  @for (star of [1,2,3,4,5]; track star) {
-                    <svg class="w-5 h-5" [class]="star <= toNumber(notaMedia() ?? 0) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'" viewBox="0 0 24 24">
-                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                  }
-                </div>
-                <div class="text-sm text-gray-500 mt-1">{{ avaliacaoStats()?.total }} avaliação(ões)</div>
-              </div>
-
-              <!-- Distribuição de Notas -->
-              @if (avaliacaoStats()) {
-                <div class="flex-1">
-                  @for (nota of [5,4,3,2,1]; track nota; let idx = $index) {
-                    <div class="flex items-center gap-2 mb-1">
-                      <span class="text-sm text-gray-600 w-8">{{ nota }} ★</span>
-                      <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                        <div class="bg-yellow-400 h-full rounded-full transition-all"
-                             [style.width]="(avaliacaoStats()!.distribuicao[nota-1] / avaliacaoStats()!.total * 100) + '%'">
-                        </div>
-                      </div>
-                      <span class="text-sm text-gray-500 w-8 text-right">{{ avaliacaoStats()!.distribuicao[nota-1] }}</span>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        }
-
         <!-- Avaliação do Usuário -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           @if (avaliacaoDoUsuario() && !mostrandoFormulario()) {
