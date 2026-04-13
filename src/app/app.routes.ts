@@ -6,7 +6,7 @@ export const routes: Routes = [
     path: '',
     loadComponent: () =>
       import('./features/home/home.component').then((m) => m.HomeComponent),
-    title: 'Chickie — Delivery',
+    title: 'Chiquitos — Delivery',
   },
   {
     path: 'auth/login',
@@ -14,7 +14,7 @@ export const routes: Routes = [
       import('./features/auth/login/login.component').then(
         (m) => m.LoginComponent,
       ),
-    title: 'Entrar — Chickie',
+    title: 'Entrar — Chiquitos',
   },
   {
     path: 'auth/signup',
@@ -22,7 +22,7 @@ export const routes: Routes = [
       import('./features/auth/signup/signup.component').then(
         (m) => m.SignupComponent,
       ),
-    title: 'Criar conta — Chickie',
+    title: 'Criar conta — Chiquitos',
   },
   {
     path: 'loja/:slug',
@@ -30,7 +30,7 @@ export const routes: Routes = [
       import('./features/loja/loja-detalhe.component').then(
         (m) => m.LojaDetalheComponent,
       ),
-    title: 'Loja — Chickie',
+    title: 'Loja — Chiquitos',
   },
   {
     path: 'pedidos',
@@ -39,7 +39,7 @@ export const routes: Routes = [
       import('./features/pedidos/pedidos.component').then(
         (m) => m.PedidosComponent,
       ),
-    title: 'Meus Pedidos — Chickie',
+    title: 'Meus Pedidos — Chiquitos',
   },
   {
     path: 'pedidos/:uuid',
@@ -48,7 +48,7 @@ export const routes: Routes = [
       import('./features/pedidos/pedido-detalhe.component').then(
         (m) => m.PedidoDetalheComponent,
       ),
-    title: 'Pedido — Chickie',
+    title: 'Pedido — Chiquitos',
   },
   {
     path: 'favoritos',
@@ -57,7 +57,7 @@ export const routes: Routes = [
       import('./features/favoritos/favoritos.component').then(
         (m) => m.FavoritosComponent,
       ),
-    title: 'Favoritos — Chickie',
+    title: 'Favoritos — Chiquitos',
   },
   {
     path: 'perfil',
@@ -66,7 +66,7 @@ export const routes: Routes = [
       import('./features/perfil/perfil.component').then(
         (m) => m.PerfilComponent,
       ),
-    title: 'Meu Perfil — Chickie',
+    title: 'Meu Perfil — Chiquitos',
   },
   {
     path: 'admin',
@@ -75,7 +75,7 @@ export const routes: Routes = [
       import('./features/admin/admin-empresas-list.component').then(
         (m) => m.AdminEmpresasListComponent,
       ),
-    title: 'Minhas Empresas — Chickie',
+    title: 'Minhas Empresas — Chiquitos',
   },
   {
     path: 'admin/:loja_uuid',
@@ -84,7 +84,7 @@ export const routes: Routes = [
       import('./features/admin/admin.component').then(
         (m) => m.AdminComponent,
       ),
-    title: 'Painel Admin — Chickie',
+    title: 'Painel Admin — Chiquitos',
   },
   {
     path: '**',
@@ -92,6 +92,6 @@ export const routes: Routes = [
       import('./features/not-found/not-found.component').then(
         (m) => m.NotFoundComponent,
       ),
-    title: '404 — Chickie',
+    title: '404 — Chiquitos',
   },
 ];

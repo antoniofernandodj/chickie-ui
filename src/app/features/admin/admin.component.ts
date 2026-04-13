@@ -360,12 +360,39 @@ export class AdminComponent {
       }
     });
 
-    // Auto-load config-pedido when tab changes to 'config-pedido'
-    let configPedidoLoaded = false;
+    // Auto-load equipe when tab changes to 'equipe'
     effect(() => {
       const aba = this.aba();
-      if (aba === 'config-pedido' && !configPedidoLoaded) {
-        configPedidoLoaded = true;
+      const loja = this.lojaSelecionada();
+      if (aba === 'equipe' && loja) {
+        this.refreshFuncionarios();
+        this.refreshEntregadores();
+      }
+    });
+
+    // Auto-load enderecos when tab changes to 'enderecos'
+    effect(() => {
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'enderecos' && loja) {
+        this.refreshEnderecos();
+      }
+    });
+
+    // Auto-load horarios when tab changes to 'horarios'
+    effect(() => {
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'horarios' && loja) {
+        this.refreshHorarios();
+      }
+    });
+
+    // Auto-load config-pedido when tab changes to 'config-pedido'
+    effect(() => {
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'config-pedido' && loja) {
         this.carregarConfigPedido();
       }
     });
