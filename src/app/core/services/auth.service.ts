@@ -135,8 +135,9 @@ export class AuthService {
 
   /** Verificar disponibilidade de celular */
   verificarCelular(celular: string): Observable<{ disponivel: boolean }> {
-    return this.http.get<{ disponivel: boolean }>(
-      `${environment.apiUrl}/usuarios/verificar-celular/${celular}`,
+    return this.http.post<{ disponivel: boolean }>(
+      `${this.base}/verificar-celular`,
+      { celular },
     );
   }
 
