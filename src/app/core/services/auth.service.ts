@@ -133,6 +133,13 @@ export class AuthService {
     return this.http.post<{ disponivel: boolean }>(`${this.base}/verificar-username`, { username });
   }
 
+  /** Verificar disponibilidade de celular */
+  verificarCelular(celular: string): Observable<{ disponivel: boolean }> {
+    return this.http.get<{ disponivel: boolean }>(
+      `${environment.apiUrl}/usuarios/verificar-celular/${celular}`,
+    );
+  }
+
   logout(): void {
     this.removeItem('chickie_token');
     this.removeItem('chickie_nome');

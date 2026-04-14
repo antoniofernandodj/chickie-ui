@@ -18,8 +18,10 @@ export class SignupComponent {
 
   emailAvailable = signal<boolean | null>(null);
   usernameAvailable = signal<boolean | null>(null);
+  celularAvailable = signal<boolean | null>(null);
   emailChecking = signal(false);
   usernameChecking = signal(false);
+  celularChecking = signal(false);
 
   form = this.fb.group({
     nome: ['', [Validators.required, Validators.minLength(3)]],
@@ -91,6 +93,30 @@ export class SignupComponent {
         this.usernameAvailable.set(result.disponivel);
       });
     }
+
+    // Monitor celular changes with debounce
+    const celularControl = this.form.get('celular');
+    if (celularControl) {
+      celularControl.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        filter((celular): celular is string => celular != null && celular.length === 11),
+        switchMap(celular => {
+          this.celularChecking.set(true);
+          this.celularAvailable.set(null);
+          return this.auth.verificarCelular(celular).pipe(
+            catchError(() => {
+              this.celularChecking.set(false);
+              this.celularAvailable.set(null);
+              return of({ disponivel: false });
+            })
+          );
+        })
+      ).subscribe(result => {
+        this.celularChecking.set(false);
+        this.celularAvailable.set(result.disponivel);
+      });
+    }
   }
 
   get f() {
@@ -100,7 +126,8 @@ export class SignupComponent {
   get formReady(): boolean {
     const emailOk = this.emailAvailable() === true;
     const usernameOk = this.usernameAvailable() === true;
-    return emailOk && usernameOk && this.form.valid;
+    const celularOk = this.celularAvailable() === true;
+    return emailOk && usernameOk && celularOk && this.form.valid;
   }
 
   submit() {
