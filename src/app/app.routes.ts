@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { ownerGuard } from './core/guards/owner.guard';
 
 export const routes: Routes = [
   {
@@ -67,6 +68,15 @@ export const routes: Routes = [
         (m) => m.PerfilComponent,
       ),
     title: 'Meu Perfil — Chiquitos',
+  },
+  {
+    path: 'owner',
+    canActivate: [ownerGuard],
+    loadComponent: () =>
+      import('./features/owner/owner-panel.component').then(
+        (m) => m.OwnerPanelComponent,
+      ),
+    title: 'Painel Owner — Chiquitos',
   },
   {
     path: 'admin',

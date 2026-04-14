@@ -39,7 +39,14 @@ export class LoginComponent {
       next: () => {
         // Busca o perfil via GET /api/auth/me para salvar chickie_classe
         this.auth.fetchAndSaveUserProfile().subscribe({
-          next: () => this.router.navigate(['/']),
+          next: (user) => {
+            // Redireciona owner para painel exclusivo
+            if (user.classe === 'owner') {
+              this.router.navigate(['/owner']);
+            } else {
+              this.router.navigate(['/']);
+            }
+          },
           error: () => this.router.navigate(['/']), // Continua mesmo se falhar
         });
       },

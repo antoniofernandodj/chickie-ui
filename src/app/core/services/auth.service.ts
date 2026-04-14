@@ -33,6 +33,7 @@ export class AuthService {
   });
 
   readonly isAdmin = computed(() => this.userClass() === 'administrador' || this.userClass() === 'owner');
+  readonly isOwner = computed(() => this.userClass() === 'owner');
 
   private loadToken(): string | null {
     if (!isPlatformBrowser(this.platformId)) return null;

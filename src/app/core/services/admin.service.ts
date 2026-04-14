@@ -195,4 +195,17 @@ export class AdminService {
       `${environment.apiUrl}/horarios/${lojaUuid}/dia/${diaSemana}`,
     );
   }
+
+  // ── Owner Endpoints ─────────────────────────────────────────────────────
+
+  bloquearLoja(lojaUuid: string, bloqueado: boolean): Observable<MessageResponse> {
+    return this.http.patch<MessageResponse>(
+      `${environment.apiUrl}/lojas/${lojaUuid}/bloqueado`,
+      { bloqueado },
+    );
+  }
+
+  wipeDatabase(): Observable<MessageResponse> {
+    return this.http.delete<MessageResponse>(`${environment.apiUrl}/wipe`);
+  }
 }
