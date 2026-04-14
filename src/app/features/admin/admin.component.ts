@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo } from '../../core/models';
 
 @Component({
   selector: 'app-admin',
@@ -36,6 +36,7 @@ export class AdminComponent {
     { id: 'catalogo',    label: '📦 Catálogo'  },
     { id: 'adicionais',  label: '🧀 Adicionais' },
     { id: 'cupons',      label: '🎟️ Cupons'    },
+    { id: 'promocoes',   label: '📢 Promoções' },
     { id: 'avaliacoes',  label: '⭐ Avaliações' },
     { id: 'config-pedido', label: '⚙️ Config Pedido' },
     { id: 'enderecos',   label: '📍 Endereços' },
@@ -348,6 +349,15 @@ export class AdminComponent {
       const aba = this.aba();
       if (aba === 'cupons') {
         this.refreshCupons();
+      }
+    });
+
+    // Auto-load promocoes when tab changes to 'promocoes'
+    effect(() => {
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'promocoes' && loja) {
+        this.refreshPromocoes();
       }
     });
 
@@ -1313,6 +1323,213 @@ export class AdminComponent {
       },
       error: (e) => {
         toast.error(e?.error?.error ?? 'Erro ao alterar status do cupom.');
+      },
+    });
+  }
+
+  // ── Promoções ──────────────────────────────────────────────────────────────
+
+  private readonly refreshPromocaoTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _promocoes = toSignal(
+    this.refreshPromocaoTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as Promocao[]);
+        return this.marketingService.listarPromocoes(loja.uuid).pipe(
+          catchError(() => of([] as Promocao[])),
+        );
+      }),
+    ),
+    { initialValue: [] as Promocao[] },
+  );
+  readonly promocaoLoading = computed(() => this._promocoes() === undefined);
+  readonly promocoes = computed(() => this._promocoes() ?? []);
+
+  private refreshPromocoes() {
+    this.refreshPromocaoTrigger.next();
+  }
+
+  promocaoForm = this.fb.group({
+    nome: ['', [Validators.required, Validators.minLength(3)]],
+    descricao: ['', Validators.required],
+    tipo_desconto: ['percentual' as TipoDesconto, Validators.required],
+    valor_desconto: [0, [Validators.required, Validators.min(0)]],
+    valor_minimo: [null as number | null, Validators.min(0)],
+    data_inicio: ['', Validators.required],
+    data_fim: ['', Validators.required],
+    dias_semana_validos: [[] as number[], Validators.required],
+    tipo_escopo: ['loja' as TipoEscopo, Validators.required],
+    produto_uuid: [null as string | null],
+    categoria_uuid: [null as string | null],
+    prioridade: [1, [Validators.required, Validators.min(0)]],
+  });
+
+  promocaoLoadingSubmit = signal(false);
+  promocaoError = signal('');
+  promocaoEditId = signal<string | null>(null);
+
+  get fprom() {
+    return this.promocaoForm.controls;
+  }
+
+  criarPromocao() {
+    const loja = this.lojaSelecionada();
+    if (!loja) {
+      this.promocaoError.set('Selecione uma loja primeiro.');
+      return;
+    }
+    if (this.promocaoForm.invalid) {
+      this.promocaoForm.markAllAsTouched();
+      return;
+    }
+    this.promocaoLoadingSubmit.set(true);
+    this.promocaoError.set('');
+    const fv = this.promocaoForm.value;
+
+    const dataInicioIso = fv.data_inicio ? `${fv.data_inicio}T00:00:00Z` : undefined;
+    const dataFimIso = fv.data_fim ? `${fv.data_fim}T23:59:59Z` : undefined;
+
+    const request: CreatePromocaoRequest = {
+      nome: fv.nome!,
+      descricao: fv.descricao!,
+      tipo_desconto: fv.tipo_desconto!,
+      valor_desconto: fv.valor_desconto!,
+      valor_minimo: fv.valor_minimo ?? undefined,
+      data_inicio: dataInicioIso!,
+      data_fim: dataFimIso!,
+      dias_semana_validos: fv.dias_semana_validos!,
+      tipo_escopo: fv.tipo_escopo!,
+      produto_uuid: fv.produto_uuid ?? undefined,
+      categoria_uuid: fv.categoria_uuid ?? undefined,
+      prioridade: fv.prioridade!,
+    };
+
+    this.marketingService.criarPromocao(loja.uuid, request).subscribe({
+      next: () => {
+        this.promocaoLoadingSubmit.set(false);
+        toast.success('Promoção criada com sucesso!');
+        this.promocaoForm.reset({
+          tipo_desconto: 'percentual',
+          valor_desconto: 0,
+          valor_minimo: null,
+          dias_semana_validos: [],
+          tipo_escopo: 'loja',
+          produto_uuid: null,
+          categoria_uuid: null,
+          prioridade: 1,
+        });
+        this.refreshPromocoes();
+      },
+      error: (e) => {
+        this.promocaoLoadingSubmit.set(false);
+        this.promocaoError.set(e?.error?.error ?? 'Erro ao criar promoção.');
+      },
+    });
+  }
+
+  editarPromocao(promocao: Promocao) {
+    this.promocaoEditId.set(promocao.uuid);
+    this.promocaoForm.patchValue({
+      nome: promocao.nome,
+      descricao: promocao.descricao,
+      tipo_desconto: promocao.tipo_desconto,
+      valor_desconto: promocao.valor_desconto,
+      valor_minimo: promocao.valor_minimo,
+      data_inicio: promocao.data_inicio.split('T')[0],
+      data_fim: promocao.data_fim.split('T')[0],
+      dias_semana_validos: promocao.dias_semana_validos,
+      tipo_escopo: promocao.tipo_escopo,
+      produto_uuid: promocao.produto_uuid,
+      categoria_uuid: promocao.categoria_uuid,
+      prioridade: promocao.prioridade,
+    });
+    this.promocaoError.set('');
+  }
+
+  salvarEdicaoPromocao() {
+    const uuid = this.promocaoEditId();
+    const loja = this.lojaSelecionada();
+    if (!uuid || !loja) return;
+    if (this.promocaoForm.invalid) {
+      this.promocaoForm.markAllAsTouched();
+      return;
+    }
+    this.promocaoLoadingSubmit.set(true);
+    this.promocaoError.set('');
+    const fv = this.promocaoForm.value;
+
+    const dataInicioIso = fv.data_inicio ? `${fv.data_inicio}T00:00:00Z` : undefined;
+    const dataFimIso = fv.data_fim ? `${fv.data_fim}T23:59:59Z` : undefined;
+
+    const request: CreatePromocaoRequest = {
+      nome: fv.nome!,
+      descricao: fv.descricao!,
+      tipo_desconto: fv.tipo_desconto!,
+      valor_desconto: fv.valor_desconto!,
+      valor_minimo: fv.valor_minimo ?? undefined,
+      data_inicio: dataInicioIso!,
+      data_fim: dataFimIso!,
+      dias_semana_validos: fv.dias_semana_validos!,
+      tipo_escopo: fv.tipo_escopo!,
+      produto_uuid: fv.produto_uuid ?? undefined,
+      categoria_uuid: fv.categoria_uuid ?? undefined,
+      prioridade: fv.prioridade!,
+    };
+
+    this.marketingService.atualizarPromocao(loja.uuid, uuid, request).subscribe({
+      next: () => {
+        this.promocaoLoadingSubmit.set(false);
+        this.promocaoEditId.set(null);
+        toast.success('Promoção atualizada com sucesso!');
+        this.promocaoForm.reset({
+          tipo_desconto: 'percentual',
+          valor_desconto: 0,
+          valor_minimo: null,
+          dias_semana_validos: [],
+          tipo_escopo: 'loja',
+          produto_uuid: null,
+          categoria_uuid: null,
+          prioridade: 1,
+        });
+        this.refreshPromocoes();
+      },
+      error: (e) => {
+        this.promocaoLoadingSubmit.set(false);
+        this.promocaoError.set(e?.error?.error ?? 'Erro ao atualizar promoção.');
+      },
+    });
+  }
+
+  cancelarEdicaoPromocao() {
+    this.promocaoEditId.set(null);
+    this.promocaoForm.reset({
+      tipo_desconto: 'percentual',
+      valor_desconto: 0,
+      valor_minimo: null,
+      dias_semana_validos: [],
+      tipo_escopo: 'loja',
+      produto_uuid: null,
+      categoria_uuid: null,
+      prioridade: 1,
+    });
+    this.promocaoError.set('');
+  }
+
+  deletarPromocao(uuid: string, nome: string) {
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+    if (!confirm(`Deletar promoção "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    this.marketingService.deletarPromocao(loja.uuid, uuid).subscribe({
+      next: () => {
+        toast.success('Promoção deletada com sucesso!');
+        if (this.promocaoEditId() === uuid) {
+          this.cancelarEdicaoPromocao();
+        }
+        this.refreshPromocoes();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao deletar promoção.');
       },
     });
   }

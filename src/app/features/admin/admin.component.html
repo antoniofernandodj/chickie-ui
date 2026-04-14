@@ -1151,6 +1151,233 @@
       </div>
   }
 
+  <!-- ── ABA: PROMOÇÕES ──────────────────────────────────────────────── -->
+  @if (aba() === 'promocoes') {
+    <div class="mb-6 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
+           style="background:var(--color-brand)">
+        {{ lojaSelecionada()!.nome.charAt(0) }}
+      </div>
+      <div>
+        <p class="font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</p>
+        <p class="text-xs text-gray-500">{{ lojaSelecionada()!.slug }}</p>
+      </div>
+    </div>
+
+      <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Formulário de Promoção -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h3 class="text-base font-semibold text-gray-900 mb-5">
+            @if (promocaoEditId()) { 📝 Editar Promoção } @else { 📢 Criar Promoção }
+          </h3>
+
+          <form [formGroup]="promocaoForm" (ngSubmit)="promocaoEditId() ? salvarEdicaoPromocao() : criarPromocao()" class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Nome *</label>
+              <input type="text" formControlName="nome"
+                     [class.border-red-400]="fprom.nome.invalid && fprom.nome.touched"
+                     placeholder="Promoção Pizza Especial"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (fprom.nome.invalid && fprom.nome.touched) {
+                <p class="text-xs text-red-600 mt-1">Nome é obrigatório (mín. 3 caracteres).</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Descrição *</label>
+              <textarea formControlName="descricao" rows="2"
+                        [class.border-red-400]="fprom.descricao.invalid && fprom.descricao.touched"
+                        placeholder="Desconto especial em pizzas selecionadas"
+                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 resize-none"></textarea>
+              @if (fprom.descricao.invalid && fprom.descricao.touched) {
+                <p class="text-xs text-red-600 mt-1">Descrição é obrigatória.</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Tipo de Desconto *</label>
+              <select formControlName="tipo_desconto"
+                      [class.border-red-400]="fprom.tipo_desconto.invalid && fprom.tipo_desconto.touched"
+                      class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400">
+                <option value="percentual">Percentual (%)</option>
+                <option value="valor_fixo">Fixo (R$)</option>
+                <option value="frete_gratis">Frete Grátis</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">
+                @if (promocaoForm.get('tipo_desconto')?.value === 'percentual') { Valor do Desconto (%) * }
+                @else if (promocaoForm.get('tipo_desconto')?.value === 'valor_fixo') { Valor do Desconto (R$) * }
+                @else { Valor do Desconto (R$) }
+              </label>
+              <input type="number" formControlName="valor_desconto" min="0" step="0.01"
+                     [class.border-red-400]="fprom.valor_desconto.invalid && fprom.valor_desconto.touched"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+              @if (fprom.valor_desconto.invalid && fprom.valor_desconto.touched) {
+                <p class="text-xs text-red-600 mt-1">Valor é obrigatório e deve ser >= 0.</p>
+              }
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Pedido Mínimo (R$)</label>
+              <input type="number" formControlName="valor_minimo" min="0" step="0.01"
+                     [class.border-red-400]="fprom.valor_minimo.invalid && fprom.valor_minimo.touched"
+                     placeholder="Opcional"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Data de Início *</label>
+                <input type="date" formControlName="data_inicio"
+                       [class.border-red-400]="fprom.data_inicio.invalid && fprom.data_inicio.touched"
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+                @if (fprom.data_inicio.invalid && fprom.data_inicio.touched) {
+                  <p class="text-xs text-red-600 mt-1">Data de início é obrigatória.</p>
+                }
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Data de Fim *</label>
+                <input type="date" formControlName="data_fim"
+                       [class.border-red-400]="fprom.data_fim.invalid && fprom.data_fim.touched"
+                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+                @if (fprom.data_fim.invalid && fprom.data_fim.touched) {
+                  <p class="text-xs text-red-600 mt-1">Data de fim é obrigatória.</p>
+                }
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Escopo da Promoção *</label>
+              <select formControlName="tipo_escopo"
+                      [class.border-red-400]="fprom.tipo_escopo.invalid && fprom.tipo_escopo.touched"
+                      class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400">
+                <option value="loja">Toda a Loja</option>
+                <option value="produto">Produto Específico</option>
+                <option value="categoria">Categoria Específica</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Prioridade</label>
+              <input type="number" formControlName="prioridade" min="0" step="1"
+                     [class.border-red-400]="fprom.prioridade.invalid && fprom.prioridade.touched"
+                     placeholder="1 = maior prioridade"
+                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400"/>
+            </div>
+
+            @if (promocaoError()) {
+              <p class="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ promocaoError() }}</p>
+            }
+
+            <div class="flex gap-2">
+              <button type="submit" [disabled]="promocaoLoadingSubmit() || promocaoForm.invalid"
+                      class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
+                      style="background:var(--color-brand)">
+                @if (promocaoLoadingSubmit()) { Salvando... }
+                @else if (promocaoEditId()) { Atualizar Promoção }
+                @else { Criar Promoção }
+              </button>
+              @if (promocaoEditId()) {
+                <button type="button" (click)="cancelarEdicaoPromocao()"
+                        class="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  Cancelar
+                </button>
+              }
+            </div>
+          </form>
+        </div>
+
+        <!-- Lista de Promoções -->
+        <div>
+          <h3 class="text-base font-semibold text-gray-900 mb-5">📢 Promoções da Loja</h3>
+
+          @if (promocaoLoading()) {
+            <div class="space-y-3">
+              @for (_ of [1,2,3]; track $index) {
+                <div class="bg-gray-50 rounded-xl p-4 mb-2 skeleton h-20"></div>
+              }
+            </div>
+          } @else {
+            @if (promocoes().length === 0) {
+              <div class="text-center py-10 bg-white rounded-2xl border border-gray-100">
+                <div class="text-4xl mb-2">📢</div>
+                <p class="text-gray-500 text-sm">Nenhuma promoção cadastrada.</p>
+              </div>
+            } @else {
+              <div class="space-y-3">
+                @for (promocao of promocoes(); track promocao.uuid) {
+                  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4
+                              hover:border-orange-200 transition-colors">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                          <span class="font-bold text-sm text-gray-900">
+                            {{ promocao.nome }}
+                          </span>
+                          <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                                [class.bg-green-100]="promocao.status === 'Ativo'"
+                                [class.text-green-700]="promocao.status === 'Ativo'"
+                                [class.bg-gray-100]="promocao.status === 'Inativo'"
+                                [class.text-gray-700]="promocao.status === 'Inativo'">
+                            {{ promocao.status }}
+                          </span>
+                        </div>
+                        <p class="text-xs text-gray-600">{{ promocao.descricao }}</p>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-3">
+                      <div>
+                        <span class="font-medium">Desconto:</span>
+                        @if (promocao.tipo_desconto === 'percentual') {
+                          {{ promocao.valor_desconto }}%
+                        } @else if (promocao.tipo_desconto === 'valor_fixo') {
+                          R$ {{ promocao.valor_desconto | number:'1.2-2' }}
+                        } @else {
+                          Frete Grátis
+                        }
+                      </div>
+                      <div>
+                        <span class="font-medium">Pedido mín.:</span> 
+                        @if (promocao.valor_minimo) {
+                          R$ {{ promocao.valor_minimo | number:'1.2-2' }}
+                        } @else {
+                          —
+                        }
+                      </div>
+                      <div>
+                        <span class="font-medium">Vigência:</span> 
+                        {{ promocao.data_inicio | date:'dd/MM/yyyy' }} - {{ promocao.data_fim | date:'dd/MM/yyyy' }}
+                      </div>
+                      <div>
+                        <span class="font-medium">Escopo:</span> 
+                        @if (promocao.tipo_escopo === 'loja') {
+                          Loja
+                        } @else if (promocao.tipo_escopo === 'produto') {
+                          Produto
+                        } @else {
+                          Categoria
+                        }
+                      </div>
+                    </div>
+
+                    <div class="flex gap-1.5">
+                      <button (click)="editarPromocao(promocao)"
+                              class="flex-1 py-1.5 rounded-lg text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                        ✏️ Editar
+                      </button>
+                      <button (click)="deletarPromocao(promocao.uuid, promocao.nome)"
+                              class="p-1.5 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                              title="Deletar promoção">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+  }
+
   <!-- ── ABA: AVALIAÇÕES ──────────────────────────────────────────────── -->
   @if (aba() === 'avaliacoes') {
     <div class="mb-6 flex items-center gap-3">
