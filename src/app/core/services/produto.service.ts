@@ -1,35 +1,68 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateProdutoRequest, Produto, UpdateProdutoRequest } from '../models';
+import { chickie } from '@app/proto/generated';
+import { ProtobufBaseService } from './base.service';
 
 @Injectable({ providedIn: 'root' })
-export class ProdutoService {
+export class ProdutoService extends ProtobufBaseService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/produtos`;
 
-  criar(body: CreateProdutoRequest): Observable<Produto> {
-    return this.http.post<Produto>(`${this.base}/`, body);
+  protected getProtoType(): any {
+    return chickie.Produto;
   }
 
-  listar(): Observable<Produto[]> {
-    return this.http.get<Produto[]>(`${this.base}/`);
+  criar(body: chickie.ICreateProdutoRequest): Observable<chickie.IProduto> {
+    return this.postProto<chickie.IProduto>(
+      this.http,
+      `${this.base}/`,
+      body,
+      chickie.Produto,
+      chickie.CreateProdutoRequest
+    );
   }
 
-  listarPorLoja(lojaUuid: string): Observable<Produto[]> {
-    return this.http.get<Produto[]>(`${this.base}/listar/${lojaUuid}`);
+  listar(): Observable<chickie.IProduto[]> {
+    return this.getProto<chickie.IListarProdutosResponse>(
+      this.http,
+      `${this.base}/`,
+      chickie.ListarProdutosResponse
+    ).pipe(map(res => res.produtos || []));
   }
 
-  buscar(uuid: string): Observable<Produto> {
-    return this.http.get<Produto>(`${this.base}/${uuid}`);
+  listarPorLoja(lojaUuid: string): Observable<chickie.IProduto[]> {
+    return this.getProto<chickie.IListarProdutosResponse>(
+      this.http,
+      `${this.base}/listar/${lojaUuid}`,
+      chickie.ListarProdutosResponse
+    ).pipe(map(res => res.produtos || []));
   }
 
-  atualizar(uuid: string, body: UpdateProdutoRequest): Observable<Produto> {
-    return this.http.put<Produto>(`${this.base}/${uuid}`, body);
+  buscar(uuid: string): Observable<chickie.IProduto> {
+    return this.getProto<chickie.IProduto>(
+      this.http,
+      `${this.base}/${uuid}`,
+      chickie.Produto
+    );
   }
 
-  deletar(uuid: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${uuid}`);
+  atualizar(uuid: string, body: chickie.IAtualizarProdutoRequest): Observable<chickie.IProduto> {
+    return this.putProto<chickie.IProduto>(
+      this.http,
+      `${this.base}/${uuid}`,
+      body,
+      chickie.Produto,
+      chickie.AtualizarProdutoRequest
+    );
+  }
+
+  deletar(uuid: string): Observable<chickie.IGenericResponse> {
+    return this.deleteProto<chickie.IGenericResponse>(
+      this.http,
+      `${this.base}/${uuid}`,
+      chickie.GenericResponse
+    );
   }
 }

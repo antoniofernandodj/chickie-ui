@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://api.chiquitos.tech/api',
+  apiUrl: 'https://api.chiquitos.tech/proto',
 };

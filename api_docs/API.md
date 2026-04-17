@@ -12,8 +12,8 @@ This API provides interactive documentation powered by **utoipa** with automatic
 
 | Resource | URL |
 |----------|-----|
-| **Swagger UI** | `http://localhost:3000/api/docs/swagger-ui` |
-| **OpenAPI JSON Spec** | `http://localhost:3000/api/docs/openapi.json` |
+| **Swagger UI** | `http://localhost:3000/proto/docs/swagger-ui` |
+| **OpenAPI JSON Spec** | `http://localhost:3000/proto/docs/openapi.json` |
 
 ### Features
 
@@ -24,7 +24,7 @@ This API provides interactive documentation powered by **utoipa** with automatic
 
 ### Using Swagger UI
 
-1. Navigate to `http://localhost:3000/api/docs/swagger-ui`
+1. Navigate to `http://localhost:3000/proto/docs/swagger-ui`
 2. Browse endpoints organized by tags
 3. Click on any endpoint to expand details
 4. Click **"Try it out"** to enable request testing
@@ -133,17 +133,17 @@ Entregue (terminal) ←─────────────┘
 
 | Prefixo | Grupo |
 |---------|-------|
-| `/api/auth/` | Autenticação |
-| `/api/usuarios/` | Usuários |
-| `/api/lojas/` | Lojas (público) |
-| `/api/admin/` | Administração |
-| `/api/pedidos/` | Pedidos |
-| `/api/marketing/` | Cupons, avaliações, promoções |
-| `/api/catalogo/` | Adicionais, categorias |
-| `/api/enderecos-entrega/` | Endereços de entrega |
-| `/api/enderecos-usuario/` | Endereços de usuário |
-| `/api/favoritos/` | Lojas favoritas |
-| `/api/produtos/` | Produtos |
+| `/proto/auth/` | Autenticação |
+| `/proto/usuarios/` | Usuários |
+| `/proto/lojas/` | Lojas (público) |
+| `/proto/admin/` | Administração |
+| `/proto/pedidos/` | Pedidos |
+| `/proto/marketing/` | Cupons, avaliações, promoções |
+| `/proto/catalogo/` | Adicionais, categorias |
+| `/proto/enderecos-entrega/` | Endereços de entrega |
+| `/proto/enderecos-usuario/` | Endereços de usuário |
+| `/proto/favoritos/` | Lojas favoritas |
+| `/proto/produtos/` | Produtos |
 
 ---
 
@@ -167,7 +167,7 @@ GET /
 ### 2.1 Cadastrar Usuário
 
 ```
-POST /api/auth/signup
+POST /proto/auth/signup
 Content-Type: application/json
 ```
 
@@ -209,7 +209,7 @@ Content-Type: application/json
 ### 2.2 Login
 
 ```
-POST /api/auth/login
+POST /proto/auth/login
 Content-Type: application/json
 ```
 
@@ -232,7 +232,7 @@ Content-Type: application/json
 ### 2.3 Me (Obter Usuário Autenticado)
 
 ```
-GET /api/auth/me
+GET /proto/auth/me
 Authorization: Bearer <token>
 ```
 
@@ -267,7 +267,7 @@ Authorization: Bearer <token>
 ### 3.1 Listar Lojas
 
 ```
-GET /api/lojas/
+GET /proto/lojas/
 ```
 
 **Response `200`:**
@@ -299,7 +299,7 @@ GET /api/lojas/
 ### 3.2 Pesquisar Lojas
 
 ```
-GET /api/lojas/pesquisar?termo={valor}
+GET /proto/lojas/pesquisar?termo={valor}
 ```
 
 **Response `200`:**
@@ -333,7 +333,7 @@ GET /api/lojas/pesquisar?termo={valor}
 ### 3.3 Buscar Loja
 
 ```
-GET /api/lojas/{uuid}
+GET /proto/lojas/{uuid}
 ```
 
 **Response `200`:**
@@ -365,7 +365,7 @@ GET /api/lojas/{uuid}
 ### 3.4 Buscar Loja por Slug
 
 ```
-GET /api/lojas/slug/{slug}
+GET /proto/lojas/slug/{slug}
 ```
 
 **Response `200`:** (mesmo schema de buscar por UUID)
@@ -375,7 +375,7 @@ GET /api/lojas/slug/{slug}
 ### 3.5 Verificar Disponibilidade de Slug
 
 ```
-GET /api/lojas/verificar-slug/{slug}
+GET /proto/lojas/verificar-slug/{slug}
 ```
 
 **Response `200` (slug disponível):**
@@ -403,7 +403,7 @@ GET /api/lojas/verificar-slug/{slug}
 ### 4.1 Listar Usuários
 
 ```
-GET /api/usuarios/
+GET /proto/usuarios/
 Authorization: Bearer <token>
 ```
 
@@ -414,9 +414,9 @@ Authorization: Bearer <token>
 | `classe` | `string` | Não | Filtrar por classe: `cliente`, `administrador`, `funcionario`, `entregador`, `owner` |
 
 **Exemplos:**
-- `GET /api/usuarios/` — lista todos os usuários
-- `GET /api/usuarios/?classe=cliente` — lista apenas clientes
-- `GET /api/usuarios/?classe=administrador` — lista apenas administradores
+- `GET /proto/usuarios/` — lista todos os usuários
+- `GET /proto/usuarios/?classe=cliente` — lista apenas clientes
+- `GET /proto/usuarios/?classe=administrador` — lista apenas administradores
 
 **Response `200`:**
 ```json
@@ -444,7 +444,7 @@ Authorization: Bearer <token>
 ### 4.2 Marcar Usuário para Remoção
 
 ```
-PATCH /api/usuarios/{usuario_uuid}/marcar-remocao
+PATCH /proto/usuarios/{usuario_uuid}/marcar-remocao
 Authorization: Bearer <token>
 ```
 
@@ -457,7 +457,7 @@ Authorization: Bearer <token>
 ### 4.3 Desmarcar Remoção de Usuário
 
 ```
-PATCH /api/usuarios/{usuario_uuid}/desmarcar-remocao
+PATCH /proto/usuarios/{usuario_uuid}/desmarcar-remocao
 Authorization: Bearer <token>
 ```
 
@@ -470,7 +470,7 @@ Authorization: Bearer <token>
 ### 4.4 Alternar Status Ativo do Usuário
 
 ```
-PUT /api/usuarios/{usuario_uuid}/ativo
+PUT /proto/usuarios/{usuario_uuid}/ativo
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -497,7 +497,7 @@ Content-Type: application/json
 ### 4.5 Toggle Bloqueio do Usuário
 
 ```
-PATCH /api/usuarios/{usuario_uuid}/bloqueado
+PATCH /proto/usuarios/{usuario_uuid}/bloqueado
 Authorization: Bearer <token>
 ```
 
@@ -529,7 +529,7 @@ Ou ao desbloquear:
 ### 5.1 Criar Loja
 
 ```
-POST /api/admin/lojas
+POST /proto/admin/lojas
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -582,7 +582,7 @@ Content-Type: application/json
 ### 5.2 Listar Todas as Lojas
 
 ```
-GET /api/admin/lojas/listar
+GET /proto/admin/lojas/listar
 Authorization: Bearer <token>
 ```
 
@@ -617,7 +617,7 @@ Authorization: Bearer <token>
 ### 5.3 Minhas Lojas (Lojas do Admin)
 
 ```
-GET /api/admin/lojas/minhas-lojas
+GET /proto/admin/lojas/minhas-lojas
 Authorization: Bearer <token>
 ```
 
@@ -637,7 +637,7 @@ Authorization: Bearer <token>
 ### 5.4 Toggle Bloqueio da Loja
 
 ```
-PATCH /api/lojas/{loja_uuid}/bloqueado
+PATCH /proto/lojas/{loja_uuid}/bloqueado
 Authorization: Bearer <token>
 ```
 
@@ -665,7 +665,7 @@ Ou ao desbloquear:
 ### 5.5 Adicionar Funcionário
 
 ```
-POST /api/admin/lojas/{loja_uuid}/funcionarios
+POST /proto/admin/lojas/{loja_uuid}/funcionarios
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -702,7 +702,7 @@ Content-Type: application/json
 ### 5.5 Adicionar Entregador
 
 ```
-POST /api/admin/lojas/{loja_uuid}/entregadores
+POST /proto/admin/lojas/{loja_uuid}/entregadores
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -738,7 +738,7 @@ Content-Type: application/json
 ### 5.6 Adicionar Cliente
 
 ```
-POST /api/admin/lojas/{loja_uuid}/clientes
+POST /proto/admin/lojas/{loja_uuid}/clientes
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -771,7 +771,7 @@ Content-Type: application/json
 ### 6.1 Criar Pedido
 
 ```
-POST /api/pedidos/criar
+POST /proto/pedidos/criar
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -817,7 +817,7 @@ Content-Type: application/json
 ### 6.2 Listar Pedidos
 
 ```
-GET /api/pedidos/
+GET /proto/pedidos/
 Authorization: Bearer <token>
 ```
 
@@ -880,7 +880,7 @@ Authorization: Bearer <token>
 ### 6.2.1 Listar Meus Pedidos (Por Usuário)
 
 ```
-GET /api/pedidos/meus
+GET /proto/pedidos/meus
 Authorization: Bearer <token>
 ```
 
@@ -941,7 +941,7 @@ Authorization: Bearer <token>
 ### 6.3 Buscar Pedido
 
 ```
-GET /api/pedidos/{uuid}
+GET /proto/pedidos/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1002,7 +1002,7 @@ Authorization: Bearer <token>
 ### 6.4 Listar Pedidos por Loja
 
 ```
-GET /api/pedidos/criar
+GET /proto/pedidos/criar
 Authorization: Bearer <token>
 ```
 
@@ -1056,7 +1056,7 @@ Authorization: Bearer <token>
 ### 6.5 Buscar Pedido com Endereço de Entrega
 
 ```
-GET /api/pedidos/{pedido_uuid}/com-entrega
+GET /proto/pedidos/{pedido_uuid}/com-entrega
 Authorization: Bearer <token>
 ```
 
@@ -1103,7 +1103,7 @@ Authorization: Bearer <token>
 ### 6.6 Atualizar Status do Pedido
 
 ```
-PUT /api/pedidos/criar/{pedido_uuid}/status
+PUT /proto/pedidos/criar/{pedido_uuid}/status
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1147,7 +1147,7 @@ Content-Type: application/json
 ### 6.7 Atribuir Entregador ao Pedido
 
 ```
-PUT /api/pedidos/{pedido_uuid}/entregador/{loja_uuid}
+PUT /proto/pedidos/{pedido_uuid}/entregador/{loja_uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1175,7 +1175,7 @@ Content-Type: application/json
 ### 6.8 Remover Entregador do Pedido
 
 ```
-DELETE /api/pedidos/{pedido_uuid}/entregador/{loja_uuid}
+DELETE /proto/pedidos/{pedido_uuid}/entregador/{loja_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1195,7 +1195,7 @@ Authorization: Bearer <token>
 ### 6.9 Buscar Pedido com Informações do Entregador
 
 ```
-GET /api/pedidos/{pedido_uuid}/com-entregador
+GET /proto/pedidos/{pedido_uuid}/com-entregador
 Authorization: Bearer <token>
 ```
 
@@ -1238,7 +1238,7 @@ Authorization: Bearer <token>
 ### 7.1 Criar Cupom (Genérico)
 
 ```
-POST /api/cupons/
+POST /proto/cupons/
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1280,7 +1280,7 @@ Content-Type: application/json
 ### 7.2 Listar Todos os Cupons
 
 ```
-GET /api/cupons/
+GET /proto/cupons/
 Authorization: Bearer <token>
 ```
 
@@ -1311,7 +1311,7 @@ Authorization: Bearer <token>
 ### 7.3 Buscar Cupom por UUID
 
 ```
-GET /api/cupons/{uuid}
+GET /proto/cupons/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1345,7 +1345,7 @@ Authorization: Bearer <token>
 ### 7.4 Atualizar Cupom
 
 ```
-PUT /api/cupons/{uuid}
+PUT /proto/cupons/{uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1371,7 +1371,7 @@ Content-Type: application/json
 ### 7.5 Deletar Cupom
 
 ```
-DELETE /api/cupons/{uuid}
+DELETE /proto/cupons/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1389,7 +1389,7 @@ Authorization: Bearer <token>
 ### 7.6 Atualizar Status do Cupom (Ativar/Inativar)
 
 ```
-PATCH /api/cupons/{uuid}/status
+PATCH /proto/cupons/{uuid}/status
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1418,10 +1418,10 @@ Content-Type: application/json
 
 ### 8.1 Criar Cupom (Legado)
 
-> ⚠️ Endpoint legado. Use `POST /api/cupons/` para novo código.
+> ⚠️ Endpoint legado. Use `POST /proto/cupons/` para novo código.
 
 ```
-POST /api/marketing/{loja_uuid}/cupons
+POST /proto/marketing/{loja_uuid}/cupons
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1461,10 +1461,10 @@ Content-Type: application/json
 
 ### 8.2 Listar Cupons da Loja (Legado)
 
-> ⚠️ Endpoint legado. Use `GET /api/cupons/` para listar todos.
+> ⚠️ Endpoint legado. Use `GET /proto/cupons/` para listar todos.
 
 ```
-GET /api/marketing/cupons
+GET /proto/marketing/cupons
 Authorization: Bearer <token>
 ```
 
@@ -1495,7 +1495,7 @@ Authorization: Bearer <token>
 > ⚠️ **Atenção**: Este endpoint é público (sem autenticação).
 
 ```
-GET /api/marketing/cupons/{codigo}
+GET /proto/marketing/cupons/{codigo}
 ```
 
 **Response `200`:**
@@ -1521,7 +1521,7 @@ GET /api/marketing/cupons/{codigo}
 ### 7.4 Avaliar Loja
 
 ```
-POST /api/marketing/{loja_uuid}/avaliar-loja
+POST /proto/marketing/{loja_uuid}/avaliar-loja
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1551,7 +1551,7 @@ Content-Type: application/json
 ### 7.5 Avaliar Produto
 
 ```
-POST /api/marketing/{loja_uuid}/avaliar-produto
+POST /proto/marketing/{loja_uuid}/avaliar-produto
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1585,7 +1585,7 @@ Content-Type: application/json
 ### 7.5.1 Listar Avaliações de Loja
 
 ```
-GET /api/marketing/{loja_uuid}/avaliacoes-loja
+GET /proto/marketing/{loja_uuid}/avaliacoes-loja
 Authorization: Bearer <token>
 ```
 
@@ -1625,7 +1625,7 @@ Authorization: Bearer <token>
 ### 7.5.2 Buscar Avaliação de Loja por UUID
 
 ```
-GET /api/marketing/avaliacoes-loja/{uuid}
+GET /proto/marketing/avaliacoes-loja/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1653,7 +1653,7 @@ Authorization: Bearer <token>
 ### 7.5.3 Atualizar Avaliação de Loja
 
 ```
-PUT /api/marketing/avaliacoes-loja/{uuid}
+PUT /proto/marketing/avaliacoes-loja/{uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1683,7 +1683,7 @@ Content-Type: application/json
 ### 7.5.4 Deletar Avaliação de Loja
 
 ```
-DELETE /api/marketing/avaliacoes-loja/{uuid}
+DELETE /proto/marketing/avaliacoes-loja/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1701,7 +1701,7 @@ Authorization: Bearer <token>
 ### 7.5.5 Listar Avaliações de Produto por Loja
 
 ```
-GET /api/marketing/{loja_uuid}/avaliacoes-produto
+GET /proto/marketing/{loja_uuid}/avaliacoes-produto
 Authorization: Bearer <token>
 ```
 
@@ -1728,7 +1728,7 @@ Authorization: Bearer <token>
 ### 7.5.6 Listar Avaliações de Produto por Produto
 
 ```
-GET /api/marketing/avaliacoes-produto/produto/{produto_uuid}
+GET /proto/marketing/avaliacoes-produto/produto/{produto_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1755,7 +1755,7 @@ Authorization: Bearer <token>
 ### 7.5.7 Buscar Avaliação de Produto por UUID
 
 ```
-GET /api/marketing/avaliacoes-produto/{uuid}
+GET /proto/marketing/avaliacoes-produto/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1785,7 +1785,7 @@ Authorization: Bearer <token>
 ### 7.5.8 Atualizar Avaliação de Produto
 
 ```
-PUT /api/marketing/avaliacoes-produto/{uuid}
+PUT /proto/marketing/avaliacoes-produto/{uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1818,7 +1818,7 @@ Content-Type: application/json
 ### 7.5.9 Deletar Avaliação de Produto
 
 ```
-DELETE /api/marketing/avaliacoes-produto/{uuid}
+DELETE /proto/marketing/avaliacoes-produto/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1836,7 +1836,7 @@ Authorization: Bearer <token>
 ### 7.6 Criar Promoção
 
 ```
-POST /api/marketing/{loja_uuid}/promocoes
+POST /proto/marketing/{loja_uuid}/promocoes
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1886,7 +1886,7 @@ Content-Type: application/json
 ### 7.7 Listar Promoções
 
 ```
-GET /api/marketing/{loja_uuid}/promocoes
+GET /proto/marketing/{loja_uuid}/promocoes
 Authorization: Bearer <token>
 ```
 
@@ -1919,7 +1919,7 @@ Authorization: Bearer <token>
 ### 7.8 Atualizar Promoção
 
 ```
-PUT /api/marketing/{loja_uuid}/promocoes/{uuid}
+PUT /proto/marketing/{loja_uuid}/promocoes/{uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1933,7 +1933,7 @@ Content-Type: application/json
 ### 7.9 Deletar Promoção
 
 ```
-DELETE /api/marketing/{loja_uuid}/promocoes/{uuid}
+DELETE /proto/marketing/{loja_uuid}/promocoes/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -1946,7 +1946,7 @@ Authorization: Bearer <token>
 ### 8.1 Criar Adicional
 
 ```
-POST /api/catalogo/{loja_uuid}/adicionais
+POST /proto/catalogo/{loja_uuid}/adicionais
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -1978,7 +1978,7 @@ Content-Type: application/json
 ### 8.2 Listar Adicionais
 
 ```
-GET /api/catalogo/{loja_uuid}/adicionais
+GET /proto/catalogo/{loja_uuid}/adicionais
 Authorization: Bearer <token>
 ```
 
@@ -2002,7 +2002,7 @@ Authorization: Bearer <token>
 ### 8.3 Listar Adicionais Disponíveis
 
 ```
-GET /api/catalogo/{loja_uuid}/adicionais/disponiveis
+GET /proto/catalogo/{loja_uuid}/adicionais/disponiveis
 Authorization: Bearer <token>
 ```
 
@@ -2026,7 +2026,7 @@ Authorization: Bearer <token>
 ### 8.4 Atualizar Adicional
 
 ```
-PUT /api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}
+PUT /proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2072,7 +2072,7 @@ Content-Type: application/json
 ### 8.5 Atualizar Disponibilidade do Adicional
 
 ```
-PUT /api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}/disponibilidade
+PUT /proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}/disponibilidade
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2107,7 +2107,7 @@ Content-Type: application/json
 ### 8.6 Deletar Adicional
 
 ```
-DELETE /api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}
+DELETE /proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2132,7 +2132,7 @@ Authorization: Bearer <token>
 ### 8.7 Criar Categoria
 
 ```
-POST /api/catalogo/{loja_uuid}/categorias
+POST /proto/catalogo/{loja_uuid}/categorias
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2165,7 +2165,7 @@ Content-Type: application/json
 ### 8.8 Listar Categorias
 
 ```
-GET /api/catalogo/{loja_uuid}/categorias
+GET /proto/catalogo/{loja_uuid}/categorias
 Authorization: Bearer <token>
 ```
 
@@ -2189,7 +2189,7 @@ Authorization: Bearer <token>
 ### 8.9 Atualizar Categoria
 
 ```
-PUT /api/catalogo/{loja_uuid}/categorias/{uuid}
+PUT /proto/catalogo/{loja_uuid}/categorias/{uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2222,7 +2222,7 @@ Content-Type: application/json
 ### 8.10 Deletar Categoria
 
 ```
-DELETE /api/catalogo/{loja_uuid}/categorias/{uuid}
+DELETE /proto/catalogo/{loja_uuid}/categorias/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2244,7 +2244,7 @@ Authorization: Bearer <token>
 ### 9.1 Criar Endereço para Pedido
 
 ```
-POST /api/enderecos-entrega/{pedido_uuid}/{loja_uuid}
+POST /proto/enderecos-entrega/{pedido_uuid}/{loja_uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2285,7 +2285,7 @@ Content-Type: application/json
 ### 9.2 Buscar Endereço por Pedido
 
 ```
-GET /api/enderecos-entrega/{pedido_uuid}
+GET /proto/enderecos-entrega/{pedido_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2312,7 +2312,7 @@ Authorization: Bearer <token>
 ### 9.3 Listar Endereços por Loja
 
 ```
-GET /api/enderecos-entrega/{loja_uuid}/loja
+GET /proto/enderecos-entrega/{loja_uuid}/loja
 Authorization: Bearer <token>
 ```
 
@@ -2343,7 +2343,7 @@ Authorization: Bearer <token>
 ### 10.1 Listar Endereços da Loja
 
 ```
-GET /api/enderecos-loja/{loja_uuid}
+GET /proto/enderecos-loja/{loja_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2371,7 +2371,7 @@ Authorization: Bearer <token>
 ### 10.2 Criar Endereço da Loja
 
 ```
-POST /api/enderecos-loja/{loja_uuid}
+POST /proto/enderecos-loja/{loja_uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2403,7 +2403,7 @@ Content-Type: application/json
 ### 10.3 Atualizar Endereço da Loja
 
 ```
-PUT /api/enderecos-loja/{loja_uuid}/{endereco_uuid}
+PUT /proto/enderecos-loja/{loja_uuid}/{endereco_uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2430,7 +2430,7 @@ Content-Type: application/json
 ### 10.4 Deletar Endereço da Loja
 
 ```
-DELETE /api/enderecos-loja/{loja_uuid}/{endereco_uuid}
+DELETE /proto/enderecos-loja/{loja_uuid}/{endereco_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2450,7 +2450,7 @@ Authorization: Bearer <token>
 ### 11.1 Criar Endereço
 
 ```
-POST /api/enderecos-usuario/
+POST /proto/enderecos-usuario/
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2490,7 +2490,7 @@ Content-Type: application/json
 ### 11.2 Listar Endereços
 
 ```
-GET /api/enderecos-usuario/
+GET /proto/enderecos-usuario/
 Authorization: Bearer <token>
 ```
 
@@ -2518,7 +2518,7 @@ Authorization: Bearer <token>
 ### 11.3 Buscar Endereço
 
 ```
-GET /api/enderecos-usuario/{uuid}
+GET /proto/enderecos-usuario/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2544,7 +2544,7 @@ Authorization: Bearer <token>
 ### 11.4 Atualizar Endereço
 
 ```
-PUT /api/enderecos-usuario/{uuid}
+PUT /proto/enderecos-usuario/{uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2584,7 +2584,7 @@ Content-Type: application/json
 ### 11.5 Deletar Endereço
 
 ```
-DELETE /api/enderecos-usuario/{uuid}
+DELETE /proto/enderecos-usuario/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2597,7 +2597,7 @@ Authorization: Bearer <token>
 ### 12.1 Adicionar Favorita
 
 ```
-POST /api/favoritos/{loja_uuid}
+POST /proto/favoritos/{loja_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2616,7 +2616,7 @@ Authorization: Bearer <token>
 ### 12.2 Remover Favorita
 
 ```
-DELETE /api/favoritos/{loja_uuid}
+DELETE /proto/favoritos/{loja_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2630,7 +2630,7 @@ Authorization: Bearer <token>
 ### 12.3 Listar Minhas Favoritas
 
 ```
-GET /api/favoritos/minhas
+GET /proto/favoritos/minhas
 Authorization: Bearer <token>
 ```
 
@@ -2651,7 +2651,7 @@ Authorization: Bearer <token>
 ### 12.4 Verificar se é Favorita
 
 ```
-GET /api/favoritos/{loja_uuid}/verificar
+GET /proto/favoritos/{loja_uuid}/verificar
 Authorization: Bearer <token>
 ```
 
@@ -2667,7 +2667,7 @@ Authorization: Bearer <token>
 ### 13.1 Criar Produto
 
 ```
-POST /api/produtos/
+POST /proto/produtos/
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2710,7 +2710,7 @@ Content-Type: application/json
 ### 13.2 Listar Produtos
 
 ```
-GET /api/produtos/
+GET /proto/produtos/
 Authorization: Bearer <token>
 ```
 
@@ -2739,7 +2739,7 @@ Authorization: Bearer <token>
 ### 13.3 Listar Produtos por Categoria
 
 ```
-GET /api/produtos/categoria/{categoria_uuid}
+GET /proto/produtos/categoria/{categoria_uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2768,7 +2768,7 @@ Authorization: Bearer <token>
 ### 13.4 Buscar Produto por UUID
 
 ```
-GET /api/produtos/{uuid}
+GET /proto/produtos/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2795,7 +2795,7 @@ Authorization: Bearer <token>
 ### 13.5 Atualizar Produto
 
 ```
-PUT /api/produtos/{uuid}
+PUT /proto/produtos/{uuid}
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2834,7 +2834,7 @@ Content-Type: application/json
 ### 13.6 Deletar Produto
 
 ```
-DELETE /api/produtos/{uuid}
+DELETE /proto/produtos/{uuid}
 Authorization: Bearer <token>
 ```
 
@@ -2845,7 +2845,7 @@ Authorization: Bearer <token>
 ### 13.7 Atualizar Disponibilidade do Produto
 
 ```
-PUT /api/produtos/{loja_uuid}/{produto_uuid}/disponibilidade
+PUT /proto/produtos/{loja_uuid}/{produto_uuid}/disponibilidade
 Authorization: Bearer <token>
 Content-Type: application/json
 ```
@@ -2880,7 +2880,7 @@ Content-Type: application/json
 ### 13.8 Subir Imagem do Produto
 
 ```
-POST /api/produtos/{uuid}/imagem
+POST /proto/produtos/{uuid}/imagem
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
@@ -2913,7 +2913,7 @@ S3_SECRET_ACCESS_KEY=your-secret-key # Optional, for custom endpoints
 ### 13.1 OK
 
 ```
-GET /api/ok
+GET /proto/ok
 ```
 
 **Response `200`:**
@@ -2926,7 +2926,7 @@ GET /api/ok
 ### 13.2 Wipe Database (⚠️ Dev Only)
 
 ```
-DELETE /api/wipe
+DELETE /proto/wipe
 ```
 
 > ⚠️ Apenas com `MODE=development`. Apaga todas as tabelas e reaplica migrações.
@@ -2946,95 +2946,95 @@ DELETE /api/wipe
 | # | Método | Rota | Auth | Admin |
 |---|--------|------|------|-------|
 | 1 | `GET` | `/` | — | — |
-| 2 | `POST` | `/api/auth/signup` | — | — |
-| 3 | `POST` | `/api/auth/login` | — | — |
-| 4 | `GET` | `/api/auth/me` | 🔒 | — |
-| 5 | `GET` | `/api/lojas/` | — | — |
-| 6 | `GET` | `/api/lojas/pesquisar` | — | — |
-| 7 | `GET` | `/api/lojas/{uuid}` | — | — |
-| 8 | `GET` | `/api/lojas/slug/{slug}` | — | — |
-| 9 | `GET` | `/api/lojas/verificar-slug/{slug}` | — | — |
-| 9.1 | `PATCH` | `/api/lojas/{uuid}/bloqueado` | 🔒 + 👑 Owner | — |
-| 10 | `GET` | `/api/usuarios/?classe=...` | 🔒 + 👑 Owner | — |
-| 10.1 | `PATCH` | `/api/usuarios/{uuid}/marcar-remocao` | 🔒 (Self/Owner) | — |
-| 10.2 | `PATCH` | `/api/usuarios/{uuid}/desmarcar-remocao` | 🔒 (Self/Owner) | — |
-| 10.3 | `PUT` | `/api/usuarios/{uuid}/ativo` | 🔒 + 👑 Owner | — |
-| 10.4 | `PATCH` | `/api/usuarios/{uuid}/bloqueado` | 🔒 + 👑 Owner | — |
-| 11 | `POST` | `/api/admin/lojas` | 🔒 | 👑 |
-| 12 | `GET` | `/api/admin/lojas/listar` | 🔒 | — |
-| 13 | `POST` | `/api/admin/lojas/{loja_uuid}/funcionarios` | 🔒 | 👑 |
-| 14 | `POST` | `/api/admin/lojas/{loja_uuid}/entregadores` | 🔒 | 👑 |
-| 15 | `POST` | `/api/admin/lojas/{loja_uuid}/clientes` | 🔒 | 👑 |
-| 16 | `POST` | `/api/pedidos/criar` | 🔒 | — |
-| 17 | `GET` | `/api/pedidos/listar` | 🔒 | — |
-| 17.1 | `GET` | `/api/pedidos/meus` | 🔒 | — |
-| 18 | `GET` | `/api/pedidos/por-loja/{loja_uuid}` | 🔒 | — |
-| 19 | `GET` | `/api/pedidos/{uuid}` | 🔒 | — |
-| 20 | `GET` | `/api/pedidos/{uuid}/com-entrega` | 🔒 | — |
-| 21 | `PUT` | `/api/pedidos/{uuid}/status` | 🔒 | — |
-| 22 | `PUT` | `/api/pedidos/{pedido_uuid}/entregador/{loja_uuid}` | 🔒 | — |
-| 23 | `DELETE` | `/api/pedidos/{pedido_uuid}/entregador/{loja_uuid}` | 🔒 | — |
-| 24 | `GET` | `/api/pedidos/{pedido_uuid}/com-entregador` | 🔒 | — |
-| 25 | `POST` | `/api/cupons/` | 🔒 | — |
-| 26 | `GET` | `/api/cupons/` | 🔒 | — |
-| 27 | `GET` | `/api/cupons/{uuid}` | 🔒 | — |
-| 28 | `PUT` | `/api/cupons/{uuid}` | 🔒 | — |
-| 29 | `DELETE` | `/api/cupons/{uuid}` | 🔒 | — |
-| 29.1 | `PATCH` | `/api/cupons/{uuid}/status` | 🔒 | — |
-| 30 | `POST` | `/api/marketing/{loja_uuid}/cupons` | 🔒 | — |
-| 31 | `GET` | `/api/marketing/cupons/{codigo}` | — | — |
-| 32 | `GET` | `/api/marketing/cupons` | 🔒 | — |
-| 33 | `POST` | `/api/marketing/{loja_uuid}/avaliar-loja` | 🔒 | — |
-| 34 | `POST` | `/api/marketing/{loja_uuid}/avaliar-produto` | 🔒 | — |
-| 34.1 | `GET` | `/api/marketing/{loja_uuid}/avaliacoes-loja` | 🔒 | — |
-| 34.2 | `GET` | `/api/marketing/avaliacoes-loja/{uuid}` | 🔒 | — |
-| 34.3 | `PUT` | `/api/marketing/avaliacoes-loja/{uuid}` | 🔒 | — |
-| 34.4 | `DELETE` | `/api/marketing/avaliacoes-loja/{uuid}` | 🔒 | — |
-| 34.5 | `GET` | `/api/marketing/{loja_uuid}/avaliacoes-produto` | 🔒 | — |
-| 34.6 | `GET` | `/api/marketing/avaliacoes-produto/produto/{produto_uuid}` | 🔒 | — |
-| 34.7 | `GET` | `/api/marketing/avaliacoes-produto/{uuid}` | 🔒 | — |
-| 34.8 | `PUT` | `/api/marketing/avaliacoes-produto/{uuid}` | 🔒 | — |
-| 34.9 | `DELETE` | `/api/marketing/avaliacoes-produto/{uuid}` | 🔒 | — |
-| 35 | `POST` | `/api/marketing/{loja_uuid}/promocoes` | 🔒 | — |
-| 36 | `GET` | `/api/marketing/{loja_uuid}/promocoes` | 🔒 | — |
-| 37 | `PUT` | `/api/marketing/{loja_uuid}/promocoes/{uuid}` | 🔒 | — |
-| 38 | `DELETE` | `/api/marketing/{loja_uuid}/promocoes/{uuid}` | 🔒 | — |
-| 39 | `POST` | `/api/catalogo/{loja_uuid}/adicionais` | 🔒 | — |
-| 40 | `GET` | `/api/catalogo/{loja_uuid}/adicionais` | 🔒 | — |
-| 41 | `GET` | `/api/catalogo/{loja_uuid}/adicionais/disponiveis` | 🔒 | — |
-| 42 | `PUT` | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | 🔒 | — |
-| 43 | `PUT` | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}/disponibilidade` | 🔒 | — |
-| 44 | `DELETE` | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | 🔒 | — |
-| 45 | `POST` | `/api/catalogo/{loja_uuid}/categorias` | 🔒 | — |
-| 46 | `GET` | `/api/catalogo/{loja_uuid}/categorias` | 🔒 | — |
-| 47 | `PUT` | `/api/catalogo/{loja_uuid}/categorias/{uuid}` | 🔒 | — |
-| 48 | `DELETE` | `/api/catalogo/{loja_uuid}/categorias/{uuid}` | 🔒 | — |
-| 49 | `POST` | `/api/enderecos-entrega/{pedido_uuid}/{loja_uuid}` | 🔒 | — |
-| 50 | `GET` | `/api/enderecos-entrega/{pedido_uuid}` | 🔒 | — |
-| 51 | `GET` | `/api/enderecos-entrega/{loja_uuid}/loja` | 🔒 | — |
-| 52 | `GET` | `/api/enderecos-loja/{loja_uuid}` | 🔒 | — |
-| 53 | `POST` | `/api/enderecos-loja/{loja_uuid}` | 🔒 | — |
-| 54 | `PUT` | `/api/enderecos-loja/{loja_uuid}/{endereco_uuid}` | 🔒 | — |
-| 55 | `DELETE` | `/api/enderecos-loja/{loja_uuid}/{endereco_uuid}` | 🔒 | — |
-| 56 | `POST` | `/api/enderecos-usuario/` | 🔒 | — |
-| 57 | `GET` | `/api/enderecos-usuario/` | 🔒 | — |
-| 58 | `GET` | `/api/enderecos-usuario/{uuid}` | 🔒 | — |
-| 59 | `PUT` | `/api/enderecos-usuario/{uuid}` | 🔒 | — |
-| 60 | `DELETE` | `/api/enderecos-usuario/{uuid}` | 🔒 | — |
-| 61 | `POST` | `/api/favoritos/{loja_uuid}` | 🔒 | — |
-| 62 | `DELETE` | `/api/favoritos/{loja_uuid}` | 🔒 | — |
-| 63 | `GET` | `/api/favoritos/minhas` | 🔒 | — |
-| 64 | `GET` | `/api/favoritos/{loja_uuid}/verificar` | 🔒 | — |
-| 65 | `POST` | `/api/produtos/` | 🔒 | — |
-| 66 | `GET` | `/api/produtos/` | 🔒 | — |
-| 67 | `GET` | `/api/produtos/categoria/{categoria_uuid}` | 🔒 | — |
-| 68 | `GET` | `/api/produtos/{uuid}` | 🔒 | — |
-| 69 | `PUT` | `/api/produtos/{uuid}` | 🔒 | — |
-| 70 | `DELETE` | `/api/produtos/{uuid}` | 🔒 | — |
-| 71 | `PUT` | `/api/produtos/{loja_uuid}/{produto_uuid}/disponibilidade` | 🔒 | — |
-| 72 | `POST` | `/api/produtos/{uuid}/imagem` | 🔒 | — |
-| 73 | `GET` | `/api/ok` | — | — |
-| 74 | `DELETE` | `/api/wipe` ⚠️ | 🔒 + 👑 Owner | — |
+| 2 | `POST` | `/proto/auth/signup` | — | — |
+| 3 | `POST` | `/proto/auth/login` | — | — |
+| 4 | `GET` | `/proto/auth/me` | 🔒 | — |
+| 5 | `GET` | `/proto/lojas/` | — | — |
+| 6 | `GET` | `/proto/lojas/pesquisar` | — | — |
+| 7 | `GET` | `/proto/lojas/{uuid}` | — | — |
+| 8 | `GET` | `/proto/lojas/slug/{slug}` | — | — |
+| 9 | `GET` | `/proto/lojas/verificar-slug/{slug}` | — | — |
+| 9.1 | `PATCH` | `/proto/lojas/{uuid}/bloqueado` | 🔒 + 👑 Owner | — |
+| 10 | `GET` | `/proto/usuarios/?classe=...` | 🔒 + 👑 Owner | — |
+| 10.1 | `PATCH` | `/proto/usuarios/{uuid}/marcar-remocao` | 🔒 (Self/Owner) | — |
+| 10.2 | `PATCH` | `/proto/usuarios/{uuid}/desmarcar-remocao` | 🔒 (Self/Owner) | — |
+| 10.3 | `PUT` | `/proto/usuarios/{uuid}/ativo` | 🔒 + 👑 Owner | — |
+| 10.4 | `PATCH` | `/proto/usuarios/{uuid}/bloqueado` | 🔒 + 👑 Owner | — |
+| 11 | `POST` | `/proto/admin/lojas` | 🔒 | 👑 |
+| 12 | `GET` | `/proto/admin/lojas/listar` | 🔒 | — |
+| 13 | `POST` | `/proto/admin/lojas/{loja_uuid}/funcionarios` | 🔒 | 👑 |
+| 14 | `POST` | `/proto/admin/lojas/{loja_uuid}/entregadores` | 🔒 | 👑 |
+| 15 | `POST` | `/proto/admin/lojas/{loja_uuid}/clientes` | 🔒 | 👑 |
+| 16 | `POST` | `/proto/pedidos/criar` | 🔒 | — |
+| 17 | `GET` | `/proto/pedidos/listar` | 🔒 | — |
+| 17.1 | `GET` | `/proto/pedidos/meus` | 🔒 | — |
+| 18 | `GET` | `/proto/pedidos/por-loja/{loja_uuid}` | 🔒 | — |
+| 19 | `GET` | `/proto/pedidos/{uuid}` | 🔒 | — |
+| 20 | `GET` | `/proto/pedidos/{uuid}/com-entrega` | 🔒 | — |
+| 21 | `PUT` | `/proto/pedidos/{uuid}/status` | 🔒 | — |
+| 22 | `PUT` | `/proto/pedidos/{pedido_uuid}/entregador/{loja_uuid}` | 🔒 | — |
+| 23 | `DELETE` | `/proto/pedidos/{pedido_uuid}/entregador/{loja_uuid}` | 🔒 | — |
+| 24 | `GET` | `/proto/pedidos/{pedido_uuid}/com-entregador` | 🔒 | — |
+| 25 | `POST` | `/proto/cupons/` | 🔒 | — |
+| 26 | `GET` | `/proto/cupons/` | 🔒 | — |
+| 27 | `GET` | `/proto/cupons/{uuid}` | 🔒 | — |
+| 28 | `PUT` | `/proto/cupons/{uuid}` | 🔒 | — |
+| 29 | `DELETE` | `/proto/cupons/{uuid}` | 🔒 | — |
+| 29.1 | `PATCH` | `/proto/cupons/{uuid}/status` | 🔒 | — |
+| 30 | `POST` | `/proto/marketing/{loja_uuid}/cupons` | 🔒 | — |
+| 31 | `GET` | `/proto/marketing/cupons/{codigo}` | — | — |
+| 32 | `GET` | `/proto/marketing/cupons` | 🔒 | — |
+| 33 | `POST` | `/proto/marketing/{loja_uuid}/avaliar-loja` | 🔒 | — |
+| 34 | `POST` | `/proto/marketing/{loja_uuid}/avaliar-produto` | 🔒 | — |
+| 34.1 | `GET` | `/proto/marketing/{loja_uuid}/avaliacoes-loja` | 🔒 | — |
+| 34.2 | `GET` | `/proto/marketing/avaliacoes-loja/{uuid}` | 🔒 | — |
+| 34.3 | `PUT` | `/proto/marketing/avaliacoes-loja/{uuid}` | 🔒 | — |
+| 34.4 | `DELETE` | `/proto/marketing/avaliacoes-loja/{uuid}` | 🔒 | — |
+| 34.5 | `GET` | `/proto/marketing/{loja_uuid}/avaliacoes-produto` | 🔒 | — |
+| 34.6 | `GET` | `/proto/marketing/avaliacoes-produto/produto/{produto_uuid}` | 🔒 | — |
+| 34.7 | `GET` | `/proto/marketing/avaliacoes-produto/{uuid}` | 🔒 | — |
+| 34.8 | `PUT` | `/proto/marketing/avaliacoes-produto/{uuid}` | 🔒 | — |
+| 34.9 | `DELETE` | `/proto/marketing/avaliacoes-produto/{uuid}` | 🔒 | — |
+| 35 | `POST` | `/proto/marketing/{loja_uuid}/promocoes` | 🔒 | — |
+| 36 | `GET` | `/proto/marketing/{loja_uuid}/promocoes` | 🔒 | — |
+| 37 | `PUT` | `/proto/marketing/{loja_uuid}/promocoes/{uuid}` | 🔒 | — |
+| 38 | `DELETE` | `/proto/marketing/{loja_uuid}/promocoes/{uuid}` | 🔒 | — |
+| 39 | `POST` | `/proto/catalogo/{loja_uuid}/adicionais` | 🔒 | — |
+| 40 | `GET` | `/proto/catalogo/{loja_uuid}/adicionais` | 🔒 | — |
+| 41 | `GET` | `/proto/catalogo/{loja_uuid}/adicionais/disponiveis` | 🔒 | — |
+| 42 | `PUT` | `/proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | 🔒 | — |
+| 43 | `PUT` | `/proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}/disponibilidade` | 🔒 | — |
+| 44 | `DELETE` | `/proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | 🔒 | — |
+| 45 | `POST` | `/proto/catalogo/{loja_uuid}/categorias` | 🔒 | — |
+| 46 | `GET` | `/proto/catalogo/{loja_uuid}/categorias` | 🔒 | — |
+| 47 | `PUT` | `/proto/catalogo/{loja_uuid}/categorias/{uuid}` | 🔒 | — |
+| 48 | `DELETE` | `/proto/catalogo/{loja_uuid}/categorias/{uuid}` | 🔒 | — |
+| 49 | `POST` | `/proto/enderecos-entrega/{pedido_uuid}/{loja_uuid}` | 🔒 | — |
+| 50 | `GET` | `/proto/enderecos-entrega/{pedido_uuid}` | 🔒 | — |
+| 51 | `GET` | `/proto/enderecos-entrega/{loja_uuid}/loja` | 🔒 | — |
+| 52 | `GET` | `/proto/enderecos-loja/{loja_uuid}` | 🔒 | — |
+| 53 | `POST` | `/proto/enderecos-loja/{loja_uuid}` | 🔒 | — |
+| 54 | `PUT` | `/proto/enderecos-loja/{loja_uuid}/{endereco_uuid}` | 🔒 | — |
+| 55 | `DELETE` | `/proto/enderecos-loja/{loja_uuid}/{endereco_uuid}` | 🔒 | — |
+| 56 | `POST` | `/proto/enderecos-usuario/` | 🔒 | — |
+| 57 | `GET` | `/proto/enderecos-usuario/` | 🔒 | — |
+| 58 | `GET` | `/proto/enderecos-usuario/{uuid}` | 🔒 | — |
+| 59 | `PUT` | `/proto/enderecos-usuario/{uuid}` | 🔒 | — |
+| 60 | `DELETE` | `/proto/enderecos-usuario/{uuid}` | 🔒 | — |
+| 61 | `POST` | `/proto/favoritos/{loja_uuid}` | 🔒 | — |
+| 62 | `DELETE` | `/proto/favoritos/{loja_uuid}` | 🔒 | — |
+| 63 | `GET` | `/proto/favoritos/minhas` | 🔒 | — |
+| 64 | `GET` | `/proto/favoritos/{loja_uuid}/verificar` | 🔒 | — |
+| 65 | `POST` | `/proto/produtos/` | 🔒 | — |
+| 66 | `GET` | `/proto/produtos/` | 🔒 | — |
+| 67 | `GET` | `/proto/produtos/categoria/{categoria_uuid}` | 🔒 | — |
+| 68 | `GET` | `/proto/produtos/{uuid}` | 🔒 | — |
+| 69 | `PUT` | `/proto/produtos/{uuid}` | 🔒 | — |
+| 70 | `DELETE` | `/proto/produtos/{uuid}` | 🔒 | — |
+| 71 | `PUT` | `/proto/produtos/{loja_uuid}/{produto_uuid}/disponibilidade` | 🔒 | — |
+| 72 | `POST` | `/proto/produtos/{uuid}/imagem` | 🔒 | — |
+| 73 | `GET` | `/proto/ok` | — | — |
+| 74 | `DELETE` | `/proto/wipe` ⚠️ | 🔒 + 👑 Owner | — |
 
 **Total: 92 endpoints**
 

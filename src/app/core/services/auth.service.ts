@@ -4,16 +4,12 @@ import { isPlatformBrowser } from '@angular/common';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  LoginRequest,
-  LoginResponse,
-  SignupRequest,
-  Usuario,
-  ClasseUsuario,
-} from '../models';
+import { chickie } from '@app/proto/generated';
+import { ProtobufBaseService } from './base.service';
+import { ClasseUsuario } from '../models';
 
 @Injectable({ providedIn: 'root' })
-export class AuthService {
+export class AuthService extends ProtobufBaseService {
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly base = `${environment.apiUrl}/auth`;
@@ -35,6 +31,10 @@ export class AuthService {
   readonly isAdmin = computed(() => this.userClass() === 'administrador' || this.userClass() === 'owner');
   readonly isOwner = computed(() => this.userClass() === 'owner');
 
+  protected getProtoType(): any {
+    return chickie.Usuario;
+  }
+
   private loadToken(): string | null {
     if (!isPlatformBrowser(this.platformId)) return null;
     return localStorage.getItem('chickie_token');
@@ -52,37 +52,53 @@ export class AuthService {
     }
   }
 
-  signup(body: SignupRequest): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.base}/signup`, body).pipe(
+  signup(body: chickie.ICreateUsuarioRequest): Observable<chickie.Usuario> {
+    return this.postProto<chickie.Usuario>(
+      this.http,
+      `${this.base}/signup`,
+      body,
+      chickie.Usuario,
+      chickie.CreateUsuarioRequest
+    ).pipe(
       tap((user) => {
-        this.saveItem('chickie_classe', user.classe);
-        this._userClassTrigger.set(new Date()); // Força atualização reativa
-      }),
-    );
-  }
-
-  login(body: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.base}/login`, body).pipe(
-      tap((res) => {
-        this.saveItem('chickie_token', res.access_token);
-        this._token.set(res.access_token);
-        // Tenta extrair do JWT como fallback
-        const classe = this.extractClasseFromToken(res.access_token);
-        if (classe) {
-          this.saveItem('chickie_classe', classe);
+        if (user.classe) {
+          this.saveItem('chickie_classe', user.classe);
           this._userClassTrigger.set(new Date()); // Força atualização reativa
         }
       }),
     );
   }
 
+  login(body: chickie.ILoginRequest): Observable<chickie.LoginResponse> {
+    return this.postProto<chickie.LoginResponse>(
+      this.http,
+      `${this.base}/login`,
+      body,
+      chickie.LoginResponse,
+      chickie.LoginRequest
+    ).pipe(
+      tap((res) => {
+        if (res.access_token) {
+          this.saveItem('chickie_token', res.access_token);
+          this._token.set(res.access_token);
+          // Tenta extrair do JWT como fallback
+          const classe = this.extractClasseFromToken(res.access_token);
+          if (classe) {
+            this.saveItem('chickie_classe', classe);
+            this._userClassTrigger.set(new Date()); // Força atualização reativa
+          }
+        }
+      }),
+    );
+  }
+
   /**
-   * GET /api/auth/me - Seção 2.3 da API
+   * GET /proto/auth/me - Seção 2.3 da API
    * Busca o perfil do usuário autenticado e salva chickie_classe no localStorage.
    * Deve ser chamado após o login para garantir que a classe seja armazenada.
    */
-  fetchAndSaveUserProfile(): Observable<Usuario> {
-    return this.http.get<Usuario>(`${this.base}/me`).pipe(
+  fetchAndSaveUserProfile(): Observable<chickie.Usuario> {
+    return this.getProto<chickie.Usuario>(this.http, `${this.base}/me`, chickie.Usuario).pipe(
       tap((user) => {
         if (user.classe) {
           this.saveItem('chickie_classe', user.classe);
@@ -124,20 +140,35 @@ export class AuthService {
   }
 
   /** Verificar disponibilidade de email */
-  verificarEmail(email: string): Observable<{ disponivel: boolean }> {
-    return this.http.post<{ disponivel: boolean }>(`${this.base}/verificar-email`, { email });
+  verificarEmail(email: string): Observable<chickie.DisponibilidadeResponse> {
+    return this.postProto<chickie.DisponibilidadeResponse>(
+      this.http,
+      `${this.base}/verificar-email`,
+      { email },
+      chickie.DisponibilidadeResponse,
+      chickie.VerificarEmailRequest
+    );
   }
 
   /** Verificar disponibilidade de username */
-  verificarUsername(username: string): Observable<{ disponivel: boolean }> {
-    return this.http.post<{ disponivel: boolean }>(`${this.base}/verificar-username`, { username });
+  verificarUsername(username: string): Observable<chickie.DisponibilidadeResponse> {
+    return this.postProto<chickie.DisponibilidadeResponse>(
+      this.http,
+      `${this.base}/verificar-username`,
+      { username },
+      chickie.DisponibilidadeResponse,
+      chickie.VerificarUsernameRequest
+    );
   }
 
   /** Verificar disponibilidade de celular */
-  verificarCelular(celular: string): Observable<{ disponivel: boolean }> {
-    return this.http.post<{ disponivel: boolean }>(
+  verificarCelular(celular: string): Observable<chickie.DisponibilidadeResponse> {
+    return this.postProto<chickie.DisponibilidadeResponse>(
+      this.http,
       `${this.base}/verificar-celular`,
       { celular },
+      chickie.DisponibilidadeResponse,
+      chickie.VerificarCelularRequest
     );
   }
 

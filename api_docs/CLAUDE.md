@@ -192,12 +192,12 @@ Cada repositório implementa também:
 
 | Padrão                          | Exemplo                                    |
 |---------------------------------|--------------------------------------------|
-| Todas sob `/api`                | `POST /api/pedidos`                        |
+| Todas sob `/api`                | `POST /proto/pedidos`                        |
 | Health check em `/`             | `GET /` → `handler_ok`                     |
 | Fallback 404 genérico           | qualquer rota não mapeada                  |
 | Auth via middleware             | Aplicado em `/pedidos` (parcial), `/usuarios`, `/produtos`, `/marketing` (parcial), `/catalogo`, `/enderecos-entrega`, `/enderecos-usuario`, `/favoritos`, `/admin` |
-| Sem auth                        | `/auth/*`, `/ok`, `GET /api/lojas/`, `GET /api/marketing/cupons/{codigo}` |
-| Owner only                      | `/api/wipe` (dev only), `/api/usuarios/`, toggle bloqueio usuários |
+| Sem auth                        | `/auth/*`, `/ok`, `GET /proto/lojas/`, `GET /proto/marketing/cupons/{codigo}` |
+| Owner only                      | `/proto/wipe` (dev only), `/proto/usuarios/`, toggle bloqueio usuários |
 
 ### Referência Completa de Endpoints
 
@@ -205,161 +205,161 @@ Cada repositório implementa também:
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/auth/signup` | Cadastro de usuário |
-| `POST` | `/api/auth/login` | Login (gera JWT) |
+| `POST` | `/proto/auth/signup` | Cadastro de usuário |
+| `POST` | `/proto/auth/login` | Login (gera JWT) |
 
 #### Usuários (auth required, Owner para maioria)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/api/usuarios/?classe=...` | Listar usuários (Owner). Query opcional: `?classe=cliente\|administrador` |
-| `PATCH` | `/api/usuarios/{uuid}/marcar-remocao` | Marcar para remoção (Self/Owner) |
-| `PATCH` | `/api/usuarios/{uuid}/desmarcar-remocao` | Desmarcar remoção (Self/Owner) |
-| `PUT` | `/api/usuarios/{uuid}/ativo` | Ativar/desativar (Owner) |
-| `PATCH` | `/api/usuarios/{uuid}/bloqueado` | Toggle bloqueio (Owner) |
+| `GET` | `/proto/usuarios/?classe=...` | Listar usuários (Owner). Query opcional: `?classe=cliente\|administrador` |
+| `PATCH` | `/proto/usuarios/{uuid}/marcar-remocao` | Marcar para remoção (Self/Owner) |
+| `PATCH` | `/proto/usuarios/{uuid}/desmarcar-remocao` | Desmarcar remoção (Self/Owner) |
+| `PUT` | `/proto/usuarios/{uuid}/ativo` | Ativar/desativar (Owner) |
+| `PATCH` | `/proto/usuarios/{uuid}/bloqueado` | Toggle bloqueio (Owner) |
 
 #### Lojas Públicas (sem auth para listagem)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/api/lojas/` | Listar lojas |
+| `GET` | `/proto/lojas/` | Listar lojas |
 
 #### Administração (auth required, apenas admin)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/admin/lojas` | Criar loja |
-| `GET` | `/api/admin/lojas/listar` | Listar todas as lojas |
-| `POST` | `/api/admin/lojas/{loja_uuid}/funcionarios` | Adicionar funcionário |
-| `POST` | `/api/admin/lojas/{loja_uuid}/entregadores` | Adicionar entregador |
+| `POST` | `/proto/admin/lojas` | Criar loja |
+| `GET` | `/proto/admin/lojas/listar` | Listar todas as lojas |
+| `POST` | `/proto/admin/lojas/{loja_uuid}/funcionarios` | Adicionar funcionário |
+| `POST` | `/proto/admin/lojas/{loja_uuid}/entregadores` | Adicionar entregador |
 
 #### Produtos (auth required)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/produtos/` | Criar produto |
-| `GET` | `/api/produtos/` | Listar produtos |
-| `GET` | `/api/produtos/categoria/{categoria_uuid}` | Listar produtos por categoria |
-| `GET` | `/api/produtos/{uuid}` | Buscar produto por UUID |
-| `PUT` | `/api/produtos/{uuid}` | Atualizar produto |
-| `DELETE` | `/api/produtos/{uuid}` | Deletar produto |
-| `PUT` | `/api/produtos/{loja_uuid}/{produto_uuid}/disponibilidade` | Atualizar disponibilidade |
-| `POST` | `/api/produtos/{uuid}/imagem` | Subir imagem do produto |
+| `POST` | `/proto/produtos/` | Criar produto |
+| `GET` | `/proto/produtos/` | Listar produtos |
+| `GET` | `/proto/produtos/categoria/{categoria_uuid}` | Listar produtos por categoria |
+| `GET` | `/proto/produtos/{uuid}` | Buscar produto por UUID |
+| `PUT` | `/proto/produtos/{uuid}` | Atualizar produto |
+| `DELETE` | `/proto/produtos/{uuid}` | Deletar produto |
+| `PUT` | `/proto/produtos/{loja_uuid}/{produto_uuid}/disponibilidade` | Atualizar disponibilidade |
+| `POST` | `/proto/produtos/{uuid}/imagem` | Subir imagem do produto |
 
 #### Horários de Funcionamento (🔒)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/api/horarios/{loja_uuid}` | Listar horários |
-| `POST` | `/api/horarios/{loja_uuid}` | Criar ou atualizar horário |
-| `PUT` | `/api/horarios/{loja_uuid}/dia/{dia_semana}/ativo` | Ativar/desativar dia |
-| `DELETE` | `/api/horarios/{loja_uuid}/dia/{dia_semana}` | Deletar horário do dia |
+| `GET` | `/proto/horarios/{loja_uuid}` | Listar horários |
+| `POST` | `/proto/horarios/{loja_uuid}` | Criar ou atualizar horário |
+| `PUT` | `/proto/horarios/{loja_uuid}/dia/{dia_semana}/ativo` | Ativar/desativar dia |
+| `DELETE` | `/proto/horarios/{loja_uuid}/dia/{dia_semana}` | Deletar horário do dia |
 
 #### Configurações de Pedido (🔒)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `GET` | `/api/config-pedido/{loja_uuid}` | Buscar configuração |
-| `PUT` | `/api/config-pedido/{loja_uuid}` | Salvar configuração |
+| `GET` | `/proto/config-pedido/{loja_uuid}` | Buscar configuração |
+| `PUT` | `/proto/config-pedido/{loja_uuid}` | Salvar configuração |
 
 #### Cupons Admin (🔒)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `PUT` | `/api/cupons/admin/{loja_uuid}/{uuid}` | Atualizar cupom |
-| `DELETE` | `/api/cupons/admin/{loja_uuid}/{uuid}` | Deletar cupom |
+| `PUT` | `/proto/cupons/admin/{loja_uuid}/{uuid}` | Atualizar cupom |
+| `DELETE` | `/proto/cupons/admin/{loja_uuid}/{uuid}` | Deletar cupom |
 
 #### Ingredientes (🔒)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/ingredientes/{loja_uuid}` | Criar ingrediente |
-| `GET` | `/api/ingredientes/{loja_uuid}` | Listar ingredientes |
-| `PUT` | `/api/ingredientes/{loja_uuid}/{uuid}` | Atualizar ingrediente |
-| `DELETE` | `/api/ingredientes/{loja_uuid}/{uuid}` | Deletar ingrediente |
+| `POST` | `/proto/ingredientes/{loja_uuid}` | Criar ingrediente |
+| `GET` | `/proto/ingredientes/{loja_uuid}` | Listar ingredientes |
+| `PUT` | `/proto/ingredientes/{loja_uuid}/{uuid}` | Atualizar ingrediente |
+| `DELETE` | `/proto/ingredientes/{loja_uuid}/{uuid}` | Deletar ingrediente |
 
 #### Funcionários (🔒)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `PUT` | `/api/funcionarios/{loja_uuid}/{uuid}` | Atualizar funcionário (inclui campos de usuário opcionais) |
-| `PUT` | `/api/funcionarios/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | Trocar email/senha |
+| `PUT` | `/proto/funcionarios/{loja_uuid}/{uuid}` | Atualizar funcionário (inclui campos de usuário opcionais) |
+| `PUT` | `/proto/funcionarios/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | Trocar email/senha |
 
 #### Entregadores (🔒)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `PUT` | `/api/entregadores/{loja_uuid}/{uuid}` | Atualizar entregador (inclui campos de usuário opcionais) |
-| `PUT` | `/api/entregadores/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | Trocar email/senha |
+| `PUT` | `/proto/entregadores/{loja_uuid}/{uuid}` | Atualizar entregador (inclui campos de usuário opcionais) |
+| `PUT` | `/proto/entregadores/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | Trocar email/senha |
 
 #### Catálogo (auth required)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/catalogo/{loja_uuid}/adicionais` | Criar adicional |
-| `GET` | `/api/catalogo/{loja_uuid}/adicionais` | Listar todos os adicionais |
-| `GET` | `/api/catalogo/{loja_uuid}/adicionais/disponiveis` | Listar adicionais disponíveis |
-| `PUT` | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | Atualizar adicional |
-| `PUT` | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}/disponibilidade` | Atualizar disponibilidade (true/false) |
-| `DELETE` | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | Deletar adicional |
-| `POST` | `/api/catalogo/{loja_uuid}/categorias` | Criar categoria |
+| `POST` | `/proto/catalogo/{loja_uuid}/adicionais` | Criar adicional |
+| `GET` | `/proto/catalogo/{loja_uuid}/adicionais` | Listar todos os adicionais |
+| `GET` | `/proto/catalogo/{loja_uuid}/adicionais/disponiveis` | Listar adicionais disponíveis |
+| `PUT` | `/proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | Atualizar adicional |
+| `PUT` | `/proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}/disponibilidade` | Atualizar disponibilidade (true/false) |
+| `DELETE` | `/proto/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | Deletar adicional |
+| `POST` | `/proto/catalogo/{loja_uuid}/categorias` | Criar categoria |
 
 #### Pedidos (auth required)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/pedidos/criar` | Criar pedido (`loja_uuid` no body) |
-| `GET` | `/api/pedidos/listar` | Listar todos pedidos |
-| `GET` | `/api/pedidos/por-loja/{loja_uuid}` | Listar pedidos por loja |
-| `GET` | `/api/pedidos/{uuid}` | Buscar pedido por UUID |
-| `GET` | `/api/pedidos/{uuid}/com-entrega` | Buscar pedido com endereço de entrega |
-| `PUT` | `/api/pedidos/{uuid}/status` | Atualizar status (máquina de estados) |
+| `POST` | `/proto/pedidos/criar` | Criar pedido (`loja_uuid` no body) |
+| `GET` | `/proto/pedidos/listar` | Listar todos pedidos |
+| `GET` | `/proto/pedidos/por-loja/{loja_uuid}` | Listar pedidos por loja |
+| `GET` | `/proto/pedidos/{uuid}` | Buscar pedido por UUID |
+| `GET` | `/proto/pedidos/{uuid}/com-entrega` | Buscar pedido com endereço de entrega |
+| `PUT` | `/proto/pedidos/{uuid}/status` | Atualizar status (máquina de estados) |
 
 #### Cupons & Avaliações (auth required, exceto validar cupom)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/marketing/{loja_uuid}/cupons` | Criar cupom |
-| `GET` | `/api/marketing/cupons` | Listar cupons da loja |
-| `GET` | `/api/marketing/cupons/{codigo}` | Validar cupom |
-| `POST` | `/api/marketing/{loja_uuid}/avaliar-loja` | Avaliar loja |
-| `POST` | `/api/marketing/{loja_uuid}/avaliar-produto` | Avaliar produto |
-| `POST` | `/api/marketing/{loja_uuid}/promocoes` | Criar promoção (escopo: loja, produto ou categoria) |
-| `GET` | `/api/marketing/{loja_uuid}/promocoes` | Listar promoções |
-| `PUT` | `/api/marketing/{loja_uuid}/promocoes/{uuid}` | Atualizar promoção |
-| `DELETE` | `/api/marketing/{loja_uuid}/promocoes/{uuid}` | Deletar promoção |
+| `POST` | `/proto/marketing/{loja_uuid}/cupons` | Criar cupom |
+| `GET` | `/proto/marketing/cupons` | Listar cupons da loja |
+| `GET` | `/proto/marketing/cupons/{codigo}` | Validar cupom |
+| `POST` | `/proto/marketing/{loja_uuid}/avaliar-loja` | Avaliar loja |
+| `POST` | `/proto/marketing/{loja_uuid}/avaliar-produto` | Avaliar produto |
+| `POST` | `/proto/marketing/{loja_uuid}/promocoes` | Criar promoção (escopo: loja, produto ou categoria) |
+| `GET` | `/proto/marketing/{loja_uuid}/promocoes` | Listar promoções |
+| `PUT` | `/proto/marketing/{loja_uuid}/promocoes/{uuid}` | Atualizar promoção |
+| `DELETE` | `/proto/marketing/{loja_uuid}/promocoes/{uuid}` | Deletar promoção |
 
 #### Endereços de Entrega (auth required)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/enderecos-entrega/{pedido_uuid}/{loja_uuid}` | Criar endereço para pedido |
-| `GET` | `/api/enderecos-entrega/{pedido_uuid}` | Buscar endereço do pedido |
+| `POST` | `/proto/enderecos-entrega/{pedido_uuid}/{loja_uuid}` | Criar endereço para pedido |
+| `GET` | `/proto/enderecos-entrega/{pedido_uuid}` | Buscar endereço do pedido |
 
 #### Endereços de Usuário (auth required)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/enderecos-usuario/` | Criar endereço |
-| `GET` | `/api/enderecos-usuario/` | Listar endereços do usuário |
-| `GET` | `/api/enderecos-usuario/{uuid}` | Buscar endereço |
-| `PUT` | `/api/enderecos-usuario/{uuid}` | Atualizar endereço |
-| `DELETE` | `/api/enderecos-usuario/{uuid}` | Deletar endereço |
+| `POST` | `/proto/enderecos-usuario/` | Criar endereço |
+| `GET` | `/proto/enderecos-usuario/` | Listar endereços do usuário |
+| `GET` | `/proto/enderecos-usuario/{uuid}` | Buscar endereço |
+| `PUT` | `/proto/enderecos-usuario/{uuid}` | Atualizar endereço |
+| `DELETE` | `/proto/enderecos-usuario/{uuid}` | Deletar endereço |
 
 #### Lojas Favoritas (auth required)
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/favoritos/{loja_uuid}` | Adicionar loja às favoritas |
-| `DELETE` | `/api/favoritos/{loja_uuid}` | Remover loja das favoritas |
-| `GET` | `/api/favoritos/minhas` | Listar minhas lojas favoritas |
-| `GET` | `/api/favoritos/{loja_uuid}/verificar` | Verificar se loja é favorita |
+| `POST` | `/proto/favoritos/{loja_uuid}` | Adicionar loja às favoritas |
+| `DELETE` | `/proto/favoritos/{loja_uuid}` | Remover loja das favoritas |
+| `GET` | `/proto/favoritos/minhas` | Listar minhas lojas favoritas |
+| `GET` | `/proto/favoritos/{loja_uuid}/verificar` | Verificar se loja é favorita |
 
 #### Administração
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `DELETE` | `/api/wipe` | ⚠️ Limpar todo o banco (dev only) |
+| `DELETE` | `/proto/wipe` | ⚠️ Limpar todo o banco (dev only) |
 
 ### AppState
 
@@ -536,7 +536,7 @@ Pedido {
 
 ```
 Admin → cadastra-se como usuário (classe: "administrador")
-     → cria sua loja via POST /api/admin/lojas (requer JWT de admin)
+     → cria sua loja via POST /proto/admin/lojas (requer JWT de admin)
      → configura catálogo (categorias, produtos, ingredientes, adicionais)
      → define horários de funcionamento
      → cria promoções
@@ -581,7 +581,7 @@ Entregador entrega → pedido status → ENTREGUE
 | Regra | Detalhe |
 |-------|---------|
 | Classe de usuário | `cliente` (padrão), `administrador`, `funcionario` ou `entregador`. Definida no signup via campo `classe`. |
-| Criar loja | Apenas usuários com `classe = "administrador"` podem criar lojas (`POST /api/admin/lojas`). |
+| Criar loja | Apenas usuários com `classe = "administrador"` podem criar lojas (`POST /proto/admin/lojas`). |
 | Produtos/Adicionais inativos | Não são exibidos no catálogo |
 | Avaliação de produto | Só via pedido autenticado (evite avaliação fraudulenta) |
 | Ingredientes | Não são adicionáveis pelo usuário; servem para descrever o produto |
@@ -603,7 +603,7 @@ Entregador entrega → pedido status → ENTREGUE
 | Data        | Mudança                                            |
 |-------------|----------------------------------------------------|
 | 2026-04-05  | **NUMERIC com tipo correto**: Todos os campos `f64`/`Option<f64>` mapeados para `NUMERIC` migrados para `rust_decimal::Decimal`. |
-| 2026-04-05  | **Endpoint minhas lojas**: `GET /api/admin/minhas-lojas` lista lojas criadas pelo admin logado. Tabela `lojas` ganhou campo `criado_por UUID` (FK para `usuarios`). Migration `0003` criada. |
+| 2026-04-05  | **Endpoint minhas lojas**: `GET /proto/admin/minhas-lojas` lista lojas criadas pelo admin logado. Tabela `lojas` ganhou campo `criado_por UUID` (FK para `usuarios`). Migration `0003` criada. |
 | 2026-04-05  | **Campos TIME corrigidos**: `horario_abertura`, `horario_fechamento` (`loja`) e `abertura`, `fechamento` (`horarios_funcionamento`) migrados de `String` para `chrono::NaiveTime`. `loja_service` agora converte `String → NaiveTime::parse_from_str("%H:%M")`. |
 | 2026-04-05  | **Timestamps corrigidos**: Models migrados de `String` para `chrono::DateTime<Utc>`. Repositórios agora omitem `criado_em`/`atualizado_em` em INSERTs/UPDATEs (usam DEFAULT/TRIGGER do PostgreSQL). |
 | 2026-04-05  | Máquina de estados do pedido + endpoint `PUT /status` |
@@ -612,9 +612,9 @@ Entregador entrega → pedido status → ENTREGUE
 | 2026-04-05  | Migration `0002` aplicada no boot |
 | 2026-04-04  | Endpoints de pedidos: listar_por_loja, buscar_pedido_com_entrega |
 | 2026-04-04  | CRUD completo de promoções (listar, atualizar, deletar) |
-| 2026-04-04  | Endpoint `GET /api/cupons/` para listar cupons por loja |
+| 2026-04-04  | Endpoint `GET /proto/cupons/` para listar cupons por loja |
 | 2026-04-04  | `ClasseUsuario.Owner` adicionado (dono da plataforma) |
-| 2026-04-04  | Endpoint `POST /api/cupons/{loja_uuid}/promocoes` criado via MarketingUsecase |
+| 2026-04-04  | Endpoint `POST /proto/cupons/{loja_uuid}/promocoes` criado via MarketingUsecase |
 | 2026-04-04  | Endpoints de adicionais (listar, disponíveis, indisponível) criados |
 | 2026-04-03  | Tabela `lojas_favoritas` e endpoints de favoritos criados |
 | 2026-04-04  | `Funcionario` e `Entregador` agora referenciam `Usuario` via FK (`usuario_uuid`) |
@@ -622,11 +622,11 @@ Entregador entrega → pedido status → ENTREGUE
 | 2026-04-03  | `LojaService::adicionar_cliente` agora cria usuário cliente automaticamente |
 | 2026-04-03  | `EnderecoEntregaService` e `EnderecoUsuarioService` injetados no AppState |
 | 2026-04-03  | `ClasseUsuario` adicionada ao `Usuario` (cliente/admin) |
-| 2026-04-03  | Endpoint `POST /api/admin/lojas` protegido por auth + verificação de admin |
-| 2026-04-03  | Pasta `src/api/usecases/` movida para `src/usecases/` |
+| 2026-04-03  | Endpoint `POST /proto/admin/lojas` protegido por auth + verificação de admin |
+| 2026-04-03  | Pasta `src/proto/usecases/` movida para `src/usecases/` |
 | 2026-04-03  | Repositórios extraídos para módulo com trait defaults |
 | 2026-04-03  | SQL queries otimizadas (indentação compacta)       |
-| 2026-04-03  | Endpoint `DELETE /api/wipe` criado (dev only)      |
+| 2026-04-03  | Endpoint `DELETE /proto/wipe` criado (dev only)      |
 | 2026-04-03  | Endpoints de avaliação de loja e produto criados   |
 | 2026-04-03  | `MarketingUsecase` implementado                    |
 | 2026-04-03  | `MarketingService` agora deriva `Clone`            |

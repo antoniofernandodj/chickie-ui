@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.chiquitos.tech/proto',
+  apiUrl: 'http://localhost:3000/proto',
 };

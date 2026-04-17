@@ -1,29 +1,50 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { FavoritaResponse, LojaFavorita, MessageResponse } from '../models';
+import { chickie } from '@app/proto/generated';
+import { ProtobufBaseService } from './base.service';
 
 @Injectable({ providedIn: 'root' })
-export class FavoritosService {
+export class FavoritosService extends ProtobufBaseService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/favoritos`;
 
-  adicionar(lojaUuid: string): Observable<LojaFavorita> {
-    return this.http.post<LojaFavorita>(`${this.base}/${lojaUuid}`, {});
+  protected getProtoType(): any {
+    return chickie.LojaFavorita;
   }
 
-  remover(lojaUuid: string): Observable<MessageResponse> {
-    return this.http.delete<MessageResponse>(`${this.base}/${lojaUuid}`);
+  adicionar(lojaUuid: string): Observable<chickie.ILojaFavorita> {
+    return this.postProto<chickie.ILojaFavorita>(
+      this.http,
+      `${this.base}/${lojaUuid}`,
+      {},
+      chickie.LojaFavorita,
+      chickie.GenericResponse // Just a placeholder for empty body if needed, or pass null
+    );
   }
 
-  listarMinhas(): Observable<LojaFavorita[]> {
-    return this.http.get<LojaFavorita[]>(`${this.base}/minhas`);
+  remover(lojaUuid: string): Observable<chickie.IGenericResponse> {
+    return this.deleteProto<chickie.IGenericResponse>(
+      this.http,
+      `${this.base}/${lojaUuid}`,
+      chickie.GenericResponse
+    );
   }
 
-  verificar(lojaUuid: string): Observable<FavoritaResponse> {
-    return this.http.get<FavoritaResponse>(
+  listarMinhas(): Observable<chickie.ILojaFavorita[]> {
+    return this.getProto<chickie.IListarLojasFavoritasResponse>(
+      this.http,
+      `${this.base}/minhas`,
+      chickie.ListarLojasFavoritasResponse
+    ).pipe(map(res => res.favoritas || []));
+  }
+
+  verificar(lojaUuid: string): Observable<chickie.IDisponibilidadeResponse> {
+    return this.getProto<chickie.IDisponibilidadeResponse>(
+      this.http,
       `${this.base}/${lojaUuid}/verificar`,
+      chickie.DisponibilidadeResponse
     );
   }
 }

@@ -8,7 +8,7 @@ import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Loja } from '../../core/models';
+import { chickie } from '../../proto/generated';
 
 @Component({
   selector: 'app-admin-empresas-list',
@@ -31,7 +31,7 @@ export class AdminEmpresasListComponent {
   readonly _minhasLojas = toSignal(
     this.refreshTrigger.pipe(
       switchMap(() => this.adminService.listarMinhasLojas()),
-      catchError(() => of([])),
+      catchError(() => of([] as chickie.ILoja[])),
     ),
   );
   readonly lojasLoading = computed(() => this._minhasLojas() === undefined);
@@ -81,10 +81,10 @@ export class AdminEmpresasListComponent {
             })
           );
         }),
-        filter((result): result is { disponivel: boolean; slug: string } => result !== null)
+        filter((result): result is chickie.ISlugDisponivelResponse => result !== null)
       ).subscribe(result => {
         this.slugChecking.set(false);
-        this.slugAvailable.set(result.disponivel);
+        this.slugAvailable.set(result.disponivel ?? false);
         this.slugMessage.set(result.disponivel ? 'Slug disponível!' : 'Slug já está em uso.');
       });
     }
@@ -160,7 +160,7 @@ export class AdminEmpresasListComponent {
     this.lojaError.set('');
   }
 
-  navegarParaPainel(loja: Loja) {
+  navegarParaPainel(loja: chickie.ILoja) {
     this.router.navigate(['/admin', loja.uuid]);
   }
 }

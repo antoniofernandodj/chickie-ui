@@ -37,7 +37,7 @@ export class LoginComponent {
     const { identifier, senha } = this.form.value;
     this.auth.login({ identifier: identifier!, senha: senha! }).subscribe({
       next: () => {
-        // Busca o perfil via GET /api/auth/me para salvar chickie_classe
+        // Busca o perfil via GET /proto/auth/me para salvar chickie_classe
         this.auth.fetchAndSaveUserProfile().subscribe({
           next: (user) => {
             // Redireciona owner para painel exclusivo

@@ -1,0 +1,4 @@
+os modelos gerados em @chickie-ui/src/app/proto devem ser aplicados ao projeto, porque todos os endpoints foram adaptados de json api para protobuf.
+   além disso, deve-se usar o ProtobufBaseService para serializar e desserializar os dados.
+
+não está compilando. esta com erros de build. melhore a migração de json api para protobuf api que está em andamento

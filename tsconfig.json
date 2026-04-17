@@ -12,8 +12,14 @@
     "isolatedModules": true,
     "experimentalDecorators": true,
     "importHelpers": true,
+    "baseUrl": "./",  // Isso já deve estar configurado como a raiz do projeto
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    "paths": {
+      "@app/*": ["src/app/*"],  // Aqui, "src/app" será o diretório raiz para @app
+      "@assets/*": ["src/assets/*"],  // O mesmo vale para outros diretórios
+      "@core/*": ["src/app/core/*"]  // Exemplo para pasta 'core'
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

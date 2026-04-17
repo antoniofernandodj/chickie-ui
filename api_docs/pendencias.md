@@ -9,9 +9,9 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 1 | Cadastrar usuário (cliente/admin) | `POST /api/auth/signup` | ✅ OK |
-| 2 | Login | `POST /api/auth/login` | ✅ OK |
-| 3 | Listar usuários (admin) | `GET /api/usuarios/` | ⏳ PENDENTE |
+| 1 | Cadastrar usuário (cliente/admin) | `POST /proto/auth/signup` | ✅ OK |
+| 2 | Login | `POST /proto/auth/login` | ✅ OK |
+| 3 | Listar usuários (admin) | `GET /proto/usuarios/` | ⏳ PENDENTE |
 
 ---
 
@@ -19,10 +19,10 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 4 | Listar todas as lojas | `GET /api/lojas/` | ✅ OK |
-| 5 | Pesquisar lojas por termo | `GET /api/lojas/pesquisar?termo=` | ✅ OK |
-| 6 | Buscar loja por UUID | `GET /api/lojas/{uuid}` | ✅ OK |
-| 7 | Buscar loja por slug | `GET /api/lojas/slug/{slug}` | ✅ OK |
+| 4 | Listar todas as lojas | `GET /proto/lojas/` | ✅ OK |
+| 5 | Pesquisar lojas por termo | `GET /proto/lojas/pesquisar?termo=` | ✅ OK |
+| 6 | Buscar loja por UUID | `GET /proto/lojas/{uuid}` | ✅ OK |
+| 7 | Buscar loja por slug | `GET /proto/lojas/slug/{slug}` | ✅ OK |
 
 ---
 
@@ -30,12 +30,12 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 8 | Criar loja | `POST /api/admin/lojas` | ✅ OK |
-| 9 | Listar todas as lojas (admin) | `GET /api/admin/lojas/listar` | ⏳ PENDENTE |
-| 10 | Listar minhas lojas (admin) | `GET /api/admin/minhas-lojas` | ✅ OK |
-| 11 | Adicionar funcionário | `POST /api/admin/lojas/{uuid}/funcionarios` | ✅ OK |
-| 12 | Adicionar entregador | `POST /api/admin/lojas/{uuid}/entregadores` | ✅ OK |
-| 13 | Adicionar cliente | `POST /api/admin/lojas/{uuid}/clientes` | ⏳ PENDENTE |
+| 8 | Criar loja | `POST /proto/admin/lojas` | ✅ OK |
+| 9 | Listar todas as lojas (admin) | `GET /proto/admin/lojas/listar` | ⏳ PENDENTE |
+| 10 | Listar minhas lojas (admin) | `GET /proto/admin/minhas-lojas` | ✅ OK |
+| 11 | Adicionar funcionário | `POST /proto/admin/lojas/{uuid}/funcionarios` | ✅ OK |
+| 12 | Adicionar entregador | `POST /proto/admin/lojas/{uuid}/entregadores` | ✅ OK |
+| 13 | Adicionar cliente | `POST /proto/admin/lojas/{uuid}/clientes` | ⏳ PENDENTE |
 
 ---
 
@@ -43,10 +43,10 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 14 | Atualizar funcionário | `PUT /api/funcionarios/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
-| 15 | Trocar email/senha de funcionário | `PUT /api/funcionarios/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | ⏳ PENDENTE |
-| 16 | Atualizar entregador | `PUT /api/entregadores/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
-| 17 | Trocar email/senha de entregador | `PUT /api/entregadores/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | ⏳ PENDENTE |
+| 14 | Atualizar funcionário | `PUT /proto/funcionarios/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
+| 15 | Trocar email/senha de funcionário | `PUT /proto/funcionarios/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | ⏳ PENDENTE |
+| 16 | Atualizar entregador | `PUT /proto/entregadores/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
+| 17 | Trocar email/senha de entregador | `PUT /proto/entregadores/{loja_uuid}/usuarios/{usuario_uuid}/credenciais` | ⏳ PENDENTE |
 
 ---
 
@@ -54,9 +54,9 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 18 | Listar produtos | `GET /api/produtos/` | ✅ OK |
-| 19 | Criar produto | `POST /api/produtos/` | ⏳ PENDENTE |
-| 20 | Atualizar produto | `PUT /api/produtos/{uuid}` | ⏳ PENDENTE |
+| 18 | Listar produtos | `GET /proto/produtos/` | ✅ OK |
+| 19 | Criar produto | `POST /proto/produtos/` | ⏳ PENDENTE |
+| 20 | Atualizar produto | `PUT /proto/produtos/{uuid}` | ⏳ PENDENTE |
 
 ---
 
@@ -64,11 +64,11 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 21 | Criar categoria | `POST /api/catalogo/{loja_uuid}/categorias` | ⏳ PENDENTE |
-| 22 | Criar adicional | `POST /api/catalogo/{loja_uuid}/adicionais` | ⏳ PENDENTE |
-| 23 | Listar todos os adicionais | `GET /api/catalogo/{loja_uuid}/adicionais` | ⏳ PENDENTE |
-| 24 | Listar adicionais disponíveis | `GET /api/catalogo/{loja_uuid}/adicionais/disponiveis` | ⏳ PENDENTE |
-| 25 | Marcar adicional como indisponível | `PUT /api/catalogo/{loja_uuid}/adicionais/{uuid}/indisponivel` | ⏳ PENDENTE |
+| 21 | Criar categoria | `POST /proto/catalogo/{loja_uuid}/categorias` | ⏳ PENDENTE |
+| 22 | Criar adicional | `POST /proto/catalogo/{loja_uuid}/adicionais` | ⏳ PENDENTE |
+| 23 | Listar todos os adicionais | `GET /proto/catalogo/{loja_uuid}/adicionais` | ⏳ PENDENTE |
+| 24 | Listar adicionais disponíveis | `GET /proto/catalogo/{loja_uuid}/adicionais/disponiveis` | ⏳ PENDENTE |
+| 25 | Marcar adicional como indisponível | `PUT /proto/catalogo/{loja_uuid}/adicionais/{uuid}/indisponivel` | ⏳ PENDENTE |
 
 ---
 
@@ -76,10 +76,10 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 26 | Criar pedido (checkout) | `POST /api/pedidos/criar` | ⏳ PENDENTE |
-| 27 | Listar meus pedidos | `GET /api/pedidos/` | ✅ OK |
-| 28 | Buscar pedido por UUID | `GET /api/pedidos/{uuid}` | ✅ OK |
-| 29 | Buscar pedido com endereço de entrega | `GET /api/pedidos/{uuid}/com-entrega` | ⏳ PENDENTE |
+| 26 | Criar pedido (checkout) | `POST /proto/pedidos/criar` | ⏳ PENDENTE |
+| 27 | Listar meus pedidos | `GET /proto/pedidos/` | ✅ OK |
+| 28 | Buscar pedido por UUID | `GET /proto/pedidos/{uuid}` | ✅ OK |
+| 29 | Buscar pedido com endereço de entrega | `GET /proto/pedidos/{uuid}/com-entrega` | ⏳ PENDENTE |
 
 ---
 
@@ -87,8 +87,8 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 30 | Listar pedidos por loja | `GET /api/pedidos/por-loja/{loja_uuid}` | ⏳ PENDENTE |
-| 31 | Atualizar status do pedido | `PUT /api/pedidos/{uuid}/status` | ⏳ PENDENTE |
+| 30 | Listar pedidos por loja | `GET /proto/pedidos/por-loja/{loja_uuid}` | ⏳ PENDENTE |
+| 31 | Atualizar status do pedido | `PUT /proto/pedidos/{uuid}/status` | ⏳ PENDENTE |
 
 ---
 
@@ -96,11 +96,11 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 32 | Criar cupom | `POST /api/marketing/{loja_uuid}/cupons` | ⏳ PENDENTE |
-| 33 | Listar cupons da loja | `GET /api/marketing/cupons` | ⏳ PENDENTE |
-| 34 | Validar cupom | `GET /api/marketing/cupons/{codigo}` | ⏳ PENDENTE |
-| 35 | Atualizar cupom | `PUT /api/cupons/admin/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
-| 36 | Deletar cupom | `DELETE /api/cupons/admin/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
+| 32 | Criar cupom | `POST /proto/marketing/{loja_uuid}/cupons` | ⏳ PENDENTE |
+| 33 | Listar cupons da loja | `GET /proto/marketing/cupons` | ⏳ PENDENTE |
+| 34 | Validar cupom | `GET /proto/marketing/cupons/{codigo}` | ⏳ PENDENTE |
+| 35 | Atualizar cupom | `PUT /proto/cupons/admin/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
+| 36 | Deletar cupom | `DELETE /proto/cupons/admin/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
 
 ---
 
@@ -108,8 +108,8 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 37 | Avaliar loja | `POST /api/marketing/{loja_uuid}/avaliar-loja` | ⏳ PENDENTE |
-| 38 | Avaliar produto | `POST /api/marketing/{loja_uuid}/avaliar-produto` | ⏳ PENDENTE |
+| 37 | Avaliar loja | `POST /proto/marketing/{loja_uuid}/avaliar-loja` | ⏳ PENDENTE |
+| 38 | Avaliar produto | `POST /proto/marketing/{loja_uuid}/avaliar-produto` | ⏳ PENDENTE |
 
 ---
 
@@ -117,10 +117,10 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 39 | Criar promoção | `POST /api/marketing/{loja_uuid}/promocoes` | ⏳ PENDENTE |
-| 40 | Listar promoções | `GET /api/marketing/{loja_uuid}/promocoes` | ⏳ PENDENTE |
-| 41 | Atualizar promoção | `PUT /api/marketing/{loja_uuid}/promocoes/{uuid}` | ⏳ PENDENTE |
-| 42 | Deletar promoção | `DELETE /api/marketing/{loja_uuid}/promocoes/{uuid}` | ⏳ PENDENTE |
+| 39 | Criar promoção | `POST /proto/marketing/{loja_uuid}/promocoes` | ⏳ PENDENTE |
+| 40 | Listar promoções | `GET /proto/marketing/{loja_uuid}/promocoes` | ⏳ PENDENTE |
+| 41 | Atualizar promoção | `PUT /proto/marketing/{loja_uuid}/promocoes/{uuid}` | ⏳ PENDENTE |
+| 42 | Deletar promoção | `DELETE /proto/marketing/{loja_uuid}/promocoes/{uuid}` | ⏳ PENDENTE |
 
 ---
 
@@ -128,8 +128,8 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 43 | Criar endereço para pedido | `POST /api/enderecos-entrega/{pedido_uuid}/{loja_uuid}` | ⏳ PENDENTE |
-| 44 | Buscar endereço do pedido | `GET /api/enderecos-entrega/{pedido_uuid}` | ⏳ PENDENTE |
+| 43 | Criar endereço para pedido | `POST /proto/enderecos-entrega/{pedido_uuid}/{loja_uuid}` | ⏳ PENDENTE |
+| 44 | Buscar endereço do pedido | `GET /proto/enderecos-entrega/{pedido_uuid}` | ⏳ PENDENTE |
 
 ---
 
@@ -137,11 +137,11 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 45 | Criar endereço | `POST /api/enderecos-usuario/` | ✅ OK |
-| 46 | Listar endereços | `GET /api/enderecos-usuario/` | ✅ OK |
-| 47 | Buscar endereço | `GET /api/enderecos-usuario/{uuid}` | ✅ OK |
-| 48 | Atualizar endereço | `PUT /api/enderecos-usuario/{uuid}` | ✅ OK |
-| 49 | Deletar endereço | `DELETE /api/enderecos-usuario/{uuid}` | ✅ OK |
+| 45 | Criar endereço | `POST /proto/enderecos-usuario/` | ✅ OK |
+| 46 | Listar endereços | `GET /proto/enderecos-usuario/` | ✅ OK |
+| 47 | Buscar endereço | `GET /proto/enderecos-usuario/{uuid}` | ✅ OK |
+| 48 | Atualizar endereço | `PUT /proto/enderecos-usuario/{uuid}` | ✅ OK |
+| 49 | Deletar endereço | `DELETE /proto/enderecos-usuario/{uuid}` | ✅ OK |
 
 ---
 
@@ -149,10 +149,10 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 50 | Adicionar aos favoritos | `POST /api/favoritos/{loja_uuid}` | ✅ OK |
-| 51 | Remover dos favoritos | `DELETE /api/favoritos/{loja_uuid}` | ✅ OK |
-| 52 | Listar minhas favoritas | `GET /api/favoritos/minhas` | ✅ OK |
-| 53 | Verificar se loja é favorita | `GET /api/favoritos/{loja_uuid}/verificar` | ✅ OK |
+| 50 | Adicionar aos favoritos | `POST /proto/favoritos/{loja_uuid}` | ✅ OK |
+| 51 | Remover dos favoritos | `DELETE /proto/favoritos/{loja_uuid}` | ✅ OK |
+| 52 | Listar minhas favoritas | `GET /proto/favoritos/minhas` | ✅ OK |
+| 53 | Verificar se loja é favorita | `GET /proto/favoritos/{loja_uuid}/verificar` | ✅ OK |
 
 ---
 
@@ -160,10 +160,10 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 54 | Listar horários | `GET /api/horarios/{loja_uuid}` | ⏳ PENDENTE |
-| 55 | Criar ou atualizar horário | `POST /api/horarios/{loja_uuid}` | ⏳ PENDENTE |
-| 56 | Ativar/desativar dia | `PUT /api/horarios/{loja_uuid}/dia/{dia_semana}/ativo` | ⏳ PENDENTE |
-| 57 | Deletar horário do dia | `DELETE /api/horarios/{loja_uuid}/dia/{dia_semana}` | ⏳ PENDENTE |
+| 54 | Listar horários | `GET /proto/horarios/{loja_uuid}` | ⏳ PENDENTE |
+| 55 | Criar ou atualizar horário | `POST /proto/horarios/{loja_uuid}` | ⏳ PENDENTE |
+| 56 | Ativar/desativar dia | `PUT /proto/horarios/{loja_uuid}/dia/{dia_semana}/ativo` | ⏳ PENDENTE |
+| 57 | Deletar horário do dia | `DELETE /proto/horarios/{loja_uuid}/dia/{dia_semana}` | ⏳ PENDENTE |
 
 ---
 
@@ -171,8 +171,8 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 58 | Buscar configuração | `GET /api/config-pedido/{loja_uuid}` | ⏳ PENDENTE |
-| 59 | Salvar configuração | `PUT /api/config-pedido/{loja_uuid}` | ⏳ PENDENTE |
+| 58 | Buscar configuração | `GET /proto/config-pedido/{loja_uuid}` | ⏳ PENDENTE |
+| 59 | Salvar configuração | `PUT /proto/config-pedido/{loja_uuid}` | ⏳ PENDENTE |
 
 ---
 
@@ -180,10 +180,10 @@
 
 | # | Funcionalidade | Endpoint API | Status |
 |---|---------------|-------------|--------|
-| 60 | Criar ingrediente | `POST /api/ingredientes/{loja_uuid}` | ⏳ PENDENTE |
-| 61 | Listar ingredientes | `GET /api/ingredientes/{loja_uuid}` | ⏳ PENDENTE |
-| 62 | Atualizar ingrediente | `PUT /api/ingredientes/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
-| 63 | Deletar ingrediente | `DELETE /api/ingredientes/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
+| 60 | Criar ingrediente | `POST /proto/ingredientes/{loja_uuid}` | ⏳ PENDENTE |
+| 61 | Listar ingredientes | `GET /proto/ingredientes/{loja_uuid}` | ⏳ PENDENTE |
+| 62 | Atualizar ingrediente | `PUT /proto/ingredientes/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
+| 63 | Deletar ingrediente | `DELETE /proto/ingredientes/{loja_uuid}/{uuid}` | ⏳ PENDENTE |
 
 ---
 

@@ -1,48 +1,71 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  CreatePedidoRequest,
-  CreatePedidoResponse,
-  Pedido,
-  PedidoComEntrega,
-  StatusPedidoResponse,
-  UpdateStatusPedidoRequest,
-} from '../models';
+import { chickie } from '@app/proto/generated';
+import { ProtobufBaseService } from './base.service';
 
 @Injectable({ providedIn: 'root' })
-export class PedidoService {
+export class PedidoService extends ProtobufBaseService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/pedidos`;
 
-  criar(body: CreatePedidoRequest): Observable<CreatePedidoResponse> {
-    return this.http.post<CreatePedidoResponse>(`${this.base}/criar`, body);
+  protected getProtoType(): any {
+    return chickie.Pedido;
   }
 
-  listar(): Observable<Pedido[]> {
-    return this.http.get<Pedido[]>(`${this.base}/`);
+  criar(body: chickie.ICriarPedidoRequest): Observable<chickie.IPedido> {
+    return this.postProto<chickie.IPedido>(
+      this.http,
+      `${this.base}/criar`,
+      body,
+      chickie.Pedido,
+      chickie.CriarPedidoRequest
+    );
   }
 
-  buscar(uuid: string): Observable<Pedido> {
-    return this.http.get<Pedido>(`${this.base}/${uuid}`);
+  listar(): Observable<chickie.IPedido[]> {
+    return this.getProto<chickie.IListarPedidosResponse>(
+      this.http,
+      `${this.base}/`,
+      chickie.ListarPedidosResponse
+    ).pipe(map(res => res.pedidos || []));
   }
 
-  listarPorLoja(lojaUuid: string): Observable<Pedido[]> {
-    return this.http.get<Pedido[]>(`${this.base}/por-loja/${lojaUuid}`);
+  buscar(uuid: string): Observable<chickie.IPedido> {
+    return this.getProto<chickie.IPedido>(
+      this.http,
+      `${this.base}/${uuid}`,
+      chickie.Pedido
+    );
   }
 
-  buscarComEntrega(uuid: string): Observable<PedidoComEntrega> {
-    return this.http.get<PedidoComEntrega>(`${this.base}/${uuid}/com-entrega`);
+  listarPorLoja(lojaUuid: string): Observable<chickie.IPedido[]> {
+    return this.getProto<chickie.IListarPedidosResponse>(
+      this.http,
+      `${this.base}/por-loja/${lojaUuid}`,
+      chickie.ListarPedidosResponse
+    ).pipe(map(res => res.pedidos || []));
+  }
+
+  buscarComEntrega(uuid: string): Observable<chickie.IPedidoComEntregaResponse> {
+    return this.getProto<chickie.IPedidoComEntregaResponse>(
+      this.http,
+      `${this.base}/${uuid}/com-entrega`,
+      chickie.PedidoComEntregaResponse
+    );
   }
 
   atualizarStatus(
     uuid: string,
-    body: UpdateStatusPedidoRequest,
-  ): Observable<StatusPedidoResponse> {
-    return this.http.put<StatusPedidoResponse>(
+    body: chickie.IAtualizarStatusPedidoRequest,
+  ): Observable<chickie.IPedidoStatusResponse> {
+    return this.putProto<chickie.IPedidoStatusResponse>(
+      this.http,
       `${this.base}/${uuid}/status`,
       body,
+      chickie.PedidoStatusResponse,
+      chickie.AtualizarStatusPedidoRequest
     );
   }
 }

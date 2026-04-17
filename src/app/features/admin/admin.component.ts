@@ -12,7 +12,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo } from '../../core/models';
+import { chickie } from '../../proto/generated';
 
 @Component({
   selector: 'app-admin',
@@ -50,7 +50,7 @@ export class AdminComponent {
     filter((uuid): uuid is string => uuid !== null),
   );
 
-  readonly lojaSelecionada = toSignal<Loja | null>(
+  readonly lojaSelecionada = toSignal<chickie.ILoja | null>(
     this.lojaUuid$.pipe(
       switchMap((uuid) =>
         this.lojaService.buscarPorUuid(uuid).pipe(
@@ -82,13 +82,13 @@ export class AdminComponent {
     this.refreshAvaliacoesTrigger.pipe(
       switchMap(() => {
         const loja = this.lojaSelecionada();
-        if (!loja) return of([] as AvaliacaoDeLoja[]);
+        if (!loja || !loja.uuid) return of([] as chickie.IAvaliacaoLoja[]);
         return this.marketingService.listarAvaliacoesLoja(loja.uuid).pipe(
-          catchError(() => of([] as AvaliacaoDeLoja[])),
+          catchError(() => of([] as chickie.IAvaliacaoLoja[])),
         );
       }),
     ),
-    { initialValue: [] as AvaliacaoDeLoja[] },
+    { initialValue: [] as chickie.IAvaliacaoLoja[] },
   );
   readonly avaliacoesLoading = computed(() => this._avaliacoes() === undefined);
   readonly avaliacoes = computed(() => this._avaliacoes() ?? []);
@@ -96,7 +96,7 @@ export class AdminComponent {
   readonly notaMedia = computed(() => {
     const avaliacoes = this.avaliacoes();
     if (!avaliacoes || avaliacoes.length === 0) return null;
-    const soma = avaliacoes.reduce((acc, a) => acc + this.toNumber(a.nota), 0);
+    const soma = avaliacoes.reduce((acc, a) => acc + this.toNumber(a.nota ?? 0), 0);
     return parseFloat((soma / avaliacoes.length).toFixed(1));
   });
 
@@ -105,7 +105,7 @@ export class AdminComponent {
     if (!avaliacoes || avaliacoes.length === 0) return null;
     const distribuicao = [0, 0, 0, 0, 0]; // 1-5 estrelas
     avaliacoes.forEach((a) => {
-      const nota = Math.round(this.toNumber(a.nota));
+      const nota = Math.round(this.toNumber(a.nota ?? 0));
       const idx = nota - 1;
       if (idx >= 0 && idx < 5) distribuicao[idx]++;
     });
@@ -124,13 +124,13 @@ export class AdminComponent {
     this.refreshFuncTrigger.pipe(
       switchMap(() => {
         const loja = this.lojaSelecionada();
-        if (!loja) return of([] as Funcionario[]);
+        if (!loja || !loja.uuid) return of([] as chickie.IFuncionario[]);
         return this.adminService.listarFuncionarios(loja.uuid).pipe(
-          catchError(() => of([] as Funcionario[])),
+          catchError(() => of([] as chickie.IFuncionario[])),
         );
       }),
     ),
-    { initialValue: [] as Funcionario[] },
+    { initialValue: [] as chickie.IFuncionario[] },
   );
   readonly funcLoading = computed(() => this._funcionarios() === undefined);
   readonly funcionarios = computed(() => this._funcionarios() ?? []);
@@ -147,13 +147,13 @@ export class AdminComponent {
     this.refreshEntregTrigger.pipe(
       switchMap(() => {
         const loja = this.lojaSelecionada();
-        if (!loja) return of([] as Entregador[]);
+        if (!loja || !loja.uuid) return of([] as chickie.IEntregador[]);
         return this.adminService.listarEntregadores(loja.uuid).pipe(
-          catchError(() => of([] as Entregador[])),
+          catchError(() => of([] as chickie.IEntregador[])),
         );
       }),
     ),
-    { initialValue: [] as Entregador[] },
+    { initialValue: [] as chickie.IEntregador[] },
   );
   readonly entregLoadingList = computed(() => this._entregadores() === undefined);
   readonly entregadores = computed(() => this._entregadores() ?? []);
@@ -410,7 +410,7 @@ export class AdminComponent {
 
   adicionarFuncionario() {
     const loja = this.lojaSelecionada();
-    if (!loja) return;
+    if (!loja || !loja.uuid) return;
     if (this.funcForm.invalid || !this.funcFormReady) {
       this.funcForm.markAllAsTouched();
       this.equipeError.set('Preencha todos os campos obrigatórios corretamente e aguarde a verificação.');
@@ -444,7 +444,7 @@ export class AdminComponent {
 
   // ── Editar Funcionário ────────────────────────────────────────────────────
 
-  editFuncionario = signal<Funcionario | null>(null);
+  editFuncionario = signal<chickie.IFuncionario | null>(null);
   editFuncForm = this.fb.group({
     cargo:         [''],
     salario:       [0, [Validators.required, Validators.min(0)]],
@@ -456,12 +456,12 @@ export class AdminComponent {
     return this.editFuncForm.controls;
   }
 
-  abrirEditFuncionario(func: Funcionario) {
+  abrirEditFuncionario(func: chickie.IFuncionario) {
     this.editFuncionario.set(func);
     this.editFuncForm.patchValue({
       cargo: func.cargo ?? '',
-      salario: func.salario,
-      data_admissao: func.data_admissao,
+      salario: func.salario ?? 0,
+      data_admissao: func.data_admissao ?? '',
     });
   }
 
@@ -473,14 +473,14 @@ export class AdminComponent {
   salvarEditFuncionario() {
     const loja = this.lojaSelecionada();
     const func = this.editFuncionario();
-    if (!loja || !func) return;
+    if (!loja || !loja.uuid || !func || !func.uuid) return;
     if (this.editFuncForm.invalid) {
       this.editFuncForm.markAllAsTouched();
       return;
     }
     this.editFuncLoading.set(true);
     const fv = this.editFuncForm.value;
-    const body: UpdateFuncionarioRequest = {
+    const body: chickie.IAtualizarFuncionarioRequest = {
       cargo: fv.cargo || null,
       salario: fv.salario!,
       data_admissao: fv.data_admissao!,
@@ -532,7 +532,7 @@ export class AdminComponent {
 
   adicionarEntregador() {
     const loja = this.lojaSelecionada();
-    if (!loja) return;
+    if (!loja || !loja.uuid) return;
     if (this.entregForm.invalid || !this.entregFormReady) {
       this.entregForm.markAllAsTouched();
       this.entregError.set('Preencha todos os campos obrigatórios corretamente e aguarde a verificação.');
@@ -565,7 +565,7 @@ export class AdminComponent {
 
   // ── Editar Entregador ─────────────────────────────────────────────────────
 
-  editEntregador = signal<Entregador | null>(null);
+  editEntregador = signal<chickie.IEntregador | null>(null);
   editEntregForm = this.fb.group({
     veiculo:  [''],
     placa:    [''],
@@ -576,7 +576,7 @@ export class AdminComponent {
     return this.editEntregForm.controls;
   }
 
-  abrirEditEntregador(entreg: Entregador) {
+  abrirEditEntregador(entreg: chickie.IEntregador) {
     this.editEntregador.set(entreg);
     this.editEntregForm.patchValue({
       veiculo: entreg.veiculo ?? '',
@@ -592,14 +592,14 @@ export class AdminComponent {
   salvarEditEntregador() {
     const loja = this.lojaSelecionada();
     const entreg = this.editEntregador();
-    if (!loja || !entreg) return;
+    if (!loja || !loja.uuid || !entreg || !entreg.uuid) return;
     if (this.editEntregForm.invalid) {
       this.editEntregForm.markAllAsTouched();
       return;
     }
     this.editEntregLoading.set(true);
     const fv = this.editEntregForm.value;
-    const body: UpdateEntregadorRequest = {
+    const body: chickie.IAtualizarEntregadorRequest = {
       veiculo: fv.veiculo || null,
       placa: fv.placa || null,
     };
@@ -619,7 +619,7 @@ export class AdminComponent {
 
   toggleDisponibilidadeEntregador(uuid: string, nome: string, disponivelAtual: boolean) {
     const loja = this.lojaSelecionada();
-    if (!loja) return;
+    if (!loja || !loja.uuid) return;
     const novoEstado = !disponivelAtual;
     this.adminService.toggleDisponibilidadeEntregador(loja.uuid, uuid, novoEstado).subscribe({
       next: () => {
@@ -640,19 +640,19 @@ export class AdminComponent {
     this.refreshCatTrigger.pipe(
       switchMap(() => {
         const loja = this.lojaSelecionada();
-        if (!loja) return of([] as CategoriaProdutos[]);
+        if (!loja || !loja.uuid) return of([] as chickie.ICategoria[]);
         return this.catalogoService.listarCategorias(loja.uuid).pipe(
-          catchError(() => of([] as CategoriaProdutos[])),
+          catchError(() => of([] as chickie.ICategoria[])),
         );
       }),
     ),
-    { initialValue: [] as CategoriaProdutos[] },
+    { initialValue: [] as chickie.ICategoria[] },
   );
   readonly catLoading = computed(() => this._categorias() === undefined);
   readonly categorias = computed(() => this._categorias() ?? []);
 
   // Products per category (map of category UUID -> products)
-  readonly produtosPorCategoria = signal<Map<string, Produto[]>>(new Map());
+  readonly produtosPorCategoria = signal<Map<string, chickie.IProduto[]>>(new Map());
 
   private refreshCategorias() {
     this.refreshCatTrigger.next();
@@ -673,7 +673,7 @@ export class AdminComponent {
     if (!loja) return;
     
     this.catalogoService.listarProdutosPorCategoria(categoriaUuid).pipe(
-      catchError(() => of([] as Produto[]))
+      catchError(() => of([] as chickie.IProduto[]))
     ).subscribe(produtos => {
       const currentMap = this.produtosPorCategoria();
       const newMap = new Map(currentMap);
@@ -685,7 +685,11 @@ export class AdminComponent {
   // Load products for all categories
   carregarTodosProdutos() {
     const cats = this.categorias();
-    cats.forEach(cat => this.carregarProdutosDaCategoria(cat.uuid));
+    cats.forEach(cat => {
+      if (cat.uuid) {
+        this.carregarProdutosDaCategoria(cat.uuid);
+      }
+    });
   }
 
   catForm = this.fb.group({
@@ -705,7 +709,7 @@ export class AdminComponent {
 
   criarCategoria() {
     const loja = this.lojaSelecionada();
-    if (!loja) return;
+    if (!loja || !loja.uuid) return;
     if (this.catForm.invalid) {
       this.catForm.markAllAsTouched();
       return;
@@ -713,7 +717,7 @@ export class AdminComponent {
     this.catLoadingSubmit.set(true);
     this.catError.set('');
     const fv = this.catForm.value;
-    const body: CreateCategoriaRequest = {
+    const body: chickie.ICreateCategoriaRequest = {
       nome: fv.nome!,
       descricao: fv.descricao || null,
       ordem: fv.ordem ?? 0,
@@ -733,13 +737,13 @@ export class AdminComponent {
     });
   }
 
-  editarCategoria(cat: CategoriaProdutos) {
-    this.catEditId.set(cat.uuid);
+  editarCategoria(cat: chickie.ICategoria) {
+    this.catEditId.set(cat.uuid ?? null);
     this.catForm.patchValue({
-      nome: cat.nome,
+      nome: cat.nome ?? '',
       descricao: cat.descricao ?? '',
-      ordem: cat.ordem,
-      pizza_mode: cat.pizza_mode,
+      ordem: cat.ordem ?? 0,
+      pizza_mode: cat.pizza_mode ?? false,
     });
     this.catError.set('');
   }
@@ -747,7 +751,7 @@ export class AdminComponent {
   salvarEdicaoCategoria() {
     const loja = this.lojaSelecionada();
     const uuid = this.catEditId();
-    if (!loja || !uuid) return;
+    if (!loja || !loja.uuid || !uuid) return;
     if (this.catForm.invalid) {
       this.catForm.markAllAsTouched();
       return;
@@ -784,7 +788,7 @@ export class AdminComponent {
   deletarCategoria(uuid: string, nome: string) {
     if (!confirm(`Deletar categoria "${nome}"? Apenas funciona se não houver produtos vinculados.`)) return;
     const loja = this.lojaSelecionada();
-    if (!loja) return;
+    if (!loja || !loja.uuid) return;
     this.catalogoService.deletarCategoria(loja.uuid, uuid).subscribe({
       next: () => {
         toast.success('Categoria deletada com sucesso!');

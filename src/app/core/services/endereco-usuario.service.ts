@@ -1,34 +1,63 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { EnderecoUsuario, EnderecoUsuarioRequest } from '../models';
+import { chickie } from '@app/proto/generated';
+import { ProtobufBaseService } from './base.service';
 
 @Injectable({ providedIn: 'root' })
-export class EnderecoUsuarioService {
+export class EnderecoUsuarioService extends ProtobufBaseService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/enderecos-usuario`;
 
-  criar(body: EnderecoUsuarioRequest): Observable<EnderecoUsuario> {
-    return this.http.post<EnderecoUsuario>(`${this.base}`, body);
+  protected getProtoType(): any {
+    return chickie.Endereco;
   }
 
-  listar(): Observable<EnderecoUsuario[]> {
-    return this.http.get<EnderecoUsuario[]>(`${this.base}`);
+  criar(body: chickie.IEnderecoRequest): Observable<chickie.IEndereco> {
+    return this.postProto<chickie.IEndereco>(
+      this.http,
+      `${this.base}`,
+      body,
+      chickie.Endereco,
+      chickie.EnderecoRequest
+    );
   }
 
-  buscar(uuid: string): Observable<EnderecoUsuario> {
-    return this.http.get<EnderecoUsuario>(`${this.base}/${uuid}`);
+  listar(): Observable<chickie.IEndereco[]> {
+    return this.getProto<chickie.IListarEnderecosResponse>(
+      this.http,
+      `${this.base}`,
+      chickie.ListarEnderecosResponse
+    ).pipe(map(res => res.enderecos || []));
+  }
+
+  buscar(uuid: string): Observable<chickie.IEndereco> {
+    return this.getProto<chickie.IEndereco>(
+      this.http,
+      `${this.base}/${uuid}`,
+      chickie.Endereco
+    );
   }
 
   atualizar(
     uuid: string,
-    body: EnderecoUsuarioRequest,
-  ): Observable<EnderecoUsuario> {
-    return this.http.put<EnderecoUsuario>(`${this.base}/${uuid}`, body);
+    body: chickie.IEnderecoRequest,
+  ): Observable<chickie.IEndereco> {
+    return this.putProto<chickie.IEndereco>(
+      this.http,
+      `${this.base}/${uuid}`,
+      body,
+      chickie.Endereco,
+      chickie.EnderecoRequest
+    );
   }
 
-  deletar(uuid: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${uuid}`);
+  deletar(uuid: string): Observable<chickie.IGenericResponse> {
+    return this.deleteProto<chickie.IGenericResponse>(
+      this.http,
+      `${this.base}/${uuid}`,
+      chickie.GenericResponse
+    );
   }
 }
