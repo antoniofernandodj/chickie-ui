@@ -11,11 +11,11 @@ import { AuthService } from '../../core/services/auth.service';
 import { Loja } from '../../core/models';
 
 @Component({
-  selector: 'app-admin-empresas-list',
+  selector: 'app-admin-lojas-list',
   imports: [ReactiveFormsModule, DecimalPipe, NgxSonnerToaster],
-  templateUrl: './admin-empresas-list.component.html',
+  templateUrl: './admin-lojas-list.component.html',
 })
-export class AdminEmpresasListComponent {
+export class AdminLojasListComponent {
   private adminService = inject(AdminService);
   private lojaService = inject(LojaService);
   private authService = inject(AuthService);

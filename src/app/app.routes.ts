@@ -82,10 +82,10 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/admin/admin-empresas-list.component').then(
-        (m) => m.AdminEmpresasListComponent,
+      import('./features/admin/admin-lojas-list.component').then(
+        (m) => m.AdminLojasListComponent,
       ),
-    title: 'Minhas Empresas — Chiquitos',
+    title: 'Minhas Lojas — Chiquitos',
   },
   {
     path: 'admin/:loja_uuid',
