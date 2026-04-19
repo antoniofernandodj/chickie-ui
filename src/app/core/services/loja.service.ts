@@ -9,11 +9,6 @@ export class LojaService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/lojas`;
 
-  /** Público — sem autenticação */
-  listar(): Observable<Loja[]> {
-    return this.http.get<Loja[]>(`${this.base}/`);
-  }
-
   /** Pesquisar lojas por termo */
   pesquisar(termo: string): Observable<Loja[]> {
     const params = new HttpParams().set('termo', termo);
