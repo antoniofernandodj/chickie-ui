@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { BehaviorSubject, catchError, of, switchMap, debounceTime, distinctUntilChanged, filter, tap, map, Observable } from 'rxjs';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
@@ -16,7 +17,7 @@ import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCatego
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective],
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective, DragDropModule],
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
@@ -649,7 +650,42 @@ export class AdminComponent {
     { initialValue: [] as CategoriaProdutos[] },
   );
   readonly catLoading = computed(() => this._categorias() === undefined);
-  readonly categorias = computed(() => this._categorias() ?? []);
+  private readonly _categoriasOrdem = signal<CategoriaProdutos[] | null>(null);
+  readonly categorias = computed(() => {
+    const override = this._categoriasOrdem();
+    if (override !== null) return override;
+    return [...(this._categorias() ?? [])].sort((a, b) => a.ordem - b.ordem);
+  });
+
+  readonly catReordering = signal(false);
+
+  onCategoriaDrop(event: CdkDragDrop<CategoriaProdutos[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    const loja = this.lojaSelecionada();
+    if (!loja) return;
+
+    const lista = [...this.categorias()];
+    moveItemInArray(lista, event.previousIndex, event.currentIndex);
+    const listaComOrdem = lista.map((c, i) => ({ ...c, ordem: i + 1 }));
+
+    this._categoriasOrdem.set(listaComOrdem);
+
+    const ordens = listaComOrdem.map(c => ({ categoria_uuid: c.uuid, ordem: c.ordem }));
+    this.catReordering.set(true);
+    this.catalogoService.reordenarCategorias(loja.uuid, ordens).subscribe({
+      next: () => {
+        this.catReordering.set(false);
+        this._categoriasOrdem.set(null);
+        this.refreshCategorias();
+      },
+      error: (e) => {
+        this.catReordering.set(false);
+        this._categoriasOrdem.set(null);
+        toast.error(e?.error?.error ?? 'Erro ao reordenar categorias.');
+        this.refreshCategorias();
+      },
+    });
+  }
 
   // Products per category (map of category UUID -> products)
   readonly produtosPorCategoria = signal<Map<string, Produto[]>>(new Map());

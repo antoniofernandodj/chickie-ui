@@ -116,6 +116,16 @@ export class CatalogoService {
     );
   }
 
+  reordenarCategorias(
+    lojaUuid: string,
+    ordens: { categoria_uuid: string; ordem: number }[],
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.base}/${lojaUuid}/categorias/reordenar`,
+      ordens,
+    );
+  }
+
   // ── Produtos ────────────────────────────────────────────────────────────────
 
   private readonly prodBase = `${environment.apiUrl}/produtos`;
