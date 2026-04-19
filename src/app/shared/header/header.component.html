@@ -42,7 +42,9 @@
 
       <!-- Ações -->
       <div class="flex items-center gap-3">
-        @if (auth.isAuthenticated()) {
+        @if (auth.tokenChecking()) {
+          <div class="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+        } @else if (auth.isAuthenticated()) {
           <!-- Menu do usuário -->
           <div class="relative" data-menu>
             <button

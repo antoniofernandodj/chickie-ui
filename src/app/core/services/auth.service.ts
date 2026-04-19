@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { toast } from 'ngx-sonner';
 import {
   LoginRequest,
   LoginResponse,
@@ -20,7 +21,14 @@ export class AuthService {
 
   private readonly _token = signal<string | null>(this.loadToken());
   readonly token = this._token.asReadonly();
-  readonly isAuthenticated = computed(() => !!this._token());
+
+  // 'loading' enquanto valida o token com /me, 'valid' se ok, 'unauthenticated' se sem token ou inválido
+  private readonly _tokenStatus = signal<'loading' | 'valid' | 'unauthenticated'>(
+    this.loadToken() ? 'loading' : 'unauthenticated',
+  );
+  readonly tokenStatus = this._tokenStatus.asReadonly();
+  readonly isAuthenticated = computed(() => this._tokenStatus() === 'valid');
+  readonly tokenChecking = computed(() => this._tokenStatus() === 'loading');
 
   // Signal para forçar reatividade quando userClass muda
   private readonly _userClassTrigger = signal<Date>(new Date());
@@ -34,6 +42,29 @@ export class AuthService {
 
   readonly isAdmin = computed(() => this.userClass() === 'administrador' || this.userClass() === 'owner');
   readonly isOwner = computed(() => this.userClass() === 'owner');
+
+  constructor() {
+    if (isPlatformBrowser(this.platformId) && this.loadToken()) {
+      this.http.get<Usuario>(`${this.base}/me`).subscribe({
+        next: (user) => {
+          if (user.classe) {
+            this.saveItem('chickie_classe', user.classe);
+            this._userClassTrigger.set(new Date());
+          }
+          if (user.nome) this.saveItem('chickie_nome', user.nome);
+          this._tokenStatus.set('valid');
+        },
+        error: () => {
+          this.removeItem('chickie_token');
+          this.removeItem('chickie_nome');
+          this.removeItem('chickie_classe');
+          this._token.set(null);
+          this._tokenStatus.set('unauthenticated');
+          toast.error('Sessão expirada. Faça login novamente.');
+        },
+      });
+    }
+  }
 
   private loadToken(): string | null {
     if (!isPlatformBrowser(this.platformId)) return null;
@@ -66,11 +97,11 @@ export class AuthService {
       tap((res) => {
         this.saveItem('chickie_token', res.access_token);
         this._token.set(res.access_token);
-        // Tenta extrair do JWT como fallback
+        this._tokenStatus.set('valid');
         const classe = this.extractClasseFromToken(res.access_token);
         if (classe) {
           this.saveItem('chickie_classe', classe);
-          this._userClassTrigger.set(new Date()); // Força atualização reativa
+          this._userClassTrigger.set(new Date());
         }
       }),
     );
@@ -146,6 +177,7 @@ export class AuthService {
     this.removeItem('chickie_nome');
     this.removeItem('chickie_classe');
     this._token.set(null);
+    this._tokenStatus.set('unauthenticated');
   }
 
   /** Extrai o UUID do usuário do token JWT */

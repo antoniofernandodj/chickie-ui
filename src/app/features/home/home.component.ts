@@ -25,16 +25,14 @@ export class HomeComponent {
       distinctUntilChanged(),
       switchMap((termo) => {
         this.search.set(termo);
-        if (!termo.trim()) {
-          return this.lojaService.listar().pipe(catchError(() => of([])));
-        }
+        if (!termo.trim()) return of([]);
         return this.lojaService.pesquisar(termo).pipe(catchError(() => of([])));
       }),
     ),
-    { initialValue: [] }
+    { initialValue: null }
   );
 
-  readonly loading = computed(() => this.lojas() === undefined);
+  readonly loading = computed(() => this.search().trim() !== '' && this.lojas() === null);
 
   onSearchInput(value: string) {
     this.searchSubject.next(value);
