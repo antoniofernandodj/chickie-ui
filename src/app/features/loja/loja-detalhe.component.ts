@@ -2,7 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { switchMap, catchError, of, map, tap, forkJoin } from 'rxjs';
+import { switchMap, catchError, of, map, tap } from 'rxjs';
 import { LojaService } from '../../core/services/loja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { HorarioService } from '../../core/services/horario.service';
@@ -11,10 +11,11 @@ import { MarketingService } from '../../core/services/marketing.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Produto, CategoriaProdutos, HorarioFuncionamento, AvaliacaoDeLoja, AvaliarLojaRequest } from '../../core/models';
 import { AvaliacaoLojaFormComponent } from './avaliacao-loja-form.component';
+import { CriarPedidoModalComponent } from './criar-pedido-modal.component';
 
 @Component({
   selector: 'app-loja-detalhe',
-  imports: [RouterLink, DecimalPipe, DatePipe, AvaliacaoLojaFormComponent],
+  imports: [RouterLink, DecimalPipe, DatePipe, AvaliacaoLojaFormComponent, CriarPedidoModalComponent],
   templateUrl: './loja-detalhe.component.html',
 })
 export class LojaDetalheComponent {
@@ -28,6 +29,7 @@ export class LojaDetalheComponent {
 
   readonly skeletons = Array(6);
   readonly favorita  = signal(false);
+  readonly mostrandoModalPedido = signal(false);
 
   // ── Avaliação de Loja ──────────────────────────────────────────────────────
   readonly avaliacaoDoUsuario = signal<AvaliacaoDeLoja | null>(null);
@@ -191,9 +193,16 @@ export class LojaDetalheComponent {
     }
   }
 
-  selecionarProduto(p: Produto) {
-    // TODO: modal de carrinho
-    console.log('Produto selecionado:', p.nome);
+  abrirModalPedido(): void {
+    this.mostrandoModalPedido.set(true);
+  }
+
+  fecharModalPedido(): void {
+    this.mostrandoModalPedido.set(false);
+  }
+
+  selecionarProduto(_p: Produto): void {
+    this.abrirModalPedido();
   }
 
   formatarDia(dia: number): string {
