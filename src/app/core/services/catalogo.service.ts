@@ -10,6 +10,7 @@ import {
   Produto,
 } from '../models';
 
+
 @Injectable({ providedIn: 'root' })
 export class CatalogoService {
   private readonly http = inject(HttpClient);
@@ -94,6 +95,10 @@ export class CatalogoService {
     return this.http.get<CategoriaProdutos[]>(
       `${this.base}/${lojaUuid}/categorias`,
     );
+  }
+
+  listarCategoriasGlobais(): Observable<CategoriaProdutos[]> {
+    return this.http.get<CategoriaProdutos[]>(`${this.base}/categorias/globais`);
   }
 
   atualizarCategoria(

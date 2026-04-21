@@ -3,7 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  CategoriaProdutos,
   Cliente,
+  CreateCategoriaGlobalRequest,
   CreateClienteRequest,
   CreateEntregadorRequest,
   CreateFuncionarioRequest,
@@ -11,6 +13,7 @@ import {
   Entregador,
   Funcionario,
   Loja,
+  UpdateCategoriaGlobalRequest,
   UpdateFuncionarioRequest,
   UpdateEntregadorRequest,
   MessageResponse,
@@ -207,5 +210,19 @@ export class AdminService {
 
   wipeDatabase(): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${environment.apiUrl}/wipe`);
+  }
+
+  // ── Categorias Globais ───────────────────────────────────────────────────
+
+  criarCategoriaGlobal(body: CreateCategoriaGlobalRequest): Observable<CategoriaProdutos> {
+    return this.http.post<CategoriaProdutos>(`${this.base}/categorias/globais`, body);
+  }
+
+  atualizarCategoriaGlobal(uuid: string, body: UpdateCategoriaGlobalRequest): Observable<CategoriaProdutos> {
+    return this.http.put<CategoriaProdutos>(`${this.base}/categorias/globais/${uuid}`, body);
+  }
+
+  deletarCategoriaGlobal(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/categorias/globais/${uuid}`);
   }
 }

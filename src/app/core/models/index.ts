@@ -247,20 +247,35 @@ export interface CreateAdicionalRequest {
 // ─── Categoria ────────────────────────────────────────────────────────────────
 
 export interface CategoriaProdutos {
-  uuid:      string;
-  loja_uuid: string;
-  nome:      string;
-  descricao: string | null;
-  ordem:     number;
+  uuid:       string;
+  loja_uuid:  string | null;
+  nome:       string;
+  descricao:  string | null;
+  ordem:      number;
   pizza_mode: boolean;
-  criado_em: string;
+  drink_mode: boolean;
+  criado_em:  string;
 }
 
 export interface CreateCategoriaRequest {
-  nome:      string;
-  descricao?:string | null;
-  ordem:     number;
+  nome:       string;
+  descricao?: string | null;
+  ordem:      number;
   pizza_mode: boolean;
+}
+
+export interface CreateCategoriaGlobalRequest {
+  nome:       string;
+  descricao?: string | null;
+  pizza_mode: boolean;
+  drink_mode: boolean;
+}
+
+export interface UpdateCategoriaGlobalRequest {
+  nome:       string;
+  descricao?: string | null;
+  pizza_mode: boolean;
+  drink_mode: boolean;
 }
 
 // ─── Pedido ──────────────────────────────────────────────────────────────────

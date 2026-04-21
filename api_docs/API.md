@@ -805,6 +805,42 @@ Content-Type: application/json
 
 ---
 
+### 5.7 Criar Categoria Global (🔒 + 👑 Owner)
+
+```
+POST /api/admin/categorias/globais
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+> **Permissão:** Apenas o owner da plataforma. Cria uma categoria sem vínculo com loja específica.
+
+**Request Body:**
+```json
+{
+  "nome": "Quentinhas",
+  "descricao": "Refeições completas",
+  "pizza_mode": false,
+  "drink_mode": false
+}
+```
+
+**Response `200`:**
+```json
+{
+  "uuid": "uuid",
+  "loja_uuid": null,
+  "nome": "Quentinhas",
+  "descricao": "Refeições completas",
+  "ordem": 11,
+  "pizza_mode": false,
+  "drink_mode": false,
+  "criado_em": "2026-04-21T00:00:00Z"
+}
+```
+
+---
+
 ## 6. Pedidos (🔒)
 
 ### 6.1 Criar Pedido
@@ -2183,10 +2219,12 @@ Content-Type: application/json
 {
   "nome": "Bebidas",
   "descricao": "string | null",
-  "ordem": 1,
-  "pizza_mode": false
+  "pizza_mode": false,
+  "drink_mode": false
 }
 ```
+
+> `ordem` não é definida na criação. Use `PUT /{loja_uuid}/categorias/reordenar` para definir a ordem das categorias na sua loja.
 
 **Response `200`:**
 ```json
@@ -2195,10 +2233,36 @@ Content-Type: application/json
   "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
   "nome": "Bebidas",
   "descricao": "Bebidas geladas",
-  "ordem": 1,
   "pizza_mode": false,
+  "drink_mode": false,
   "criado_em": "2026-04-04T00:00:00Z"
 }
+```
+
+---
+
+### 9.8.1 Listar Categorias Globais
+
+```
+GET /api/catalogo/categorias/globais
+```
+
+> Retorna apenas as categorias que não pertencem a nenhuma loja específica.
+
+**Response `200`:**
+```json
+[
+  {
+    "uuid": "uuid",
+    "loja_uuid": null,
+    "nome": "Pizzas",
+    "descricao": "Pizzas de diversos sabores e tamanhos",
+    "ordem": 1,
+    "pizza_mode": true,
+    "drink_mode": false,
+    "criado_em": "2026-04-21T00:00:00Z"
+  }
+]
 ```
 
 ---
@@ -2208,6 +2272,8 @@ Content-Type: application/json
 ```
 GET /api/catalogo/{loja_uuid}/categorias
 ```
+
+> Retorna todas as categorias visíveis à loja (próprias + globais) com a ordem definida por ela. `ordem` é sempre um inteiro — categorias sem ordem explícita recebem um valor de fallback calculado por data de criação, aparecendo após as ordenadas. Use `PUT /{loja_uuid}/categorias/reordenar` para definir ordens explícitas.
 
 **Response `200`:**
 ```json
@@ -2219,6 +2285,17 @@ GET /api/catalogo/{loja_uuid}/categorias
     "descricao": "Bebidas geladas",
     "ordem": 1,
     "pizza_mode": false,
+    "drink_mode": false,
+    "criado_em": "2026-04-04T00:00:00Z"
+  },
+  {
+    "uuid": "550e8400-e29b-41d4-a716-000000000001",
+    "loja_uuid": null,
+    "nome": "Pizzas",
+    "descricao": "Pizzas de diversos sabores",
+    "ordem": 2,
+    "pizza_mode": true,
+    "drink_mode": false,
     "criado_em": "2026-04-04T00:00:00Z"
   }
 ]
@@ -2239,10 +2316,12 @@ Content-Type: application/json
 {
   "nome": "Bebidas Geladas",
   "descricao": "string | null",
-  "ordem": 2,
-  "pizza_mode": false
+  "pizza_mode": false,
+  "drink_mode": false
 }
 ```
+
+> `ordem` é gerenciada separadamente via `PUT /{loja_uuid}/categorias/reordenar`.
 
 **Response `200`:**
 ```json
@@ -2251,8 +2330,8 @@ Content-Type: application/json
   "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
   "nome": "Bebidas Geladas",
   "descricao": "Bebidas bem geladas",
-  "ordem": 2,
   "pizza_mode": false,
+  "drink_mode": false,
   "criado_em": "2026-04-04T00:00:00Z"
 }
 ```
@@ -3079,7 +3158,8 @@ DELETE /api/wipe
 | 12 | `GET` | `/api/admin/lojas/listar` | 🔒 | — |
 | 13 | `POST` | `/api/admin/lojas/{loja_uuid}/funcionarios` | 🔒 | 👑 |
 | 14 | `POST` | `/api/admin/lojas/{loja_uuid}/entregadores` | 🔒 | 👑 |
-| 15 | `POST` | `/api/admin/lojas/{loja_uuid}/clientes` | 🔒 | 👑 |
+| 15 | `POST` | `/api/admin/lojas/{loja_uuid}/clientes`  | ✅   | Admin  |
+| 15.1 | `POST` | `/api/admin/categorias/globais` | 🔒 | 👑 Owner |
 | 16 | `POST` | `/api/pedidos/criar` | — (auth opcional) | — |
 | 17 | `GET` | `/api/pedidos/listar` | 🔒 | — |
 | 17.1 | `GET` | `/api/pedidos/meus` | 🔒 | — |
@@ -3122,6 +3202,7 @@ DELETE /api/wipe
 | 44 | `DELETE` | `/api/catalogo/{loja_uuid}/adicionais/{adicional_uuid}` | 🔒 | — |
 | 45 | `POST` | `/api/catalogo/{loja_uuid}/categorias` | 🔒 | — |
 | 46 | `GET` | `/api/catalogo/{loja_uuid}/categorias` | — | — |
+| 46.1 | `GET` | `/api/catalogo/categorias/globais` | — | — |
 | 47 | `PUT` | `/api/catalogo/{loja_uuid}/categorias/{uuid}` | 🔒 | — |
 | 48 | `DELETE` | `/api/catalogo/{loja_uuid}/categorias/{uuid}` | 🔒 | — |
 | 49 | `POST` | `/api/enderecos-entrega/{pedido_uuid}/{loja_uuid}` | 🔒 | — |

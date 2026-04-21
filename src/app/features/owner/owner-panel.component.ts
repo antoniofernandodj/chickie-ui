@@ -2,11 +2,12 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { AdminService } from '../../core/services/admin.service';
-import { Usuario, ClasseUsuario } from '../../core/models';
+import { CatalogoService } from '../../core/services/catalogo.service';
+import { Usuario, ClasseUsuario, CategoriaProdutos } from '../../core/models';
 
 @Component({
   selector: 'app-owner-panel',
@@ -16,12 +17,14 @@ import { Usuario, ClasseUsuario } from '../../core/models';
 export class OwnerPanelComponent {
   private usuarioService = inject(UsuarioService);
   private adminService = inject(AdminService);
+  private catalogoService = inject(CatalogoService);
   private fb = inject(FormBuilder);
 
   readonly aba = signal('usuarios');
   readonly tabs = [
     { id: 'usuarios', label: '👥 Usuários' },
     { id: 'lojas', label: '🏪 Lojas' },
+    { id: 'categorias', label: '📂 Categorias Globais' },
     { id: 'admin', label: '⚠️ Administração' },
   ];
 
@@ -112,7 +115,6 @@ export class OwnerPanelComponent {
 
   // ── Lojas ─────────────────────────────────────────────────────────────────
 
-  // TODO: Implementar listagem de lojas quando endpoint disponível
   readonly lojas = signal<any[]>([]);
   readonly lojasLoading = signal(false);
 
@@ -130,8 +132,113 @@ export class OwnerPanelComponent {
   }
 
   refreshLojas() {
-    // TODO: Implementar quando endpoint de listagem de lojas disponível
     toast.info('Listagem de lojas em desenvolvimento.');
+  }
+
+  // ── Categorias Globais ────────────────────────────────────────────────────
+
+  private readonly refreshCatTrigger = new BehaviorSubject<void>(undefined);
+
+  readonly _categorias = toSignal(
+    this.refreshCatTrigger.pipe(
+      switchMap(() =>
+        this.catalogoService.listarCategoriasGlobais().pipe(
+          catchError(() => of([] as CategoriaProdutos[])),
+        ),
+      ),
+    ),
+    { initialValue: [] as CategoriaProdutos[] },
+  );
+  readonly catLoading = computed(() => this._categorias() === undefined);
+  readonly categorias = computed(() => this._categorias() ?? []);
+
+  readonly catEditandoUuid = signal<string | null>(null);
+  readonly catLoadingSubmit = signal(false);
+  readonly catError = signal('');
+  readonly catDeleteConfirm = signal<string | null>(null);
+
+  readonly catForm = this.fb.group({
+    nome:       ['', Validators.required],
+    descricao:  [''],
+    pizza_mode: [false],
+    drink_mode: [false],
+  });
+
+  refreshCategorias() {
+    this.refreshCatTrigger.next();
+  }
+
+  iniciarEdicaoCategoria(cat: CategoriaProdutos) {
+    this.catEditandoUuid.set(cat.uuid);
+    this.catError.set('');
+    this.catForm.setValue({
+      nome:       cat.nome,
+      descricao:  cat.descricao ?? '',
+      pizza_mode: cat.pizza_mode,
+      drink_mode: cat.drink_mode,
+    });
+  }
+
+  cancelarEdicaoCategoria() {
+    this.catEditandoUuid.set(null);
+    this.catError.set('');
+    this.catForm.reset({ nome: '', descricao: '', pizza_mode: false, drink_mode: false });
+  }
+
+  salvarCategoria() {
+    if (this.catForm.invalid) {
+      this.catForm.markAllAsTouched();
+      return;
+    }
+    const fv = this.catForm.value;
+    const body = {
+      nome:       fv.nome!,
+      descricao:  fv.descricao || null,
+      pizza_mode: fv.pizza_mode ?? false,
+      drink_mode: fv.drink_mode ?? false,
+    };
+    this.catLoadingSubmit.set(true);
+    this.catError.set('');
+
+    const editando = this.catEditandoUuid();
+    const obs = editando
+      ? this.adminService.atualizarCategoriaGlobal(editando, body)
+      : this.adminService.criarCategoriaGlobal(body);
+
+    obs.subscribe({
+      next: () => {
+        this.catLoadingSubmit.set(false);
+        toast.success(editando ? 'Categoria atualizada!' : 'Categoria criada!');
+        this.cancelarEdicaoCategoria();
+        this.refreshCategorias();
+      },
+      error: (e) => {
+        this.catLoadingSubmit.set(false);
+        this.catError.set(e?.error?.error ?? 'Erro ao salvar categoria.');
+      },
+    });
+  }
+
+  confirmarDeleteCategoria(uuid: string) {
+    this.catDeleteConfirm.set(uuid);
+  }
+
+  cancelarDeleteCategoria() {
+    this.catDeleteConfirm.set(null);
+  }
+
+  deletarCategoria(uuid: string) {
+    this.adminService.deletarCategoriaGlobal(uuid).subscribe({
+      next: () => {
+        toast.success('Categoria removida!');
+        this.catDeleteConfirm.set(null);
+        this.refreshCategorias();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao remover categoria.');
+        this.catDeleteConfirm.set(null);
+      },
+    });
   }
 
   // ── Admin ─────────────────────────────────────────────────────────────────

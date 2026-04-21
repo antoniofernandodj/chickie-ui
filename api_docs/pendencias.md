@@ -232,6 +232,14 @@
 
 ---
 
+## 👑 Owner Panel
+
+| # | Funcionalidade | Endpoint API | Status |
+|---|---------------|-------------|--------|
+| 88 | CRUD de categorias globais | `GET /api/catalogo/categorias/globais`, `POST/PUT/DELETE /api/admin/categorias/globais` | ✅ OK |
+
+---
+
 ## Resumo
 
 | Categoria | Total | OK | Pendentes |
@@ -255,8 +263,9 @@
 | Ingredientes | 4 | 0 | 4 |
 | Fluxo de Checkout | 7 | 0 | 7 |
 | Dashboard / Gestão | 11 | 0 | 11 |
+| Owner Panel | 1 | 1 | 0 |
 | Melhorias de UX/UI | 6 | 0 | 6 |
-| **TOTAL** | **87** | **22** | **65** |
+| **TOTAL** | **88** | **23** | **65** |
 
 ---
 
