@@ -12,8 +12,19 @@ import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
+import { PedidoService } from '../../core/services/pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido } from '../../core/models';
+
+const STATUS_CFG: Record<StatusPedido, { label: string; color: string; bg: string; icon: string }> = {
+  criado:                           { label: 'Criado',              color: 'text-gray-600',   bg: 'bg-gray-100',   icon: '🕐' },
+  aguardando_confirmacao_de_loja:   { label: 'Aguardando loja',     color: 'text-yellow-700', bg: 'bg-yellow-100', icon: '⏳' },
+  confirmado_pela_loja:             { label: 'Confirmado',          color: 'text-blue-700',   bg: 'bg-blue-100',   icon: '✅' },
+  em_preparo:                       { label: 'Em preparo',          color: 'text-purple-700', bg: 'bg-purple-100', icon: '👨‍🍳' },
+  pronto_para_retirada:             { label: 'Pronto',              color: 'text-teal-700',   bg: 'bg-teal-100',   icon: '📦' },
+  saiu_para_entrega:                { label: 'Saiu para entrega',   color: 'text-orange-700', bg: 'bg-orange-100', icon: '🛵' },
+  entregue:                         { label: 'Entregue',            color: 'text-green-700',  bg: 'bg-green-100',  icon: '🎉' },
+};
 
 @Component({
   selector: 'app-admin',
@@ -29,10 +40,12 @@ export class AdminComponent {
   private authService = inject(AuthService);
   private marketingService = inject(MarketingService);
   private configPedidoService = inject(ConfigPedidoService);
+  private pedidoService = inject(PedidoService);
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('equipe');
   readonly tabs = [
+    { id: 'pedidos',     label: '🛒 Pedidos'   },
     { id: 'equipe',      label: '👥 Equipe'    },
     { id: 'catalogo',    label: '📦 Catálogo'  },
     { id: 'adicionais',  label: '🧀 Adicionais' },
@@ -74,6 +87,56 @@ export class AdminComponent {
   );
 
   readonly lojaLoading = computed(() => this.lojaSelecionada() === undefined);
+
+  // ── Pedidos da Loja ──────────────────────────────────────────────────────
+
+  private readonly refreshPedidosTrigger = new BehaviorSubject<void>(undefined);
+
+  private readonly _pedidos = toSignal(
+    this.refreshPedidosTrigger.pipe(
+      switchMap(() => {
+        const loja = this.lojaSelecionada();
+        if (!loja) return of([] as Pedido[]);
+        return this.pedidoService.listarPorLoja(loja.uuid).pipe(
+          catchError(() => of([] as Pedido[])),
+        );
+      }),
+    ),
+    { initialValue: [] as Pedido[] },
+  );
+  readonly pedidosLoading = computed(() => this._pedidos() === undefined);
+  readonly pedidos = computed(() => this._pedidos() ?? []);
+
+  readonly pedidoFiltroStatus = signal<StatusPedido | 'todos'>('todos');
+
+  readonly pedidosFiltrados = computed(() => {
+    const all = this.pedidos();
+    const filtro = this.pedidoFiltroStatus();
+    return filtro === 'todos' ? all : all.filter(p => p.status === filtro);
+  });
+
+  readonly statusEntries = (Object.entries(STATUS_CFG) as [StatusPedido, typeof STATUS_CFG[StatusPedido]][])
+    .map(([key, cfg]) => ({ key, cfg }));
+
+  statusCfg(s: StatusPedido) {
+    return STATUS_CFG[s];
+  }
+
+  refreshPedidos() {
+    this.refreshPedidosTrigger.next();
+  }
+
+  atualizarStatusPedido(pedidoUuid: string, novoStatus: StatusPedido) {
+    this.pedidoService.atualizarStatus(pedidoUuid, { novo_status: novoStatus }).subscribe({
+      next: () => {
+        toast.success('Status atualizado com sucesso!');
+        this.refreshPedidos();
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao atualizar status do pedido.');
+      },
+    });
+  }
 
   // ── Avaliações de Loja ──────────────────────────────────────────────────
 
@@ -359,6 +422,15 @@ export class AdminComponent {
       const loja = this.lojaSelecionada();
       if (aba === 'promocoes' && loja) {
         this.refreshPromocoes();
+      }
+    });
+
+    // Auto-load pedidos when tab changes to 'pedidos'
+    effect(() => {
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'pedidos' && loja) {
+        this.refreshPedidos();
       }
     });
 

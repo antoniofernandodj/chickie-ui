@@ -63,6 +63,119 @@
       }
     </div>
 
+  <!-- ── ABA: PEDIDOS ────────────────────────────────────────────────── -->
+  @if (aba() === 'pedidos') {
+    <div class="space-y-4">
+      <!-- Header + refresh -->
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-semibold text-gray-900">Pedidos recebidos</h2>
+        <button (click)="refreshPedidos()"
+                class="text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center gap-1.5">
+          🔄 Atualizar
+        </button>
+      </div>
+
+      <!-- Filtros de status -->
+      <div class="flex flex-wrap gap-2">
+        <button
+          (click)="pedidoFiltroStatus.set('todos')"
+          class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+          [class.bg-gray-800]="pedidoFiltroStatus() === 'todos'"
+          [class.text-white]="pedidoFiltroStatus() === 'todos'"
+          [class.bg-gray-100]="pedidoFiltroStatus() !== 'todos'"
+          [class.text-gray-600]="pedidoFiltroStatus() !== 'todos'"
+        >Todos ({{ pedidos().length }})</button>
+        @for (entry of statusEntries; track entry.key) {
+          <button
+            (click)="pedidoFiltroStatus.set(entry.key)"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            [class]="pedidoFiltroStatus() === entry.key
+              ? entry.cfg.bg + ' ' + entry.cfg.color + ' font-semibold'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+          >{{ entry.cfg.icon }} {{ entry.cfg.label }}</button>
+        }
+      </div>
+
+      <!-- Loading -->
+      @if (pedidosLoading()) {
+        <div class="flex justify-center py-12">
+          <svg class="animate-spin h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
+      } @else if (pedidosFiltrados().length === 0) {
+        <div class="text-center py-12 bg-white rounded-2xl border border-gray-100">
+          <p class="text-4xl mb-3">📋</p>
+          <p class="text-gray-500 text-sm">Nenhum pedido encontrado.</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (pedido of pedidosFiltrados(); track pedido.uuid) {
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <!-- Cabeçalho do pedido -->
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <p class="text-xs text-gray-400 font-mono">{{ pedido.uuid.slice(0, 8) }}…</p>
+                  <p class="text-sm text-gray-500 mt-0.5">
+                    {{ pedido.criado_em | date:'dd/MM/yyyy HH:mm' }}
+                  </p>
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold shrink-0"
+                      [class]="statusCfg(pedido.status).bg + ' ' + statusCfg(pedido.status).color">
+                  {{ statusCfg(pedido.status).icon }} {{ statusCfg(pedido.status).label }}
+                </span>
+              </div>
+
+              <!-- Itens resumidos -->
+              <div class="mb-3 space-y-1">
+                @for (item of pedido.itens; track item.uuid) {
+                  <div class="text-sm text-gray-700">
+                    <span class="font-medium">{{ item.quantidade }}×</span>
+                    {{ item.partes[0]?.produto_nome ?? 'Item' }}
+                    @if (item.partes.length > 1) {
+                      <span class="text-gray-400 text-xs"> + {{ item.partes.length - 1 }} parte(s)</span>
+                    }
+                    @if (item.observacoes) {
+                      <span class="text-gray-400 text-xs"> — {{ item.observacoes }}</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Totais + pagamento -->
+              <div class="flex items-center gap-4 text-sm mb-4">
+                <span class="font-semibold text-gray-900">R$ {{ pedido.total | number:'1.2-2' }}</span>
+                <span class="text-gray-400">•</span>
+                <span class="text-gray-500">{{ pedido.forma_pagamento }}</span>
+                @if (pedido.observacoes) {
+                  <span class="text-gray-400">•</span>
+                  <span class="text-gray-400 italic text-xs truncate">{{ pedido.observacoes }}</span>
+                }
+              </div>
+
+              <!-- Ações de status -->
+              <div class="border-t border-gray-50 pt-3">
+                <p class="text-xs text-gray-400 mb-2 font-medium">Avançar status:</p>
+                <div class="flex flex-wrap gap-2">
+                  @for (entry of statusEntries; track entry.key) {
+                    @if (entry.key !== pedido.status) {
+                      <button
+                        (click)="atualizarStatusPedido(pedido.uuid, entry.key)"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors hover:opacity-80"
+                        [class]="entry.cfg.bg + ' ' + entry.cfg.color + ' border-transparent'"
+                      >{{ entry.cfg.icon }} {{ entry.cfg.label }}</button>
+                    }
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
   <!-- ── ABA: EQUIPE ─────────────────────────────────────────────────── -->
   @if (aba() === 'equipe') {
       <div class="grid md:grid-cols-2 gap-6">
