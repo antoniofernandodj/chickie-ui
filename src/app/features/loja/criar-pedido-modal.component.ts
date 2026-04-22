@@ -205,9 +205,9 @@ export class CriarPedidoModalComponent implements OnInit {
   // ── Computed totals ─────────────────────────────────────────────────────────
   get subtotal(): number {
     return this.cart().reduce((total, item) => {
-      const precoBase = Math.max(...item.partes.map((p) => p.produto.preco));
+      const precoBase = Math.max(...item.partes.map((p) => Number(p.produto.preco)));
       const precoAdicionais = item.partes.reduce(
-        (s, p) => s + p.adicionais.reduce((sa, a) => sa + a.preco, 0), 0,
+        (s, p) => s + p.adicionais.reduce((sa, a) => sa + Number(a.preco), 0), 0,
       );
       return total + (precoBase + precoAdicionais) * item.quantidade;
     }, 0);
@@ -460,9 +460,9 @@ export class CriarPedidoModalComponent implements OnInit {
   // ── Helpers ───────────────────────────────────────────────────────────────────
   itemPreco(item: CartItem): number {
     if (item.partes.length === 0) return 0;
-    const precoBase = Math.max(...item.partes.map((p) => p.produto.preco));
+    const precoBase = Math.max(...item.partes.map((p) => Number(p.produto.preco)));
     const precoAdicionais = item.partes.reduce(
-      (s, p) => s + p.adicionais.reduce((sa, a) => sa + a.preco, 0), 0,
+      (s, p) => s + p.adicionais.reduce((sa, a) => sa + Number(a.preco), 0), 0,
     );
     return precoBase + precoAdicionais;
   }
@@ -479,10 +479,10 @@ export class CriarPedidoModalComponent implements OnInit {
   pizzaBuilderPreco(): number {
     const partes = this.pizzaPartes();
     if (partes.length === 0) return 0;
-    const precoBase = Math.max(...partes.map((p) => p.produto.preco));
+    const precoBase = Math.max(...partes.map((p) => Number(p.produto.preco)));
     const adMap = this.pizzaAdicionaisPorPosicao();
     const precoAdicionais = partes.reduce(
-      (s, p) => s + (adMap[p.posicao] ?? []).reduce((sa, a) => sa + a.preco, 0), 0,
+      (s, p) => s + (adMap[p.posicao] ?? []).reduce((sa, a) => sa + Number(a.preco), 0), 0,
     );
     return precoBase + precoAdicionais;
   }
