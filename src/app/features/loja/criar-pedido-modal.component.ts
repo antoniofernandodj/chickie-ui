@@ -20,10 +20,12 @@ import {
   CategoriaProdutos,
   EnderecoUsuario,
   Cupom,
+  Pedido,
   CreatePedidoRequest,
 } from '../../core/models';
 import { AuthService } from '../../core/services/auth.service';
 import { PedidoService } from '../../core/services/pedido.service';
+import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { MarketingService } from '../../core/services/marketing.service';
@@ -82,6 +84,7 @@ export class CriarPedidoModalComponent implements OnInit {
 
   private auth = inject(AuthService);
   private pedidoService = inject(PedidoService);
+  private pedidoLocalStorage = inject(PedidoLocalStorageService);
   private enderecoService = inject(EnderecoUsuarioService);
   private configService = inject(ConfigPedidoService);
   private marketingService = inject(MarketingService);
@@ -201,6 +204,7 @@ export class CriarPedidoModalComponent implements OnInit {
 
   // ── Submit ──────────────────────────────────────────────────────────────────
   readonly submitting = signal(false);
+  readonly codigoCriado = signal<string | null>(null);
 
   // ── Computed totals ─────────────────────────────────────────────────────────
   get subtotal(): number {
@@ -596,18 +600,51 @@ export class CriarPedidoModalComponent implements OnInit {
       },
     };
 
+    const isAuth = this.auth.isAuthenticated();
     this.submitting.set(true);
     this.pedidoService.criar(body).subscribe({
       next: (res) => {
-        toast.success('Pedido criado com sucesso! 🎉');
-        this.submitting.set(false);
-        this.pedidoCriado.emit(res.uuid);
-        this.router.navigate(['/pedidos', res.uuid]);
+        this.pedidoService.buscarPorCodigo(res.codigo).subscribe({
+          next: (pedido: Pedido) => {
+            this.pedidoLocalStorage.salvar(pedido);
+            this.submitting.set(false);
+            this.pedidoCriado.emit(res.uuid);
+            if (isAuth) {
+              toast.success(`Pedido criado! Código: ${res.codigo}`);
+              this.router.navigate(['/pedidos', res.codigo]);
+            } else {
+              this.codigoCriado.set(res.codigo);
+            }
+          },
+          error: () => {
+            this.submitting.set(false);
+            this.pedidoCriado.emit(res.uuid);
+            if (isAuth) {
+              toast.success(`Pedido criado! Código: ${res.codigo}`);
+              this.router.navigate(['/pedidos', res.codigo]);
+            } else {
+              this.codigoCriado.set(res.codigo);
+            }
+          },
+        });
       },
       error: () => {
         toast.error('Erro ao criar pedido. Tente novamente.');
         this.submitting.set(false);
       },
     });
+  }
+
+  irParaDetalhe(): void {
+    const codigo = this.codigoCriado();
+    if (codigo) {
+      this.fechar.emit();
+      this.router.navigate(['/pedidos', codigo]);
+    }
+  }
+
+  irParaPedidos(): void {
+    this.fechar.emit();
+    this.router.navigate(['/pedidos']);
   }
 }

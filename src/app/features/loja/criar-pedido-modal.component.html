@@ -9,6 +9,53 @@
     style="max-height: 93vh"
     (click)="$event.stopPropagation()"
   >
+    @if (codigoCriado(); as codigo) {
+      <!-- ── Tela de sucesso (usuário deslogado) ──────────────────────── -->
+      <div class="flex flex-col items-center justify-center px-8 py-12 text-center min-h-[500px]">
+
+        <div class="text-6xl mb-3 animate-bounce">🎉</div>
+        <h2 class="text-2xl font-black text-gray-900 mb-1">Pedido enviado!</h2>
+        <p class="text-sm text-gray-500 mb-8">Seu pedido chegou até a loja com sucesso.</p>
+
+        <!-- Código em destaque -->
+        <div class="w-full rounded-3xl px-8 py-8 mb-6 shadow-lg"
+             style="background: linear-gradient(135deg, var(--color-brand) 0%, oklch(52% 0.23 25) 100%)">
+          <p class="text-xs font-bold uppercase tracking-[0.25em] mb-3"
+             style="color: oklch(95% 0.05 40)">código do pedido</p>
+          <p class="font-black tracking-[0.3em] text-white font-mono drop-shadow"
+             style="font-size: clamp(2.5rem, 10vw, 3.5rem)">{{ codigo }}</p>
+        </div>
+
+        <!-- Info de armazenamento -->
+        <div class="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-7 text-left w-full">
+          <span class="text-2xl shrink-0 mt-0.5">📱</span>
+          <div>
+            <p class="text-sm font-bold text-amber-900 mb-0.5">Salvo neste dispositivo</p>
+            <p class="text-xs text-amber-700 leading-relaxed">
+              Guardamos este pedido localmente. Você pode acompanhá-lo a qualquer momento,
+              mesmo sem criar uma conta.
+            </p>
+          </div>
+        </div>
+
+        <!-- CTAs -->
+        <button
+          (click)="irParaDetalhe()"
+          class="w-full py-3.5 rounded-2xl font-semibold text-white mb-3 hover:opacity-90 transition-opacity"
+          style="background: var(--color-brand)"
+        >
+          Ver detalhes do pedido
+        </button>
+        <button
+          (click)="irParaPedidos()"
+          class="text-sm font-semibold hover:underline transition-all"
+          style="color: var(--color-brand)"
+        >
+          Ver todos os pedidos deste dispositivo →
+        </button>
+      </div>
+    } @else {
+
     <!-- Header -->
     <div class="px-5 pt-5 pb-4 border-b border-gray-100 shrink-0">
       <!-- Top row: back/close + step counter + cart badge -->
@@ -658,5 +705,7 @@
         </button>
       }
     </div>
+
+    } <!-- end @else (not codigoCriado) -->
   </div>
 </div>

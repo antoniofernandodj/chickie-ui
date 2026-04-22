@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { switchMap, catchError, of, map } from 'rxjs';
 import { PedidoService } from '../../core/services/pedido.service';
+import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { Pedido, StatusPedido } from '../../core/models';
 
 type Steps = {
@@ -32,17 +33,28 @@ const ORDER: StatusPedido[] = STEPS.map((s) => s.status);
 export class PedidoDetalheComponent {
   private route = inject(ActivatedRoute);
   private pedidoService = inject(PedidoService);
+  private pedidoLocalStorage = inject(PedidoLocalStorageService);
 
   readonly steps = STEPS;
 
   readonly pedido = toSignal(
     this.route.paramMap.pipe(
-      map((p) => p.get('uuid')!),
-      switchMap((uuid) =>
-        this.pedidoService
-        .buscar(uuid)
-        .pipe(catchError(() => of(null))),
-      ),
+      map((p) => p.get('uuid')?.trim() ?? ''),
+      switchMap((identificador) => {
+        if (!identificador) return of(null);
+        const observable = identificador.length === 36 && identificador.includes('-')
+          ? this.pedidoService.buscar(identificador)
+          : this.pedidoService.buscarPorCodigo(identificador);
+
+        return observable.pipe(
+          catchError(() => {
+            const local = identificador.length === 36 && identificador.includes('-')
+              ? this.pedidoLocalStorage.buscarPorUuid(identificador)
+              : this.pedidoLocalStorage.buscarPorCodigo(identificador);
+            return of(local);
+          }),
+        );
+      }),
     ),
   );
 
@@ -56,6 +68,10 @@ export class PedidoDetalheComponent {
   getFormattedDate(date: string): string {
     const datePipe = new DatePipe('en-US');
     return `${datePipe.transform(date, 'dd/MM/yyyy')} às ${new Date(date).toLocaleTimeString('pt-BR')}`;
+  }
+
+  displayCode(): string {
+    return this.pedido()?.codigo ?? '';
   }
 
   isActive(s: StatusPedido) { return this.pedido()?.status === s; }

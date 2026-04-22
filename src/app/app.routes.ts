@@ -35,7 +35,6 @@ export const routes: Routes = [
   },
   {
     path: 'pedidos',
-    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/pedidos/pedidos.component').then(
         (m) => m.PedidosComponent,
@@ -44,7 +43,6 @@ export const routes: Routes = [
   },
   {
     path: 'pedidos/:uuid',
-    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/pedidos/pedido-detalhe.component').then(
         (m) => m.PedidoDetalheComponent,

@@ -53,6 +53,12 @@ export class PedidoService {
     );
   }
 
+  buscarPorCodigo(codigo: string): Observable<Pedido> {
+    return this.http.get<any>(`${this.base}/codigo/${codigo}`).pipe(
+      map((p) => this.normalizar(p)),
+    );
+  }
+
   listarPorLoja(lojaUuid: string): Observable<Pedido[]> {
     return this.http.get<any[]>(`${this.base}/por-loja/${lojaUuid}`).pipe(
       map((lista) => lista.map((p) => this.normalizar(p))),

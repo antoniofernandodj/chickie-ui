@@ -313,6 +313,7 @@ export interface ItemPedido {
 
 export interface Pedido {
   uuid:              string;
+  codigo:            string;
   usuario_uuid:      string;
   loja_uuid:         string;
   status:            StatusPedido;
@@ -358,7 +359,8 @@ export interface CreatePedidoRequest {
 }
 
 export interface CreatePedidoResponse {
-  uuid: string;
+  uuid:   string;
+  codigo: string;
 }
 
 export interface StatusPedidoResponse {

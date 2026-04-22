@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { LojaService } from '../../core/services/loja.service';
+import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { catchError, debounceTime, distinctUntilChanged, of, switchMap } from 'rxjs';
 import { Subject } from 'rxjs';
 
@@ -13,6 +14,7 @@ import { Subject } from 'rxjs';
 })
 export class HomeComponent {
   private lojaService = inject(LojaService);
+  private pedidoLocalStorage = inject(PedidoLocalStorageService);
 
   readonly skeletons = Array(8);
   readonly search = signal('');
@@ -33,6 +35,7 @@ export class HomeComponent {
   );
 
   readonly loading = computed(() => this.search().trim() !== '' && this.lojas() === null);
+  readonly pedidosLocais = computed(() => this.pedidoLocalStorage.pedidos());
 
   onSearchInput(value: string) {
     this.searchSubject.next(value);

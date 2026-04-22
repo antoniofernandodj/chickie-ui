@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { PedidoService } from '../../core/services/pedido.service';
+import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { Pedido, StatusPedido } from '../../core/models';
 import { catchError, of } from 'rxjs';
 
@@ -23,6 +24,7 @@ const STATUS_CONFIG: Record<StatusPedido, { label: string; color: string; bg: st
 })
 export class PedidosComponent {
   private pedidoService = inject(PedidoService);
+  private pedidoLocalStorage = inject(PedidoLocalStorageService);
 
   readonly filtro = signal<StatusPedido | 'todos'>('todos');
   readonly pedidoSelecionado = signal<Pedido | null>(null);
@@ -34,9 +36,23 @@ export class PedidosComponent {
     this.pedidoService.listar().pipe(catchError(() => of([]))),
   );
 
-  readonly loading = computed(() => this._pedidos() === undefined);
+  readonly pedidos = computed(() => {
+    const api = this._pedidos() ?? [];
+    const local = this.pedidoLocalStorage.pedidos();
+    const combinados = new Map<string, Pedido>();
+
+    [...local, ...api].forEach((pedido) => {
+      combinados.set(pedido.uuid, pedido);
+    });
+
+    return [...combinados.values()].sort(
+      (a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime(),
+    );
+  });
+
+  readonly loading = computed(() => this._pedidos() === undefined && this.pedidoLocalStorage.pedidos().length === 0);
   readonly filtered = computed(() => {
-    const all = this._pedidos() ?? [];
+    const all = this.pedidos();
     const status = this.filtro();
     return status === 'todos' ? all : all.filter((p) => p.status === status);
   });
@@ -52,6 +68,10 @@ export class PedidosComponent {
 
   abrirDetalhe(pedido: Pedido) {
     this.pedidoSelecionado.set(pedido);
+  }
+
+  pedidoCodigo(pedido: Pedido): string {
+    return pedido.codigo;
   }
 
   fecharDetalhe() {
