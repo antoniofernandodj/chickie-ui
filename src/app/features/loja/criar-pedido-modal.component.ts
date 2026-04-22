@@ -219,12 +219,12 @@ export class CriarPedidoModalComponent implements OnInit {
     const sub = this.subtotal;
     if (cupom.tipo_desconto === 'percentual') return (sub * cupom.valor_desconto) / 100;
     if (cupom.tipo_desconto === 'valor_fixo') return Math.min(cupom.valor_desconto, sub);
-    if (cupom.tipo_desconto === 'frete_gratis') return this.loja.taxa_entrega;
+    if (cupom.tipo_desconto === 'frete_gratis') return Number(this.loja.taxa_entrega);
     return 0;
   }
 
   get total(): number {
-    return this.subtotal + this.loja.taxa_entrega - this.desconto;
+    return this.subtotal + Number(this.loja.taxa_entrega) - this.desconto;
   }
 
   // ── Validation ──────────────────────────────────────────────────────────────
@@ -571,7 +571,7 @@ export class CriarPedidoModalComponent implements OnInit {
     const f = this.enderecoForm;
     const body: CreatePedidoRequest = {
       loja_uuid: this.loja.uuid,
-      taxa_entrega: this.loja.taxa_entrega,
+      taxa_entrega: Number(this.loja.taxa_entrega),
       forma_pagamento: this.formaPagamento,
       observacoes: this.observacoes || null,
       codigo_cupom: this.cupomValidado()?.codigo ?? null,

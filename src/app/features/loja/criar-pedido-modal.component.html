@@ -603,10 +603,10 @@
                 </div>
                 <div class="flex items-center justify-between text-sm text-gray-600">
                   <span>Taxa de entrega</span>
-                  @if (loja.taxa_entrega === 0) {
+                  @if (+loja.taxa_entrega === 0) {
                     <span class="text-green-600 font-semibold">Grátis</span>
                   } @else {
-                    <span>R$ {{ loja.taxa_entrega | number:'1.2-2' }}</span>
+                    <span>R$ {{ +loja.taxa_entrega | number:'1.2-2' }}</span>
                   }
                 </div>
                 @if (desconto > 0) {
