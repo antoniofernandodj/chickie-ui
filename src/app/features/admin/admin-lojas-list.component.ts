@@ -18,7 +18,6 @@ import { Loja } from '../../core/models';
 export class AdminLojasListComponent {
   private adminService = inject(AdminService);
   private lojaService = inject(LojaService);
-  private authService = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
