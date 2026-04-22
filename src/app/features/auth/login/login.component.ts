@@ -1,30 +1,49 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import {
+  UiInputComponent,
+  UiPasswordInputComponent,
+  UiButtonComponent,
+  UiErrorBannerComponent,
+  UiAvatarComponent,
+} from '../../../shared/components';
 
 @Component({
   selector: 'app-login',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, UiInputComponent, UiPasswordInputComponent, UiButtonComponent, UiErrorBannerComponent, UiAvatarComponent],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
-  private auth = inject(AuthService);
+  private auth   = inject(AuthService);
   private router = inject(Router);
-  private fb = inject(FormBuilder);
+  private fb     = inject(FormBuilder);
 
   form = this.fb.group({
     identifier: ['', [Validators.required]],
-    senha: ['', [Validators.required, Validators.minLength(6)]],
+    senha:      ['', [Validators.required, Validators.minLength(6)]],
   });
 
-  loading = signal(false);
-  error = signal('');
-  showPass = signal(false);
+  loading  = signal(false);
+  error    = signal('');
 
-  get f() {
-    return this.form.controls;
-  }
+  get f() { return this.form.controls; }
+
+  identifierError = computed(() => {
+    const c = this.f.identifier;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required']) return 'Identificador é obrigatório.';
+    return null;
+  });
+
+  senhaError = computed(() => {
+    const c = this.f.senha;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required'])   return 'Senha é obrigatória.';
+    if (c.errors?.['minlength'])  return `Senha deve ter pelo menos ${c.errors['minlength'].requiredLength} caracteres.`;
+    return null;
+  });
 
   submit() {
     if (this.form.invalid) {
@@ -37,17 +56,15 @@ export class LoginComponent {
     const { identifier, senha } = this.form.value;
     this.auth.login({ identifier: identifier!, senha: senha! }).subscribe({
       next: () => {
-        // Busca o perfil via GET /api/auth/me para salvar chickie_classe
         this.auth.fetchAndSaveUserProfile().subscribe({
           next: (user) => {
-            // Redireciona owner para painel exclusivo
             if (user.classe === 'owner') {
               this.router.navigate(['/owner']);
             } else {
               this.router.navigate(['/']);
             }
           },
-          error: () => this.router.navigate(['/']), // Continua mesmo se falhar
+          error: () => this.router.navigate(['/']),
         });
       },
       error: (err) => {

@@ -95,6 +95,14 @@ export const routes: Routes = [
     title: 'Painel Admin — Chiquitos',
   },
   {
+    path: 'design-system',
+    loadComponent: () =>
+      import('./features/design-system/design-system.component').then(
+        (m) => m.DesignSystemComponent,
+      ),
+    title: 'Design System — Chiquitos',
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./features/not-found/not-found.component').then(

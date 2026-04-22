@@ -2,28 +2,13 @@
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <h1 class="text-2xl font-bold text-gray-900 mb-8">Meu Perfil</h1>
 
-  <!-- Tabs -->
-  <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8">
-    @for (tab of tabs; track tab.id) {
-      <button
-        (click)="abaAtiva.set(tab.id)"
-        class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all"
-        [class.bg-white]="abaAtiva() === tab.id"
-        [class.shadow-sm]="abaAtiva() === tab.id"
-        [class.text-gray-900]="abaAtiva() === tab.id"
-        [class.text-gray-500]="abaAtiva() !== tab.id"
-      >{{ tab.label }}</button>
-    }
-  </div>
+  <ui-tab-bar [tabs]="tabs" [(active)]="abaAtiva" class="mb-8 block"/>
 
   <!-- Aba: Conta -->
   @if (abaAtiva() === 'conta') {
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <ui-card padding="lg">
       <div class="flex items-center gap-4 mb-6">
-        <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-bold text-2xl"
-             style="background:var(--color-brand)">
-          {{ initial() }}
-        </div>
+        <ui-avatar [initial]="initial()" size="lg"/>
         <div>
           <p class="font-semibold text-gray-900 text-lg">{{ nomeExibido() }}</p>
           <p class="text-sm text-gray-500">Conta Chiquitos</p>
@@ -35,89 +20,40 @@
           <span class="font-medium text-green-600">Ativa</span>
         </div>
       </div>
-      <button
-        (click)="logout()"
-        class="mt-6 w-full py-3 rounded-xl border border-red-200 text-red-600 font-medium text-sm hover:bg-red-50 transition-colors"
-      >Sair da conta</button>
-    </div>
+      <ui-button variant="danger" [fullWidth]="true" class="mt-6 block" (click)="logout()">
+        Sair da conta
+      </ui-button>
+    </ui-card>
   }
 
   <!-- Aba: Endereços -->
   @if (abaAtiva() === 'enderecos') {
     <div class="space-y-4">
-      <!-- Formulário de novo endereço / edição -->
+
       @if (showForm()) {
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <ui-card padding="lg">
           <h2 class="text-base font-semibold text-gray-900 mb-5">
             {{ editando() ? 'Editar endereço' : 'Novo endereço' }}
           </h2>
           <form [formGroup]="formEnd" (ngSubmit)="salvarEndereco()" class="space-y-4">
             <div class="grid grid-cols-2 gap-3">
               <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">CEP</label>
-                <input type="text" formControlName="cep"
-                       placeholder="00000-000"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
+                <ui-input formControlName="cep" label="CEP" placeholder="00000-000" size="sm"/>
               </div>
               <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Logradouro *</label>
-                <input type="text" formControlName="logradouro" required
-                       placeholder="Rua das Flores"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                       [class.border-red-400]="fe.logradouro.invalid && fe.logradouro.touched"/>
-                @if (fe.logradouro.invalid && fe.logradouro.touched) {
-                  <p class="text-xs text-red-600 mt-1">Logradouro é obrigatório.</p>
-                }
+                <ui-input formControlName="logradouro" label="Logradouro *" placeholder="Rua das Flores"
+                          size="sm" [error]="fieldError(fe.logradouro)"/>
               </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Número *</label>
-                <input type="text" formControlName="numero" required
-                       placeholder="123"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                       [class.border-red-400]="fe.numero.invalid && fe.numero.touched"/>
-                @if (fe.numero.invalid && fe.numero.touched) {
-                  <p class="text-xs text-red-600 mt-1">Número é obrigatório.</p>
-                }
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Complemento</label>
-                <input type="text" formControlName="complemento"
-                       placeholder="Apto 101"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"/>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Bairro *</label>
-                <input type="text" formControlName="bairro" required
-                       placeholder="Centro"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                       [class.border-red-400]="fe.bairro.invalid && fe.bairro.touched"/>
-                @if (fe.bairro.invalid && fe.bairro.touched) {
-                  <p class="text-xs text-red-600 mt-1">Bairro é obrigatório.</p>
-                }
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Cidade *</label>
-                <input type="text" formControlName="cidade" required
-                       placeholder="São Paulo"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                       [class.border-red-400]="fe.cidade.invalid && fe.cidade.touched"/>
-                @if (fe.cidade.invalid && fe.cidade.touched) {
-                  <p class="text-xs text-red-600 mt-1">Cidade é obrigatória.</p>
-                }
-              </div>
+              <ui-input formControlName="numero"      label="Número *"      placeholder="123"
+                        size="sm" [error]="fieldError(fe.numero)"/>
+              <ui-input formControlName="complemento" label="Complemento"   placeholder="Apto 101" size="sm"/>
+              <ui-input formControlName="bairro"      label="Bairro *"      placeholder="Centro"
+                        size="sm" [error]="fieldError(fe.bairro)"/>
+              <ui-input formControlName="cidade"      label="Cidade *"      placeholder="São Paulo"
+                        size="sm" [error]="fieldError(fe.cidade)"/>
               <div class="col-span-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1.5">Estado *</label>
-                <input type="text" formControlName="estado" required maxlength="2"
-                       placeholder="SP"
-                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                       [class.border-red-400]="fe.estado.invalid && fe.estado.touched"/>
-                @if (fe.estado.invalid && fe.estado.touched) {
-                  <p class="text-xs text-red-600 mt-1">
-                    @if (fe.estado.errors?.['required']) { Estado é obrigatório. }
-                    @else if (fe.estado.errors?.['maxlength']) { Estado deve ter 2 caracteres. }
-                    @else if (fe.estado.errors?.['pattern']) { Estado deve ser 2 letras maiúsculas. }
-                  </p>
-                }
+                <ui-input formControlName="estado" label="Estado *" placeholder="SP" size="sm"
+                          [error]="fieldError(fe.estado)"/>
               </div>
             </div>
 
@@ -126,28 +62,24 @@
             }
 
             <div class="flex gap-3">
-              <button type="button" (click)="cancelarForm()"
-                      class="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50">
+              <ui-button type="button" variant="secondary" [fullWidth]="true" (click)="cancelarForm()">
                 Cancelar
-              </button>
-              <button type="submit" [disabled]="formLoading() || formEnd.invalid"
-                      class="flex-1 py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
-                      style="background:var(--color-brand)">
-                @if (formLoading()) { Salvando... } @else { Salvar }
-              </button>
+              </ui-button>
+              <ui-button type="submit" [loading]="formLoading()" [disabled]="formLoading() || formEnd.invalid" [fullWidth]="true">
+                {{ formLoading() ? 'Salvando...' : 'Salvar' }}
+              </ui-button>
             </div>
           </form>
-        </div>
+        </ui-card>
       }
 
-      <!-- Lista de endereços -->
       @if (endLoading()) {
         @for (_ of [1,2]; track $index) {
           <div class="bg-white rounded-2xl p-5 h-28 skeleton"></div>
         }
       } @else {
         @for (end of enderecos(); track end.uuid) {
-          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <ui-card padding="md">
             <div class="flex items-start justify-between">
               <div class="flex items-start gap-3">
                 <span class="text-2xl mt-0.5">📍</span>
@@ -179,7 +111,7 @@
                 </button>
               </div>
             </div>
-          </div>
+          </ui-card>
         }
 
         <button

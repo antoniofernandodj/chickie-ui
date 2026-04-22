@@ -5,11 +5,8 @@
   <!-- Loading -->
   @if (lojaLoading()) {
     <div class="flex items-center justify-center py-20">
-      <div class="text-center">
-        <svg class="animate-spin h-10 w-10 mx-auto mb-4" style="color:var(--color-brand)" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+      <div class="text-center" style="color:var(--color-brand)">
+        <ui-spinner size="xl" class="mx-auto mb-4 block"/>
         <p class="text-gray-500 text-sm">Carregando painel da loja...</p>
       </div>
     </div>
@@ -50,17 +47,8 @@
     </div>
 
     <!-- Tabs -->
-    <div class="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8 overflow-x-auto">
-      @for (tab of tabs; track tab.id) {
-        <button
-          (click)="aba.set(tab.id)"
-          class="shrink-0 py-2 px-4 rounded-lg text-sm font-medium transition-all"
-          [class.bg-white]="aba() === tab.id"
-          [class.shadow-sm]="aba() === tab.id"
-          [class.text-gray-900]="aba() === tab.id"
-          [class.text-gray-500]="aba() !== tab.id"
-        >{{ tab.label }}</button>
-      }
+    <div class="mb-8 overflow-x-auto">
+      <ui-tab-bar [tabs]="tabs" [(active)]="aba"/>
     </div>
 
   <!-- ── ABA: PEDIDOS ────────────────────────────────────────────────── -->

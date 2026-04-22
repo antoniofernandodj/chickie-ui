@@ -15,20 +15,14 @@ import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
 import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido, ItemPedido } from '../../core/models';
+import { STATUS_PEDIDO_CFG, UiTabBarComponent, UiSpinnerComponent, UiTab } from '../../shared/components';
 
-const STATUS_CFG: Record<StatusPedido, { label: string; color: string; bg: string; icon: string }> = {
-  criado:                           { label: 'Criado',              color: 'text-gray-600',   bg: 'bg-gray-100',   icon: '🕐' },
-  aguardando_confirmacao_de_loja:   { label: 'Aguardando loja',     color: 'text-yellow-700', bg: 'bg-yellow-100', icon: '⏳' },
-  confirmado_pela_loja:             { label: 'Confirmado',          color: 'text-blue-700',   bg: 'bg-blue-100',   icon: '✅' },
-  em_preparo:                       { label: 'Em preparo',          color: 'text-purple-700', bg: 'bg-purple-100', icon: '👨‍🍳' },
-  pronto_para_retirada:             { label: 'Pronto',              color: 'text-teal-700',   bg: 'bg-teal-100',   icon: '📦' },
-  saiu_para_entrega:                { label: 'Saiu para entrega',   color: 'text-orange-700', bg: 'bg-orange-100', icon: '🛵' },
-  entregue:                         { label: 'Entregue',            color: 'text-green-700',  bg: 'bg-green-100',  icon: '🎉' },
-};
+const STATUS_CFG = STATUS_PEDIDO_CFG;
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective, DragDropModule],
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective, DragDropModule,
+    UiTabBarComponent, UiSpinnerComponent],
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
@@ -44,17 +38,17 @@ export class AdminComponent {
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('equipe');
-  readonly tabs = [
-    { id: 'pedidos',     label: '🛒 Pedidos'   },
-    { id: 'equipe',      label: '👥 Equipe'    },
-    { id: 'catalogo',    label: '📦 Catálogo'  },
-    { id: 'adicionais',  label: '🧀 Adicionais' },
-    { id: 'cupons',      label: '🎟️ Cupons'    },
-    { id: 'promocoes',   label: '📢 Promoções' },
-    { id: 'avaliacoes',  label: '⭐ Avaliações' },
-    { id: 'config-pedido', label: '⚙️ Config Pedido' },
-    { id: 'enderecos',   label: '📍 Endereços' },
-    { id: 'horarios',    label: '🕐 Horários'  },
+  readonly tabs: UiTab[] = [
+    { id: 'pedidos',      label: '🛒 Pedidos'        },
+    { id: 'equipe',       label: '👥 Equipe'         },
+    { id: 'catalogo',     label: '📦 Catálogo'       },
+    { id: 'adicionais',   label: '🧀 Adicionais'      },
+    { id: 'cupons',       label: '🎟️ Cupons'         },
+    { id: 'promocoes',    label: '📢 Promoções'      },
+    { id: 'avaliacoes',   label: '⭐ Avaliações'     },
+    { id: 'config-pedido',label: '⚙️ Config Pedido'  },
+    { id: 'enderecos',    label: '📍 Endereços'      },
+    { id: 'horarios',     label: '🕐 Horários'       },
   ];
 
   // ── Loja (carregada via URL) ──────────────────────────────────────────────

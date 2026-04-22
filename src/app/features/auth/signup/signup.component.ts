@@ -1,175 +1,173 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators, AsyncValidatorFn, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClasseUsuario } from '../../../core/models';
-import { debounceTime, distinctUntilChanged, filter, switchMap, catchError, of, map } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, switchMap, catchError, of } from 'rxjs';
 import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
+import {
+  UiInputComponent,
+  UiPasswordInputComponent,
+  UiButtonComponent,
+  UiErrorBannerComponent,
+  UiAvatarComponent,
+  UiSpinnerComponent,
+} from '../../../shared/components';
 
 @Component({
   selector: 'app-signup',
-  imports: [RouterLink, ReactiveFormsModule, PhoneMaskDirective],
+  imports: [RouterLink, ReactiveFormsModule, PhoneMaskDirective,
+    UiInputComponent, UiPasswordInputComponent, UiButtonComponent,
+    UiErrorBannerComponent, UiAvatarComponent, UiSpinnerComponent],
   templateUrl: './signup.component.html',
 })
 export class SignupComponent {
-  private auth = inject(AuthService);
+  private auth   = inject(AuthService);
   private router = inject(Router);
-  private fb = inject(FormBuilder);
+  private fb     = inject(FormBuilder);
 
-  emailAvailable = signal<boolean | null>(null);
+  emailAvailable    = signal<boolean | null>(null);
   usernameAvailable = signal<boolean | null>(null);
-  celularAvailable = signal<boolean | null>(null);
-  emailChecking = signal(false);
-  usernameChecking = signal(false);
-  celularChecking = signal(false);
+  celularAvailable  = signal<boolean | null>(null);
+  emailChecking     = signal(false);
+  usernameChecking  = signal(false);
+  celularChecking   = signal(false);
 
   form = this.fb.group({
-    nome: ['', [Validators.required, Validators.minLength(3)]],
-    username: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
-    email: ['', [Validators.required, Validators.email]],
-    senha: ['', [Validators.required, Validators.minLength(6)]],
-    celular: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+    nome:        ['', [Validators.required, Validators.minLength(3)]],
+    username:    ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9_]+$/)]],
+    email:       ['', [Validators.required, Validators.email]],
+    senha:       ['', [Validators.required, Validators.minLength(6)]],
+    celular:     ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
     auth_method: ['email'],
-    classe: ['cliente' as ClasseUsuario],
+    classe:      ['cliente' as ClasseUsuario],
   });
 
   readonly classOptions: { value: ClasseUsuario; label: string; icon: string }[] = [
-    { value: 'cliente', label: 'Cliente', icon: '🛒' },
-    { value: 'administrador', label: 'Administrador', icon: '👑' },
+    { value: 'cliente',        label: 'Cliente',        icon: '🛒' },
+    { value: 'administrador',  label: 'Administrador',  icon: '👑' },
   ];
 
-  loading = signal(false);
-  error = signal('');
-  showPass = signal(false);
+  loading  = signal(false);
+  error    = signal('');
 
   constructor() {
-    // Monitor email changes with debounce
-    const emailControl = this.form.get('email');
-    if (emailControl) {
-      emailControl.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged(),
-        filter((email): email is string => {
-          const emailValid = this.form.get('email')?.valid ?? false;
-          return email != null && email.length > 0 && emailValid;
-        }),
-        switchMap(email => {
-          this.emailChecking.set(true);
-          this.emailAvailable.set(null);
-          return this.auth.verificarEmail(email).pipe(
-            catchError(() => {
-              this.emailChecking.set(false);
-              this.emailAvailable.set(null);
-              return of({ disponivel: false });
-            })
-          );
-        })
-      ).subscribe(result => {
-        this.emailChecking.set(false);
-        this.emailAvailable.set(result.disponivel);
-      });
-    }
+    const email = this.form.get('email')!;
+    email.valueChanges.pipe(
+      debounceTime(400), distinctUntilChanged(),
+      filter((v): v is string => email.valid && !!v?.length),
+      switchMap(v => { this.emailChecking.set(true); this.emailAvailable.set(null);
+        return this.auth.verificarEmail(v).pipe(catchError(() => { this.emailChecking.set(false); return of({ disponivel: false }); })); })
+    ).subscribe(r => { this.emailChecking.set(false); this.emailAvailable.set(r.disponivel); });
 
-    // Monitor username changes with debounce
-    const usernameControl = this.form.get('username');
-    if (usernameControl) {
-      usernameControl.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged(),
-        filter((username): username is string => username != null && username.length >= 3),
-        switchMap(username => {
-          this.usernameChecking.set(true);
-          this.usernameAvailable.set(null);
-          return this.auth.verificarUsername(username).pipe(
-            catchError(() => {
-              this.usernameChecking.set(false);
-              this.usernameAvailable.set(null);
-              return of({ disponivel: false });
-            })
-          );
-        })
-      ).subscribe(result => {
-        this.usernameChecking.set(false);
-        this.usernameAvailable.set(result.disponivel);
-      });
-    }
+    const username = this.form.get('username')!;
+    username.valueChanges.pipe(
+      debounceTime(400), distinctUntilChanged(),
+      filter((v): v is string => v != null && v.length >= 3),
+      switchMap(v => { this.usernameChecking.set(true); this.usernameAvailable.set(null);
+        return this.auth.verificarUsername(v).pipe(catchError(() => { this.usernameChecking.set(false); return of({ disponivel: false }); })); })
+    ).subscribe(r => { this.usernameChecking.set(false); this.usernameAvailable.set(r.disponivel); });
 
-    // Monitor celular changes with debounce
-    const celularControl = this.form.get('celular');
-    if (celularControl) {
-      celularControl.valueChanges.pipe(
-        debounceTime(400),
-        distinctUntilChanged(),
-        filter((celular): celular is string => celular != null && celular.length === 11),
-        switchMap(celular => {
-          this.celularChecking.set(true);
-          this.celularAvailable.set(null);
-          return this.auth.verificarCelular(celular).pipe(
-            catchError(() => {
-              this.celularChecking.set(false);
-              this.celularAvailable.set(null);
-              return of({ disponivel: false });
-            })
-          );
-        })
-      ).subscribe(result => {
-        this.celularChecking.set(false);
-        this.celularAvailable.set(result.disponivel);
-      });
-    }
+    const celular = this.form.get('celular')!;
+    celular.valueChanges.pipe(
+      debounceTime(400), distinctUntilChanged(),
+      filter((v): v is string => v != null && v.length === 11),
+      switchMap(v => { this.celularChecking.set(true); this.celularAvailable.set(null);
+        return this.auth.verificarCelular(v).pipe(catchError(() => { this.celularChecking.set(false); return of({ disponivel: false }); })); })
+    ).subscribe(r => { this.celularChecking.set(false); this.celularAvailable.set(r.disponivel); });
   }
 
-  get f() {
-    return this.form.controls;
-  }
+  get f() { return this.form.controls; }
 
   get formReady(): boolean {
-    const emailOk = this.emailAvailable() === true;
-    const usernameOk = this.usernameAvailable() === true;
-    const celularOk = this.celularAvailable() === true;
-    return emailOk && usernameOk && celularOk && this.form.valid;
+    return this.emailAvailable() === true && this.usernameAvailable() === true
+        && this.celularAvailable() === true && this.form.valid;
   }
 
+  nomeError = computed(() => {
+    const c = this.f.nome;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required'])  return 'Nome é obrigatório.';
+    if (c.errors?.['minlength']) return 'Nome deve ter pelo menos 3 caracteres.';
+    return null;
+  });
+
+  usernameError = computed(() => {
+    const c = this.f.username;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required'])  return 'Username é obrigatório.';
+    if (c.errors?.['minlength']) return 'Username deve ter pelo menos 3 caracteres.';
+    if (c.errors?.['pattern'])   return 'Username pode conter apenas letras, números e underscore.';
+    return null;
+  });
+
+  emailError = computed(() => {
+    const c = this.f.email;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required']) return 'E-mail é obrigatório.';
+    if (c.errors?.['email'])    return 'E-mail inválido.';
+    return null;
+  });
+
+  celularError = computed(() => {
+    const c = this.f.celular;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required']) return 'Celular é obrigatório.';
+    if (c.errors?.['pattern'])  return 'Celular deve ter 11 dígitos.';
+    return null;
+  });
+
+  senhaError = computed(() => {
+    const c = this.f.senha;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required'])  return 'Senha é obrigatória.';
+    if (c.errors?.['minlength']) return 'Senha deve ter pelo menos 6 caracteres.';
+    return null;
+  });
+
+  usernameState = computed(() => {
+    if (this.f.username.invalid) return 'default' as const;
+    if (this.usernameChecking()) return 'warning' as const;
+    if (this.usernameAvailable() === true)  return 'success' as const;
+    if (this.usernameAvailable() === false) return 'error' as const;
+    return 'default' as const;
+  });
+
+  emailState = computed(() => {
+    if (this.f.email.invalid) return 'default' as const;
+    if (this.emailChecking()) return 'warning' as const;
+    if (this.emailAvailable() === true)  return 'success' as const;
+    if (this.emailAvailable() === false) return 'error' as const;
+    return 'default' as const;
+  });
+
+  celularState = computed(() => {
+    if (this.f.celular.invalid) return 'default' as const;
+    if (this.celularChecking()) return 'warning' as const;
+    if (this.celularAvailable() === true)  return 'success' as const;
+    if (this.celularAvailable() === false) return 'error' as const;
+    return 'default' as const;
+  });
+
   submit() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.error.set('Preencha todos os campos obrigatórios corretamente.');
-      return;
-    }
-    if (!this.formReady) {
-      this.error.set('Aguarde a verificação dos campos ou corrija os erros.');
-      return;
-    }
+    if (this.form.invalid) { this.form.markAllAsTouched(); this.error.set('Preencha todos os campos obrigatórios corretamente.'); return; }
+    if (!this.formReady)   { this.error.set('Aguarde a verificação dos campos ou corrija os erros.'); return; }
     this.loading.set(true);
     this.error.set('');
-    const formValue = this.form.value;
-    this.auth.signup({
-      nome: formValue.nome!,
-      username: formValue.username!,
-      email: formValue.email!,
-      senha: formValue.senha!,
-      celular: formValue.celular!,
-      auth_method: formValue.auth_method!,
-      classe: formValue.classe!,
-    }).subscribe({
-      next: (user) => {
-        this.auth.saveUserMeta(user.nome);
-        const { email, senha } = formValue;
-        this.auth.login({ identifier: email!, senha: senha! }).subscribe({
-          next: () => {
-            // Busca o perfil via GET /api/auth/me para salvar chickie_classe
-            this.auth.fetchAndSaveUserProfile().subscribe({
+    const v = this.form.value;
+    this.auth.signup({ nome: v.nome!, username: v.username!, email: v.email!, senha: v.senha!, celular: v.celular!, auth_method: v.auth_method!, classe: v.classe! })
+      .subscribe({
+        next: (user) => {
+          this.auth.saveUserMeta(user.nome);
+          this.auth.login({ identifier: v.email!, senha: v.senha! }).subscribe({
+            next: () => this.auth.fetchAndSaveUserProfile().subscribe({
               next: () => this.router.navigate(['/']),
               error: () => this.router.navigate(['/auth/login']),
-            });
-          },
-          error: () => this.router.navigate(['/auth/login']),
-        });
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.error.set(err?.error?.error ?? 'Erro ao criar conta. Tente novamente.');
-      },
-    });
+            }),
+            error: () => this.router.navigate(['/auth/login']),
+          });
+        },
+        error: (err) => { this.loading.set(false); this.error.set(err?.error?.error ?? 'Erro ao criar conta. Tente novamente.'); },
+      });
   }
 }
