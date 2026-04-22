@@ -68,7 +68,7 @@ export class PedidoService {
     body: UpdateStatusPedidoRequest,
   ): Observable<StatusPedidoResponse> {
     return this.http.put<StatusPedidoResponse>(
-      `${this.base}/${uuid}/status`,
+      `${this.base}/criar/${uuid}/status`,
       body,
     );
   }
