@@ -14,7 +14,7 @@ import { MarketingService } from '../../core/services/marketing.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido } from '../../core/models';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido, ItemPedido } from '../../core/models';
 
 const STATUS_CFG: Record<StatusPedido, { label: string; color: string; bg: string; icon: string }> = {
   criado:                           { label: 'Criado',              color: 'text-gray-600',   bg: 'bg-gray-100',   icon: '🕐' },
@@ -131,11 +131,45 @@ export class AdminComponent {
       next: () => {
         toast.success('Status atualizado com sucesso!');
         this.refreshPedidos();
+        // Update modal if open
+        const detalhe = this.pedidoDetalhe();
+        if (detalhe?.uuid === pedidoUuid) {
+          this.pedidoDetalhe.set({ ...detalhe, status: novoStatus });
+        }
       },
       error: (e) => {
         toast.error(e?.error?.error ?? 'Erro ao atualizar status do pedido.');
       },
     });
+  }
+
+  // ── Detalhe do Pedido (modal) ─────────────────────────────────────────────
+  readonly pedidoDetalhe = signal<Pedido | null>(null);
+
+  abrirDetalhesPedido(pedido: Pedido): void {
+    this.pedidoDetalhe.set(pedido);
+  }
+
+  fecharDetalhesPedido(): void {
+    this.pedidoDetalhe.set(null);
+  }
+
+  itemLabelPedido(item: ItemPedido): string {
+    if (item.partes.length === 0) return 'Item';
+    if (item.partes.length === 1) return item.partes[0].produto_nome;
+    return item.partes
+      .sort((a, b) => a.posicao - b.posicao)
+      .map(p => `${p.posicao}/${item.partes.length} ${p.produto_nome}`)
+      .join(' + ');
+  }
+
+  itemPrecoPedido(item: ItemPedido): number {
+    if (item.partes.length === 0) return 0;
+    const base = Math.max(...item.partes.map(p => Number(p.preco_unitario)));
+    const extras = item.partes.reduce(
+      (s, p) => s + p.adicionais.reduce((sa, a) => sa + Number(a.preco), 0), 0,
+    );
+    return base + extras;
   }
 
   // ── Avaliações de Loja ──────────────────────────────────────────────────
