@@ -16,6 +16,7 @@ import { toast } from 'ngx-sonner';
 import {
   Loja,
   Produto,
+  Adicional,
   CategoriaProdutos,
   EnderecoUsuario,
   Cupom,
@@ -26,35 +27,37 @@ import { PedidoService } from '../../core/services/pedido.service';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { MarketingService } from '../../core/services/marketing.service';
+import { CatalogoService } from '../../core/services/catalogo.service';
 
 // ─── Local types ──────────────────────────────────────────────────────────────
 
 interface CartParte {
-  produto: Produto;
-  posicao: number;
+  produto:    Produto;
+  posicao:    number;
+  adicionais: Adicional[];
 }
 
 interface CartItem {
-  id: number;
+  id:             number;
   categoria_uuid: string;
-  partes: CartParte[];
-  quantidade: number;
+  partes:         CartParte[];
+  quantidade:     number;
 }
 
 interface EnderecoForm {
-  logradouro: string;
-  numero: string;
-  complemento: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-  cep: string;
+  logradouro:   string;
+  numero:       string;
+  complemento:  string;
+  bairro:       string;
+  cidade:       string;
+  estado:       string;
+  cep:          string;
 }
 
 interface CategoriaStep {
-  tipo: 'categoria';
+  tipo:     'categoria';
   categoria: CategoriaProdutos;
-  produtos: Produto[];
+  produtos:  Produto[];
 }
 
 interface FixedStep {
@@ -82,6 +85,7 @@ export class CriarPedidoModalComponent implements OnInit {
   private enderecoService = inject(EnderecoUsuarioService);
   private configService = inject(ConfigPedidoService);
   private marketingService = inject(MarketingService);
+  private catalogoService = inject(CatalogoService);
   private router = inject(Router);
 
   // ── Steps ──────────────────────────────────────────────────────────────────
@@ -116,6 +120,7 @@ export class CriarPedidoModalComponent implements OnInit {
     if (!s) return '';
     if (s.tipo === 'categoria') {
       const cs = s as CategoriaStep;
+      if (cs.categoria.drink_mode) return `${cs.produtos.length} ${cs.produtos.length === 1 ? 'bebida disponível' : 'bebidas disponíveis'}`;
       return cs.categoria.pizza_mode
         ? `Até ${this.maxPartes()} sabores por pizza`
         : `${cs.produtos.length} ${cs.produtos.length === 1 ? 'item disponível' : 'itens disponíveis'}`;
@@ -145,6 +150,17 @@ export class CriarPedidoModalComponent implements OnInit {
     if (!s) return [];
     return this.cart().filter((i) => i.categoria_uuid === s.categoria.uuid);
   }
+
+  // ── Adicionais ──────────────────────────────────────────────────────────────
+  readonly adicionaisDisponiveis = signal<Adicional[]>([]);
+
+  // Pizza: adicionais por posicao da parte (chave: posicao)
+  readonly pizzaAdicionaisPorPosicao = signal<Record<number, Adicional[]>>({});
+  // Pizza: qual parte está com painel de adicionais aberto
+  readonly pizzaParteExpandida = signal<number | null>(null);
+
+  // Não-pizza: qual item do cart está com painel de adicionais aberto
+  readonly itemExpandidoId = signal<number | null>(null);
 
   // ── Pizza builder ───────────────────────────────────────────────────────────
   readonly pizzaPartes = signal<CartParte[]>([]);
@@ -189,8 +205,11 @@ export class CriarPedidoModalComponent implements OnInit {
   // ── Computed totals ─────────────────────────────────────────────────────────
   get subtotal(): number {
     return this.cart().reduce((total, item) => {
-      const precoItem = Math.max(...item.partes.map((p) => p.produto.preco));
-      return total + precoItem * item.quantidade;
+      const precoBase = Math.max(...item.partes.map((p) => p.produto.preco));
+      const precoAdicionais = item.partes.reduce(
+        (s, p) => s + p.adicionais.reduce((sa, a) => sa + a.preco, 0), 0,
+      );
+      return total + (precoBase + precoAdicionais) * item.quantidade;
     }, 0);
   }
 
@@ -229,6 +248,11 @@ export class CriarPedidoModalComponent implements OnInit {
         if (cfg) this.maxPartes.set(cfg.max_partes);
       });
 
+    this.catalogoService
+      .listarAdicionaisDisponiveis(this.loja.uuid)
+      .pipe(catchError(() => of([])))
+      .subscribe((list) => this.adicionaisDisponiveis.set(list));
+
     if (this.auth.isAuthenticated()) {
       this.enderecoService
         .listar()
@@ -260,6 +284,9 @@ export class CriarPedidoModalComponent implements OnInit {
   avancar(): void {
     if (!this.canAdvance) return;
     this.pizzaPartes.set([]);
+    this.pizzaAdicionaisPorPosicao.set({});
+    this.pizzaParteExpandida.set(null);
+    this.itemExpandidoId.set(null);
     if (this.currentStepIndex() < this.steps.length - 1) {
       this.currentStepIndex.update((i) => i + 1);
     }
@@ -267,6 +294,9 @@ export class CriarPedidoModalComponent implements OnInit {
 
   voltar(): void {
     this.pizzaPartes.set([]);
+    this.pizzaAdicionaisPorPosicao.set({});
+    this.pizzaParteExpandida.set(null);
+    this.itemExpandidoId.set(null);
     if (this.currentStepIndex() > 0) {
       this.currentStepIndex.update((i) => i - 1);
     }
@@ -275,6 +305,9 @@ export class CriarPedidoModalComponent implements OnInit {
   irParaStep(index: number): void {
     if (index < this.currentStepIndex()) {
       this.pizzaPartes.set([]);
+      this.pizzaAdicionaisPorPosicao.set({});
+      this.pizzaParteExpandida.set(null);
+      this.itemExpandidoId.set(null);
       this.currentStepIndex.set(index);
     }
   }
@@ -300,7 +333,7 @@ export class CriarPedidoModalComponent implements OnInit {
         {
           id: this.nextId++,
           categoria_uuid: produto.categoria_uuid,
-          partes: [{ produto, posicao: 1 }],
+          partes: [{ produto, posicao: 1, adicionais: [] }],
           quantidade: 1,
         },
       ]);
@@ -329,9 +362,18 @@ export class CriarPedidoModalComponent implements OnInit {
       const filtered = partes
         .filter((_, i) => i !== idx)
         .map((p, i) => ({ ...p, posicao: i + 1 }));
+      // limpa adicionais da posicao removida e reindexar
+      const adMap = this.pizzaAdicionaisPorPosicao();
+      const newMap: Record<number, Adicional[]> = {};
+      filtered.forEach((p, i) => {
+        const oldPosicao = partes.find(pp => pp.produto.uuid === p.produto.uuid)?.posicao;
+        if (oldPosicao != null && adMap[oldPosicao]) newMap[i + 1] = adMap[oldPosicao];
+      });
+      this.pizzaAdicionaisPorPosicao.set(newMap);
       this.pizzaPartes.set(filtered);
+      if (this.pizzaParteExpandida() === idx + 1) this.pizzaParteExpandida.set(null);
     } else if (partes.length < this.maxPartes()) {
-      this.pizzaPartes.set([...partes, { produto, posicao: partes.length + 1 }]);
+      this.pizzaPartes.set([...partes, { produto, posicao: partes.length + 1, adicionais: [] }]);
     }
   }
 
@@ -346,20 +388,125 @@ export class CriarPedidoModalComponent implements OnInit {
   adicionarPizza(): void {
     const partes = this.pizzaPartes();
     if (partes.length === 0) return;
+    const adMap = this.pizzaAdicionaisPorPosicao();
     this.cart.update((c) => [
       ...c,
       {
         id: this.nextId++,
         categoria_uuid: partes[0].produto.categoria_uuid,
-        partes: [...partes],
+        partes: partes.map((p) => ({ ...p, adicionais: adMap[p.posicao] ?? [] })),
         quantidade: 1,
       },
     ]);
     this.pizzaPartes.set([]);
+    this.pizzaAdicionaisPorPosicao.set({});
+    this.pizzaParteExpandida.set(null);
   }
 
   removerCartItem(id: number): void {
     this.cart.update((c) => c.filter((i) => i.id !== id));
+  }
+
+  // ── Adicionais — pizza builder ────────────────────────────────────────────────
+  expandirAdicionaisPizzaParte(posicao: number): void {
+    this.pizzaParteExpandida.update((p) => (p === posicao ? null : posicao));
+  }
+
+  toggleAdicionalPizzaParte(posicao: number, adicional: Adicional): void {
+    this.pizzaAdicionaisPorPosicao.update((map) => {
+      const current = map[posicao] ?? [];
+      const idx = current.findIndex((a) => a.uuid === adicional.uuid);
+      return {
+        ...map,
+        [posicao]: idx >= 0 ? current.filter((_, i) => i !== idx) : [...current, adicional],
+      };
+    });
+  }
+
+  isAdicionalSelectedForParte(posicao: number, uuid: string): boolean {
+    return (this.pizzaAdicionaisPorPosicao()[posicao] ?? []).some((a) => a.uuid === uuid);
+  }
+
+  // ── Adicionais — cart items (não-pizza) ───────────────────────────────────────
+  expandirAdicionaisItem(itemId: number): void {
+    this.itemExpandidoId.update((id) => (id === itemId ? null : itemId));
+  }
+
+  toggleAdicionalItem(itemId: number, adicional: Adicional): void {
+    this.cart.update((items) =>
+      items.map((item) => {
+        if (item.id !== itemId) return item;
+        const parte = item.partes[0];
+        const adicionais = parte.adicionais;
+        const idx = adicionais.findIndex((a) => a.uuid === adicional.uuid);
+        return {
+          ...item,
+          partes: [{
+            ...parte,
+            adicionais: idx >= 0
+              ? adicionais.filter((_, i) => i !== idx)
+              : [...adicionais, adicional],
+          }],
+        };
+      }),
+    );
+  }
+
+  isAdicionalSelectedForItem(itemId: number, adicionalUuid: string): boolean {
+    return this.cart().find((i) => i.id === itemId)?.partes[0]?.adicionais
+      .some((a) => a.uuid === adicionalUuid) ?? false;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  itemPreco(item: CartItem): number {
+    if (item.partes.length === 0) return 0;
+    const precoBase = Math.max(...item.partes.map((p) => p.produto.preco));
+    const precoAdicionais = item.partes.reduce(
+      (s, p) => s + p.adicionais.reduce((sa, a) => sa + a.preco, 0), 0,
+    );
+    return precoBase + precoAdicionais;
+  }
+
+  itemLabel(item: CartItem): string {
+    if (item.partes.length === 1) return item.partes[0].produto.nome;
+    return item.partes.map((p) => `${p.posicao}/${item.partes.length} ${p.produto.nome}`).join(' + ');
+  }
+
+  adicionaisLabel(parte: CartParte): string {
+    return parte.adicionais.map((a) => a.nome).join(', ');
+  }
+
+  pizzaBuilderPreco(): number {
+    const partes = this.pizzaPartes();
+    if (partes.length === 0) return 0;
+    const precoBase = Math.max(...partes.map((p) => p.produto.preco));
+    const adMap = this.pizzaAdicionaisPorPosicao();
+    const precoAdicionais = partes.reduce(
+      (s, p) => s + (adMap[p.posicao] ?? []).reduce((sa, a) => sa + a.preco, 0), 0,
+    );
+    return precoBase + precoAdicionais;
+  }
+
+  pizzaBuilderLabel(): string {
+    const partes = this.pizzaPartes();
+    if (partes.length === 0) return '';
+    return partes.map((p) => p.produto.nome).join(' + ');
+  }
+
+  isStepCompleted(index: number): boolean {
+    return index < this.currentStepIndex();
+  }
+
+  readonly formasPagamento = [
+    { valor: 'PIX', emoji: '📱' },
+    { valor: 'Cartão', emoji: '💳' },
+    { valor: 'Dinheiro', emoji: '💵' },
+  ];
+
+  onOverlayClick(event: MouseEvent): void {
+    if (event.target === event.currentTarget) {
+      this.fechar.emit();
+    }
   }
 
   // ── Address ───────────────────────────────────────────────────────────────────
@@ -410,45 +557,6 @@ export class CriarPedidoModalComponent implements OnInit {
     this.cupomErro.set(null);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────────
-  itemLabel(item: CartItem): string {
-    if (item.partes.length === 1) return item.partes[0].produto.nome;
-    return item.partes.map((p) => `${p.posicao}/${item.partes.length} ${p.produto.nome}`).join(' + ');
-  }
-
-  itemPreco(item: CartItem): number {
-    if (item.partes.length === 0) return 0;
-    return Math.max(...item.partes.map((p) => p.produto.preco));
-  }
-
-  pizzaBuilderLabel(): string {
-    const partes = this.pizzaPartes();
-    if (partes.length === 0) return '';
-    return partes.map((p) => p.produto.nome).join(' + ');
-  }
-
-  pizzaBuilderPreco(): number {
-    const partes = this.pizzaPartes();
-    if (partes.length === 0) return 0;
-    return Math.max(...partes.map((p) => p.produto.preco));
-  }
-
-  isStepCompleted(index: number): boolean {
-    return index < this.currentStepIndex();
-  }
-
-  readonly formasPagamento = [
-    { valor: 'PIX', emoji: '📱' },
-    { valor: 'Cartão', emoji: '💳' },
-    { valor: 'Dinheiro', emoji: '💵' },
-  ];
-
-  onOverlayClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.fechar.emit();
-    }
-  }
-
   // ── Submit ──────────────────────────────────────────────────────────────────
   confirmarPedido(): void {
     if (this.cart().length === 0) {
@@ -472,6 +580,9 @@ export class CriarPedidoModalComponent implements OnInit {
         partes: item.partes.map((p) => ({
           produto_uuid: p.produto.uuid,
           posicao: p.posicao,
+          adicionais: p.adicionais.length > 0
+            ? p.adicionais.map((a) => ({ adicional_uuid: a.uuid }))
+            : undefined,
         })),
       })),
       endereco_entrega: {

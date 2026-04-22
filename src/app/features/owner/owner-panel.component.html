@@ -208,11 +208,15 @@
           <!-- Toggles -->
           <div class="flex gap-6">
             <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input formControlName="pizza_mode" type="checkbox" class="w-4 h-4 rounded text-indigo-600" />
+              <input formControlName="pizza_mode" type="checkbox"
+                     (change)="$any($event.target).checked && catForm.get('drink_mode')?.setValue(false)"
+                     class="w-4 h-4 rounded text-indigo-600" />
               <span class="text-sm text-gray-700">🍕 Pizza mode</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer select-none">
-              <input formControlName="drink_mode" type="checkbox" class="w-4 h-4 rounded text-indigo-600" />
+              <input formControlName="drink_mode" type="checkbox"
+                     (change)="$any($event.target).checked && catForm.get('pizza_mode')?.setValue(false)"
+                     class="w-4 h-4 rounded text-indigo-600" />
               <span class="text-sm text-gray-700">🥤 Drink mode</span>
             </label>
           </div>

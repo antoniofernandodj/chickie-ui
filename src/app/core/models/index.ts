@@ -262,6 +262,7 @@ export interface CreateCategoriaRequest {
   descricao?: string | null;
   ordem:      number;
   pizza_mode: boolean;
+  drink_mode: boolean;
 }
 
 export interface CreateCategoriaGlobalRequest {
@@ -332,8 +333,9 @@ export interface CreatePedidoItemRequest {
   quantidade:  number;
   observacoes?:string | null;
   partes: {
-    produto_uuid:string;
-    posicao:     number;
+    produto_uuid: string;
+    posicao:      number;
+    adicionais?:  { adicional_uuid: string }[];
   }[];
 }
 

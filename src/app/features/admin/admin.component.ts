@@ -801,6 +801,7 @@ export class AdminComponent {
     descricao: [''],
     ordem: [0, [Validators.min(0)]],
     pizza_mode: [false],
+    drink_mode: [false],
   });
 
   catLoadingSubmit = signal(false);
@@ -826,12 +827,13 @@ export class AdminComponent {
       descricao: fv.descricao || null,
       ordem: fv.ordem ?? 0,
       pizza_mode: fv.pizza_mode ?? false,
+      drink_mode: fv.drink_mode ?? false,
     };
     this.catalogoService.criarCategoria(loja.uuid, body).subscribe({
       next: () => {
         this.catLoadingSubmit.set(false);
         toast.success('Categoria criada com sucesso!');
-        this.catForm.reset({ ordem: 0, pizza_mode: false });
+        this.catForm.reset({ ordem: 0, pizza_mode: false, drink_mode: false });
         this.refreshCategorias();
       },
       error: (e) => {
@@ -848,6 +850,7 @@ export class AdminComponent {
       descricao: cat.descricao ?? '',
       ordem: cat.ordem,
       pizza_mode: cat.pizza_mode,
+      drink_mode: cat.drink_mode,
     });
     this.catError.set('');
   }
@@ -868,12 +871,13 @@ export class AdminComponent {
       descricao: fv.descricao || null,
       ordem: fv.ordem ?? 0,
       pizza_mode: fv.pizza_mode ?? false,
+      drink_mode: fv.drink_mode ?? false,
     }).subscribe({
       next: () => {
         this.catLoadingSubmit.set(false);
         this.catEditId.set(null);
         toast.success('Categoria atualizada com sucesso!');
-        this.catForm.reset({ ordem: 0, pizza_mode: false });
+        this.catForm.reset({ ordem: 0, pizza_mode: false, drink_mode: false });
         this.refreshCategorias();
       },
       error: (e) => {
@@ -885,7 +889,7 @@ export class AdminComponent {
 
   cancelarEdicaoCategoria() {
     this.catEditId.set(null);
-    this.catForm.reset({ ordem: 0, pizza_mode: false });
+    this.catForm.reset({ ordem: 0, pizza_mode: false, drink_mode: false });
     this.catError.set('');
   }
 
