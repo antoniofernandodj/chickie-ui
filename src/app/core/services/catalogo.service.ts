@@ -156,9 +156,9 @@ export class CatalogoService {
     return this.http.get<Produto>(`${this.prodBase}/${uuid}`);
   }
 
-  listarProdutosPorCategoria(categoriaUuid: string): Observable<Produto[]> {
+  listarProdutosPorCategoria(lojaUuid: string, categoriaUuid: string): Observable<Produto[]> {
     return this.http.get<Produto[]>(
-      `${this.prodBase}/categoria/${categoriaUuid}`,
+      `${this.prodBase}/categoria/${lojaUuid}/${categoriaUuid}`,
     );
   }
 

@@ -196,7 +196,7 @@ Cada repositório implementa também:
 | Health check em `/`             | `GET /` → `handler_ok`                     |
 | Fallback 404 genérico           | qualquer rota não mapeada                  |
 | Auth via middleware             | Aplicado em `/pedidos` (parcial), `/usuarios`, `/marketing` (parcial), `/enderecos-entrega`, `/enderecos-usuario`, `/favoritos`, `/admin`; GETs de `/produtos`, `/catalogo`, `/horarios` são públicos |
-| Sem auth                        | `/auth/*`, `/ok`, `GET /api/lojas/`, `GET /api/marketing/cupons/{codigo}`, `GET /api/horarios/{loja_uuid}`, `GET /api/catalogo/{loja_uuid}/adicionais`, `GET /api/catalogo/{loja_uuid}/categorias`, `GET /api/produtos/listar/{loja_uuid}`, `GET /api/produtos/{uuid}`, `GET /api/produtos/categoria/{uuid}` |
+| Sem auth                        | `/auth/*`, `/ok`, `GET /api/lojas/`, `GET /api/marketing/cupons/{codigo}`, `GET /api/horarios/{loja_uuid}`, `GET /api/catalogo/{loja_uuid}/adicionais`, `GET /api/catalogo/{loja_uuid}/categorias`, `GET /api/produtos/listar/{loja_uuid}`, `GET /api/produtos/{uuid}`, `GET /api/produtos/categoria/{loja_uuid}/{categoria_uuid}` |
 | Owner only                      | `/api/wipe` (dev only), `/api/usuarios/`, toggle bloqueio usuários |
 
 ### Referência Completa de Endpoints
@@ -246,7 +246,7 @@ Cada repositório implementa também:
 | Método | Rota | Auth | Descrição |
 |--------|------|------|-----------|
 | `GET` | `/api/produtos/listar/{loja_uuid}` | — | Listar produtos da loja |
-| `GET` | `/api/produtos/categoria/{categoria_uuid}` | — | Listar produtos por categoria |
+| `GET` | `/api/produtos/categoria/{loja_uuid}/{categoria_uuid}` | — | Listar produtos por categoria |
 | `GET` | `/api/produtos/{uuid}` | — | Buscar produto por UUID |
 | `POST` | `/api/produtos/` | 🔒 | Criar produto |
 | `PUT` | `/api/produtos/{uuid}` | 🔒 | Atualizar produto |
@@ -612,7 +612,7 @@ Entregador entrega → pedido status → ENTREGUE
 | Data        | Mudança                                            |
 |-------------|----------------------------------------------------|
 | 2026-04-21  | **Ordem de categorias desacoplada**: campo `ordem` removido de `categorias_produtos`. Nova tabela `ordem_categorias_de_produtos (loja_uuid, categoria_uuid, ordem)` permite que cada loja defina sua própria ordem para qualquer categoria (própria ou global). Migration `0012` criada. Stack completa atualizada: model (`CategoriaProdutosOrdenada`, `OrdemCategoriaProdutos`), port (`OrdemCategoriaRepositoryPort`), repository (`CategoriaOrdemRepository`), service (`reordenar_categorias` → novo repo), handlers (`listar_categorias` retorna `CategoriaProdutosOrdenada`), CLI (args sem `ordem`), seed (INSERT sem `ordem`). |
-| 2026-04-20  | **Endpoints públicos de leitura**: GETs de `/api/horarios/{loja_uuid}`, `/api/catalogo/{loja_uuid}/adicionais`, `/api/catalogo/{loja_uuid}/adicionais/disponiveis`, `/api/catalogo/{loja_uuid}/categorias`, `/api/produtos/listar/{loja_uuid}`, `/api/produtos/{uuid}` e `/api/produtos/categoria/{uuid}` movidos para fora do middleware de auth. Apenas POST, PUT e DELETE permanecem protegidos. Handlers refatorados para chamar o service diretamente, removendo `Extension<Usuario>` que causava 500 em rotas públicas. |
+| 2026-04-20  | **Endpoints públicos de leitura**: GETs de `/api/horarios/{loja_uuid}`, `/api/catalogo/{loja_uuid}/adicionais`, `/api/catalogo/{loja_uuid}/adicionais/disponiveis`, `/api/catalogo/{loja_uuid}/categorias`, `/api/produtos/listar/{loja_uuid}`, `/api/produtos/{uuid}` e `/api/produtos/categoria/{loja_uuid}/{categoria_uuid}` movidos para fora do middleware de auth. Apenas POST, PUT e DELETE permanecem protegidos. Handlers refatorados para chamar o service diretamente, removendo `Extension<Usuario>` que causava 500 em rotas públicas. |
 | 2026-04-19  | **Pedido sem usuário obrigatório**: `usuario_uuid` em `pedidos` agora é nullable (migration `0010`). `endereco_entrega` no body de criação de pedido agora é opcional. Endpoint `POST /api/pedidos/criar` não exige mais auth (usa `optional_auth_middleware`). Middleware `optional_auth_middleware` criado. Stack completa atualizada: model, repository, port, service, usecase, handlers, router. |
 | 2026-04-05  | **NUMERIC com tipo correto**: Todos os campos `f64`/`Option<f64>` mapeados para `NUMERIC` migrados para `rust_decimal::Decimal`. |
 | 2026-04-05  | **Endpoint minhas lojas**: `GET /api/admin/minhas-lojas` lista lojas criadas pelo admin logado. Tabela `lojas` ganhou campo `criado_por UUID` (FK para `usuarios`). Migration `0003` criada. |

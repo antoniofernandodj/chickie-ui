@@ -807,8 +807,8 @@ export class AdminComponent {
   carregarProdutosDaCategoria(categoriaUuid: string) {
     const loja = this.lojaSelecionada();
     if (!loja) return;
-    
-    this.catalogoService.listarProdutosPorCategoria(categoriaUuid).pipe(
+
+    this.catalogoService.listarProdutosPorCategoria(loja.uuid, categoriaUuid).pipe(
       catchError(() => of([] as Produto[]))
     ).subscribe(produtos => {
       const currentMap = this.produtosPorCategoria();
@@ -817,7 +817,6 @@ export class AdminComponent {
       this.produtosPorCategoria.set(newMap);
     });
   }
-
   // Load products for all categories
   carregarTodosProdutos() {
     const cats = this.categorias();
