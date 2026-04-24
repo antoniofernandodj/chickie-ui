@@ -39,6 +39,15 @@ export class PedidosComponent {
     return s === 'todos' ? this.pedidos() : this.pedidos().filter(p => p.status === s);
   });
 
+  readonly pedidosLocaisSet = computed(() => new Set(this.pedidoLocalStorage.pedidos().map(p => p.uuid)));
+
+  eLocal(uuid: string): boolean { return this.pedidosLocaisSet().has(uuid); }
+
+  removerLocal(uuid: string, event: Event): void {
+    event.stopPropagation();
+    this.pedidoLocalStorage.remover(uuid);
+  }
+
   getFormattedDate(date: string): string {
     const dp = new DatePipe('pt-BR');
     return `${dp.transform(date, 'dd/MM/yyyy')} às ${new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;

@@ -68,7 +68,19 @@
                 Pedido #{{ pedido.codigo || pedido.uuid.slice(-8).toUpperCase() }}
               </p>
             </div>
-            <ui-status-badge [status]="pedido.status"/>
+            <div class="flex items-center gap-2">
+              <ui-status-badge [status]="pedido.status"/>
+              @if (eLocal(pedido.uuid)) {
+                <button type="button"
+                  (click)="removerLocal(pedido.uuid, $event)"
+                  title="Remover do histórico"
+                  class="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              }
+            </div>
           </div>
 
           @if (pedido.itens && pedido.itens.length > 0) {

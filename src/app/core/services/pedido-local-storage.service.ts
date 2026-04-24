@@ -53,4 +53,8 @@ export class PedidoLocalStorageService {
     const alvo = codigo.trim().toUpperCase();
     return this._pedidos().find((p) => p.codigo?.toUpperCase() === alvo) ?? null;
   }
+
+  remover(uuid: string): void {
+    this.persist(this._pedidos().filter((p) => p.uuid !== uuid));
+  }
 }
