@@ -36,4 +36,10 @@ export class HomeComponent {
   readonly pedidosLocais = computed(() => this.pedidoLocalStorage.pedidos());
 
   onSearchInput(value: string) { this.searchSubject.next(value); }
+
+  removerLocal(uuid: string, event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.pedidoLocalStorage.remover(uuid);
+  }
 }
