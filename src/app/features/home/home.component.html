@@ -48,7 +48,7 @@
         <a [routerLink]="['/pedidos', pedido.codigo]"
            class="relative bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-all">
           <button type="button"
-            (click)="removerLocal(pedido.uuid, $event)"
+            (click)="abrirConfirmacaoRemocao(pedido.uuid, $event)"
             title="Remover do histórico"
             class="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,3 +156,21 @@
     </div>
   }
 </main>
+
+@if (confirmandoRemocao()) {
+  <ui-modal title="Remover pedido" size="sm" (close)="cancelarRemocao()">
+    <p class="px-5 pt-4 text-sm text-gray-600">
+      Tem certeza que deseja remover este pedido do histórico do dispositivo?
+    </p>
+    <div class="flex justify-end gap-3 px-5 py-4">
+      <button type="button" (click)="cancelarRemocao()"
+              class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        Cancelar
+      </button>
+      <button type="button" (click)="confirmarRemocao()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors">
+        Remover
+      </button>
+    </div>
+  </ui-modal>
+}

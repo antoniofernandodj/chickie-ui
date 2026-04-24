@@ -5,11 +5,11 @@ import { DecimalPipe } from '@angular/common';
 import { LojaService } from '../../core/services/loja.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { catchError, debounceTime, distinctUntilChanged, of, switchMap, Subject } from 'rxjs';
-import { UiEmptyStateComponent } from '../../shared/components';
+import { UiEmptyStateComponent, UiModalComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, DecimalPipe, UiEmptyStateComponent],
+  imports: [RouterLink, DecimalPipe, UiEmptyStateComponent, UiModalComponent],
   templateUrl: './home.component.html',
 })
 export class HomeComponent {
@@ -34,12 +34,23 @@ export class HomeComponent {
 
   readonly loading      = computed(() => this.search().trim() !== '' && this.lojas() === null);
   readonly pedidosLocais = computed(() => this.pedidoLocalStorage.pedidos());
+  readonly confirmandoRemocao = signal<string | null>(null);
 
   onSearchInput(value: string) { this.searchSubject.next(value); }
 
-  removerLocal(uuid: string, event: MouseEvent): void {
+  abrirConfirmacaoRemocao(uuid: string, event: MouseEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    this.pedidoLocalStorage.remover(uuid);
+    this.confirmandoRemocao.set(uuid);
+  }
+
+  confirmarRemocao(): void {
+    const uuid = this.confirmandoRemocao();
+    if (uuid) this.pedidoLocalStorage.remover(uuid);
+    this.confirmandoRemocao.set(null);
+  }
+
+  cancelarRemocao(): void {
+    this.confirmandoRemocao.set(null);
   }
 }
