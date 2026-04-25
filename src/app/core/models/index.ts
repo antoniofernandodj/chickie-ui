@@ -345,6 +345,7 @@ export interface CreatePedidoRequest {
   taxa_entrega:    number;
   forma_pagamento: string;
   observacoes?:    string | null;
+  contato?:        string | null;
   codigo_cupom?:   string | null;
   itens:           CreatePedidoItemRequest[];
   endereco_entrega:{

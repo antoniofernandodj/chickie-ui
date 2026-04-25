@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
 import { Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { toast } from 'ngx-sonner';
@@ -72,7 +73,7 @@ type Step = CategoriaStep | FixedStep;
 
 @Component({
   selector: 'app-criar-pedido-modal',
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, PhoneMaskDirective],
   templateUrl: './criar-pedido-modal.component.html',
 })
 export class CriarPedidoModalComponent implements OnInit {
@@ -196,6 +197,7 @@ export class CriarPedidoModalComponent implements OnInit {
   // ── Pagamento ───────────────────────────────────────────────────────────────
   formaPagamento = 'PIX';
   observacoes = '';
+  contato = '';
   codigoCupom = '';
 
   readonly cupomValidado = signal<Cupom | null>(null);
@@ -578,6 +580,7 @@ export class CriarPedidoModalComponent implements OnInit {
       taxa_entrega: Number(this.loja.taxa_entrega),
       forma_pagamento: this.formaPagamento,
       observacoes: this.observacoes || null,
+      contato: this.contato || null,
       codigo_cupom: this.cupomValidado()?.codigo ?? null,
       itens: this.cart().map((item) => ({
         quantidade: item.quantidade,
