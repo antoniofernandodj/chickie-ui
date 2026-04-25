@@ -239,7 +239,7 @@ export class CriarPedidoModalComponent implements OnInit {
     if (!s) return false;
     if (s.tipo === 'categoria') return true;
     if (s.tipo === 'endereco') return this.enderecoValido;
-    if (s.tipo === 'pagamento') return this.formaPagamento !== '';
+    if (s.tipo === 'pagamento') return this.formaPagamento !== '' && this.contato.length === 11;
     return this.cart().length > 0;
   }
 
@@ -571,6 +571,10 @@ export class CriarPedidoModalComponent implements OnInit {
     }
     if (!this.enderecoValido) {
       toast.error('Preencha o endereço de entrega.');
+      return;
+    }
+    if (this.contato.length !== 11) {
+      toast.error('Informe o celular de contato.');
       return;
     }
 
