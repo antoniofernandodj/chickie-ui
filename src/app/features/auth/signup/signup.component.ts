@@ -4,7 +4,6 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClasseUsuario } from '../../../core/models';
 import { debounceTime, distinctUntilChanged, filter, switchMap, catchError, of } from 'rxjs';
-import { PhoneMaskDirective } from '../../../shared/directives/phone-mask.directive';
 import {
   UiInputComponent,
   UiPasswordInputComponent,
@@ -16,7 +15,7 @@ import {
 
 @Component({
   selector: 'app-signup',
-  imports: [RouterLink, ReactiveFormsModule, PhoneMaskDirective,
+  imports: [RouterLink, ReactiveFormsModule,
     UiInputComponent, UiPasswordInputComponent, UiButtonComponent,
     UiErrorBannerComponent, UiAvatarComponent, UiSpinnerComponent],
   templateUrl: './signup.component.html',

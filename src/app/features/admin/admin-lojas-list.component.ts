@@ -10,10 +10,11 @@ import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Loja } from '../../core/models';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
+import { SlugMaskDirective } from '../../shared/directives/slug-mask.directive';
 
 @Component({
   selector: 'app-admin-lojas-list',
-  imports: [ReactiveFormsModule, DecimalPipe, NgxSonnerToaster, PhoneMaskDirective],
+  imports: [ReactiveFormsModule, DecimalPipe, NgxSonnerToaster, PhoneMaskDirective, SlugMaskDirective],
   templateUrl: './admin-lojas-list.component.html',
 })
 export class AdminLojasListComponent {

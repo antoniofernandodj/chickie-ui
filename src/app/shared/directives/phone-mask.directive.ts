@@ -45,8 +45,8 @@ export class PhoneMaskDirective implements OnInit, OnDestroy {
     // Update view value
     this.el.nativeElement.value = formatted;
     
-    // Update form control with numeric-only value
-    this.control.control?.setValue(digits);
+    // Update form control with numeric-only value (emitEvent: false to avoid valueChanges loop)
+    this.control.control?.setValue(digits, { emitEvent: false });
   }
 
   @HostListener('blur')
@@ -59,16 +59,16 @@ export class PhoneMaskDirective implements OnInit, OnDestroy {
 
   private formatPhone(digits: string): string {
     if (!digits) return '';
-    
-    // Format: DD D DDDD-DDDD (2 digit DDD + 9 digits)
+
+    // Format: (DD) D DDDD-DDDD
     if (digits.length <= 2) {
-      return digits;
-    } else if (digits.length <= 3) {
-      return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+      return `(${digits}`;
+    } else if (digits.length === 3) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
     } else if (digits.length <= 7) {
-      return `${digits.slice(0, 2)} ${digits.slice(2, 3)} ${digits.slice(3)}`;
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3)}`;
     } else {
-      return `${digits.slice(0, 2)} ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
     }
   }
 }

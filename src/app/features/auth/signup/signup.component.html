@@ -43,8 +43,8 @@
           }
         </ui-input>
 
-        <ui-input formControlName="celular" label="Celular" type="tel" placeholder="21 9 9999-9999"
-                  appPhoneMask [error]="celularError()" [state]="celularState()">
+        <ui-input formControlName="celular" label="Celular" type="tel" placeholder="(21) 9 9999-9999"
+                  mask="phone" [error]="celularError()" [state]="celularState()">
           @if (!f.celular.invalid && celularChecking()) {
             <p uiInputFeedback class="text-xs text-gray-500 mt-1 inline-flex items-center gap-1">
               <ui-spinner size="xs"/> Verificando...

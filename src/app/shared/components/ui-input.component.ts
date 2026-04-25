@@ -1,6 +1,14 @@
 import { Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
+function formatPhone(digits: string): string {
+  if (!digits) return '';
+  if (digits.length <= 2)  return `(${digits}`;
+  if (digits.length === 3) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 7)  return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
+}
+
 @Component({
   selector: 'ui-input',
   standalone: true,
@@ -38,6 +46,7 @@ export class UiInputComponent implements ControlValueAccessor {
   state       = input<'default' | 'error' | 'success' | 'warning'>('default');
   error       = input<string | null | undefined>(null);
   hint        = input<string | null | undefined>(null);
+  mask        = input<'phone' | null>(null);
 
   innerValue = signal('');
   isDisabled = signal(false);
@@ -59,14 +68,28 @@ export class UiInputComponent implements ControlValueAccessor {
     return `w-full rounded-xl border text-sm outline-none transition-all placeholder-gray-400 ${pad} ${border}`;
   });
 
-  writeValue(v: string)               { this.innerValue.set(v ?? ''); }
+  writeValue(v: string) {
+    if (this.mask() === 'phone' && v) {
+      this.innerValue.set(formatPhone(v.replace(/\D/g, '').slice(0, 11)));
+    } else {
+      this.innerValue.set(v ?? '');
+    }
+  }
   registerOnChange(fn: (v: string) => void) { this.onChange = fn; }
   registerOnTouched(fn: () => void)   { this.onTouched = fn; }
   setDisabledState(d: boolean)        { this.isDisabled.set(d); }
 
   onInput(e: Event) {
-    const v = (e.target as HTMLInputElement).value;
-    this.innerValue.set(v);
-    this.onChange(v);
+    const input = e.target as HTMLInputElement;
+    if (this.mask() === 'phone') {
+      const digits = input.value.replace(/\D/g, '').slice(0, 11);
+      const formatted = formatPhone(digits);
+      input.value = formatted;
+      this.innerValue.set(formatted);
+      this.onChange(digits);
+    } else {
+      this.innerValue.set(input.value);
+      this.onChange(input.value);
+    }
   }
 }
