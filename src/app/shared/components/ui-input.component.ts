@@ -1,13 +1,6 @@
 import { Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-
-function formatPhone(digits: string): string {
-  if (!digits) return '';
-  if (digits.length <= 2)  return `(${digits}`;
-  if (digits.length === 3) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 7)  return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3)}`;
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 3)} ${digits.slice(3, 7)}-${digits.slice(7)}`;
-}
+import { formatPhone } from '../../core/utils/phone-utils';
 
 @Component({
   selector: 'ui-input',

@@ -10,8 +10,8 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
 import { Router } from '@angular/router';
+import { formatPhone } from '../../core/utils/phone-utils';
 import { catchError, of } from 'rxjs';
 import { toast } from 'ngx-sonner';
 import {
@@ -73,7 +73,7 @@ type Step = CategoriaStep | FixedStep;
 
 @Component({
   selector: 'app-criar-pedido-modal',
-  imports: [FormsModule, DecimalPipe, PhoneMaskDirective],
+  imports: [FormsModule, DecimalPipe],
   templateUrl: './criar-pedido-modal.component.html',
 })
 export class CriarPedidoModalComponent implements OnInit {
@@ -199,6 +199,13 @@ export class CriarPedidoModalComponent implements OnInit {
   observacoes = '';
   contato = '';
   codigoCupom = '';
+
+  onContatoInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 11);
+    input.value = formatPhone(digits);
+    this.contato = digits;
+  }
 
   readonly cupomValidado = signal<Cupom | null>(null);
   readonly validandoCupom = signal(false);
