@@ -323,11 +323,13 @@ export interface Pedido {
   desconto:          number;
   forma_pagamento:   string;
   observacoes:       string | null;
+  contato:           string | null;
   tempo_estimado_min:number;
   criado_em:         string;
   atualizado_em:     string;
   itens:             ItemPedido[];
   partes:            ParteDeItemPedido[];
+  endereco_entrega:  EnderecoEntrega | null;
 }
 
 export interface CreatePedidoItemRequest {

@@ -859,6 +859,7 @@ Content-Type: application/json
   "taxa_entrega": 5.0,
   "forma_pagamento": "PIX",
   "observacoes": "string | null",
+  "contato": "string | null",
   "codigo_cupom": "string | null",
   "itens": [
     {
@@ -893,15 +894,17 @@ Content-Type: application/json
 
 **Response `201`:**
 ```json
-{ "uuid": "uuid" }
+{ "uuid": "uuid", "codigo": "A1B2C3" }
 ```
 
 ---
 
 ### 6.2 Listar Pedidos
 
+> Lista todos os pedidos da plataforma, ordenados do mais recente. Todos os responses de pedido agora incluem `contato` e `endereco_entrega`.
+
 ```
-GET /api/pedidos/
+GET /api/pedidos/listar
 Authorization: Bearer <token>
 ```
 
@@ -910,6 +913,7 @@ Authorization: Bearer <token>
 [
   {
     "uuid": "550e8400-e29b-41d4-a716-446655440010",
+    "codigo": "A1B2C3",
     "usuario_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "entregador_uuid": null,
@@ -920,6 +924,7 @@ Authorization: Bearer <token>
     "desconto": 0.0,
     "forma_pagamento": "PIX",
     "observacoes": "Sem cebola",
+    "contato": "11999999999",
     "tempo_estimado_min": 45,
     "criado_em": "2026-04-04T00:00:00Z",
     "atualizado_em": "2026-04-04T00:00:00Z",
@@ -953,10 +958,26 @@ Authorization: Bearer <token>
           }
         ]
       }
-    ]
+    ],
+    "endereco_entrega": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440020",
+      "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "pedido_uuid": "550e8400-e29b-41d4-a716-446655440010",
+      "cep": "01001-000",
+      "logradouro": "Rua das Flores",
+      "numero": "123",
+      "complemento": "Apto 101",
+      "bairro": "Centro",
+      "cidade": "São Paulo",
+      "estado": "SP",
+      "latitude": -23.5505,
+      "longitude": -46.6333
+    }
   }
 ]
 ```
+
+> `endereco_entrega` é `null` quando o pedido não possui endereço de entrega cadastrado.
 
 ---
 
@@ -967,13 +988,14 @@ GET /api/pedidos/meus
 Authorization: Bearer <token>
 ```
 
-> Retorna todos os pedidos criados pelo usuário autenticado, ordenados do mais recente ao mais antigo. Inclui itens, partes e adicionais hidratados.
+> Retorna todos os pedidos criados pelo usuário autenticado, ordenados do mais recente ao mais antigo. Inclui itens, partes, adicionais, `contato` e `endereco_entrega`.
 
 **Response `200`:**
 ```json
 [
   {
     "uuid": "550e8400-e29b-41d4-a716-446655440010",
+    "codigo": "A1B2C3",
     "usuario_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "entregador_uuid": null,
@@ -984,6 +1006,7 @@ Authorization: Bearer <token>
     "desconto": 0.0,
     "forma_pagamento": "PIX",
     "observacoes": "Sem cebola",
+    "contato": "11999999999",
     "tempo_estimado_min": 45,
     "criado_em": "2026-04-04T00:00:00Z",
     "atualizado_em": "2026-04-04T00:00:00Z",
@@ -1008,7 +1031,8 @@ Authorization: Bearer <token>
           }
         ]
       }
-    ]
+    ],
+    "endereco_entrega": null
   }
 ]
 ```
@@ -1031,6 +1055,7 @@ Authorization: Bearer <token>
 ```json
 {
   "uuid": "550e8400-e29b-41d4-a716-446655440010",
+  "codigo": "A1B2C3",
   "usuario_uuid": "550e8400-e29b-41d4-a716-446655440000",
   "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
   "entregador_uuid": null,
@@ -1041,6 +1066,7 @@ Authorization: Bearer <token>
   "desconto": 0.0,
   "forma_pagamento": "PIX",
   "observacoes": "Sem cebola",
+  "contato": "11999999999",
   "tempo_estimado_min": 45,
   "criado_em": "2026-04-04T00:00:00Z",
   "atualizado_em": "2026-04-04T00:00:00Z",
@@ -1074,7 +1100,55 @@ Authorization: Bearer <token>
         }
       ]
     }
-  ]
+  ],
+  "endereco_entrega": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440020",
+    "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "pedido_uuid": "550e8400-e29b-41d4-a716-446655440010",
+    "cep": "01001-000",
+    "logradouro": "Rua das Flores",
+    "numero": "123",
+    "complemento": "Apto 101",
+    "bairro": "Centro",
+    "cidade": "São Paulo",
+    "estado": "SP",
+    "latitude": -23.5505,
+    "longitude": -46.6333
+  }
+}
+```
+
+---
+
+### 6.3.1 Buscar Pedido por Código
+
+> Endpoint público para localizar um pedido pelo código alfanumérico de 6 caracteres retornado na criação.
+
+```
+GET /api/pedidos/codigo/{codigo}
+```
+
+**Response `200`:**
+```json
+{
+  "uuid": "550e8400-e29b-41d4-a716-446655440010",
+  "codigo": "A1B2C3",
+  "usuario_uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
+  "entregador_uuid": null,
+  "status": "criado",
+  "total": 65.90,
+  "subtotal": 55.90,
+  "taxa_entrega": 5.0,
+  "desconto": 0.0,
+  "forma_pagamento": "PIX",
+  "observacoes": "Sem cebola",
+  "contato": "11999999999",
+  "tempo_estimado_min": 45,
+  "criado_em": "2026-04-04T00:00:00Z",
+  "atualizado_em": "2026-04-04T00:00:00Z",
+  "itens": [],
+  "endereco_entrega": null
 }
 ```
 
@@ -1092,6 +1166,7 @@ Authorization: Bearer <token>
 [
   {
     "uuid": "550e8400-e29b-41d4-a716-446655440010",
+    "codigo": "A1B2C3",
     "usuario_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "entregador_uuid": null,
@@ -1102,6 +1177,7 @@ Authorization: Bearer <token>
     "desconto": 0.0,
     "forma_pagamento": "PIX",
     "observacoes": "Sem cebola",
+    "contato": "11999999999",
     "tempo_estimado_min": 45,
     "criado_em": "2026-04-04T00:00:00Z",
     "atualizado_em": "2026-04-04T00:00:00Z",
@@ -1126,7 +1202,8 @@ Authorization: Bearer <token>
           }
         ]
       }
-    ]
+    ],
+    "endereco_entrega": null
   }
 ]
 ```
@@ -1134,6 +1211,8 @@ Authorization: Bearer <token>
 ---
 
 ### 6.5 Buscar Pedido com Endereço de Entrega
+
+> Este endpoint retorna a estrutura `{ pedido, endereco_entrega }` mantida por compatibilidade. O campo `endereco_entrega` também está disponível diretamente dentro do objeto `pedido`.
 
 ```
 GET /api/pedidos/{pedido_uuid}/com-entrega
@@ -1145,6 +1224,7 @@ Authorization: Bearer <token>
 {
   "pedido": {
     "uuid": "550e8400-e29b-41d4-a716-446655440010",
+    "codigo": "A1B2C3",
     "usuario_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
     "entregador_uuid": null,
@@ -1155,10 +1235,25 @@ Authorization: Bearer <token>
     "desconto": 0.0,
     "forma_pagamento": "PIX",
     "observacoes": null,
+    "contato": "11999999999",
     "tempo_estimado_min": 45,
     "criado_em": "2026-04-04T00:00:00Z",
     "atualizado_em": "2026-04-04T00:00:00Z",
-    "itens": []
+    "itens": [],
+    "endereco_entrega": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440020",
+      "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
+      "pedido_uuid": "550e8400-e29b-41d4-a716-446655440010",
+      "cep": "01001-000",
+      "logradouro": "Rua das Flores",
+      "numero": "123",
+      "complemento": "Apto 101",
+      "bairro": "Centro",
+      "cidade": "São Paulo",
+      "estado": "SP",
+      "latitude": -23.5505,
+      "longitude": -46.6333
+    }
   },
   "endereco_entrega": {
     "uuid": "550e8400-e29b-41d4-a716-446655440020",
@@ -1294,14 +1389,31 @@ Authorization: Bearer <token>
   "desconto": 0.0,
   "forma_pagamento": "PIX",
   "observacoes": "Sem cebola",
+  "contato": "11999999999",
   "tempo_estimado_min": 45,
   "criado_em": "2026-04-04T00:00:00Z",
   "atualizado_em": "2026-04-04T00:00:00Z",
+  "endereco_entrega": {
+    "uuid": "550e8400-e29b-41d4-a716-446655440080",
+    "loja_uuid": "550e8400-e29b-41d4-a716-446655440000",
+    "pedido_uuid": "550e8400-e29b-41d4-a716-446655440010",
+    "cep": "01001-000",
+    "logradouro": "Rua das Flores",
+    "numero": "123",
+    "complemento": "Apto 101",
+    "bairro": "Centro",
+    "cidade": "São Paulo",
+    "estado": "SP",
+    "latitude": -23.5505,
+    "longitude": -46.6333
+  },
   "entregador_nome": "Carlos Entregador",
   "veiculo": "Moto",
   "placa": "ABC-1234"
 }
 ```
+
+> `contato` e `endereco_entrega` são `null` quando não informados.
 
 **Response `404`:**
 ```json
@@ -2241,6 +2353,72 @@ Content-Type: application/json
 
 ---
 
+### 9.8.0 Atualizar Categoria Global (🔒 + 👑 Owner)
+
+```
+PUT /api/admin/categorias/globais/{uuid}
+Authorization: Bearer <token>
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "nome": "Pizzas Especiais",
+  "descricao": "Pizzas premium de diversos sabores",
+  "pizza_mode": true,
+  "drink_mode": false
+}
+```
+
+**Response `200`:**
+```json
+{
+  "uuid": "uuid",
+  "loja_uuid": null,
+  "nome": "Pizzas Especiais",
+  "descricao": "Pizzas premium de diversos sabores",
+  "pizza_mode": true,
+  "drink_mode": false,
+  "criado_em": "2026-04-21T00:00:00Z"
+}
+```
+
+**Response `404`:**
+```json
+{ "error": "Categoria não encontrada" }
+```
+
+**Response `400`:**
+```json
+{ "error": "Categoria não é global" }
+```
+
+---
+
+### 9.8.0b Deletar Categoria Global (🔒 + 👑 Owner)
+
+```
+DELETE /api/admin/categorias/globais/{uuid}
+Authorization: Bearer <token>
+```
+
+> ⚠️ Apenas funciona se a categoria não tiver produtos vinculados.
+
+**Response `204`:** No Content
+
+**Response `404`:**
+```json
+{ "error": "Categoria não encontrada" }
+```
+
+**Response `400`:**
+```json
+{ "error": "Categoria não é global" }
+```
+
+---
+
 ### 9.8.1 Listar Categorias Globais
 
 ```
@@ -3160,9 +3338,12 @@ DELETE /api/wipe
 | 14 | `POST` | `/api/admin/lojas/{loja_uuid}/entregadores` | 🔒 | 👑 |
 | 15 | `POST` | `/api/admin/lojas/{loja_uuid}/clientes`  | ✅   | Admin  |
 | 15.1 | `POST` | `/api/admin/categorias/globais` | 🔒 | 👑 Owner |
+| 15.2 | `PUT` | `/api/admin/categorias/globais/{uuid}` | 🔒 | 👑 Owner |
+| 15.3 | `DELETE` | `/api/admin/categorias/globais/{uuid}` | 🔒 | 👑 Owner |
 | 16 | `POST` | `/api/pedidos/criar` | — (auth opcional) | — |
 | 17 | `GET` | `/api/pedidos/listar` | 🔒 | — |
 | 17.1 | `GET` | `/api/pedidos/meus` | 🔒 | — |
+| 17.2 | `GET` | `/api/pedidos/codigo/{codigo}` | — | — |
 | 18 | `GET` | `/api/pedidos/por-loja/{loja_uuid}` | 🔒 | — |
 | 19 | `GET` | `/api/pedidos/{uuid}` | 🔒 | — |
 | 20 | `GET` | `/api/pedidos/{uuid}/com-entrega` | 🔒 | — |
