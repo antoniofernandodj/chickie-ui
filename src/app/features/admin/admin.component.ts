@@ -14,6 +14,7 @@ import { MarketingService } from '../../core/services/marketing.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
+import { PhonePipe } from '../../shared/pipes/phone.pipe';
 import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido, ItemPedido } from '../../core/models';
 import { STATUS_PEDIDO_CFG, UiTabBarComponent, UiSpinnerComponent, UiTab } from '../../shared/components';
 
@@ -21,7 +22,7 @@ const STATUS_CFG = STATUS_PEDIDO_CFG;
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective, DragDropModule,
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective, PhonePipe, DragDropModule,
     UiTabBarComponent, UiSpinnerComponent],
   templateUrl: './admin.component.html',
 })
