@@ -325,7 +325,7 @@ export interface Pedido {
   forma_pagamento:   string;
   observacoes:       string | null;
   contato:           string | null;
-  tempo_estimado_min:number;
+  tempo_estimado_min:number | null;
   criado_em:         string;
   atualizado_em:     string;
   itens:             ItemPedido[];

@@ -18,11 +18,17 @@ export class PedidoService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/pedidos`;
 
+  private readonly STATUS_ALIAS: Record<string, StatusPedido> = {
+    pronto: 'pronto_para_retirada',
+  };
+
   // A API retorna status capitalizado ("Criado") e valores monetários como string ("80.33")
   private normalizar(p: any): Pedido {
+    const rawStatus = (p.status as string).toLowerCase();
+    const status = (this.STATUS_ALIAS[rawStatus] ?? rawStatus) as StatusPedido;
     return {
       ...p,
-      status: (p.status as string).toLowerCase() as StatusPedido,
+      status,
       total: parseFloat(p.total),
       subtotal: parseFloat(p.subtotal),
       taxa_entrega: parseFloat(p.taxa_entrega ?? '0'),

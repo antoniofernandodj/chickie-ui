@@ -170,6 +170,19 @@ export class AdminComponent {
     });
   }
 
+  // ── Estado is_retirada por pedido ────────────────────────────────────────
+  private readonly isRetiradaMap = signal<Map<string, boolean>>(new Map());
+
+  getIsRetirada(uuid: string): boolean {
+    return this.isRetiradaMap().get(uuid) ?? false;
+  }
+
+  setIsRetirada(uuid: string, value: boolean): void {
+    const m = new Map(this.isRetiradaMap());
+    m.set(uuid, value);
+    this.isRetiradaMap.set(m);
+  }
+
   // ── Detalhe do Pedido (modal) ─────────────────────────────────────────────
   readonly pedidoDetalhe = signal<Pedido | null>(null);
 
