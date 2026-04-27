@@ -54,6 +54,13 @@ export class PedidoService {
     );
   }
 
+  cancelar(uuid: string): Observable<{ uuid: string; status: StatusPedido }> {
+    return this.http.post<{ uuid: string; status: StatusPedido }>(
+      `${this.base}/${uuid}/cancelar`,
+      {},
+    );
+  }
+
   buscar(uuid: string): Observable<Pedido> {
     return this.http.get<any>(`${this.base}/${uuid}`).pipe(
       map((p) => this.normalizar(p)),

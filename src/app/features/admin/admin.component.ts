@@ -143,6 +143,33 @@ export class AdminComponent {
     });
   }
 
+  // ── Cancelar Pedido (confirmação) ────────────────────────────────────────
+  readonly pedidoCancelarConfirm = signal<Pedido | null>(null);
+
+  pedirConfirmacaoCancelar(pedido: Pedido, event?: Event): void {
+    event?.stopPropagation();
+    this.pedidoCancelarConfirm.set(pedido);
+  }
+
+  executarCancelarPedido(): void {
+    const pedido = this.pedidoCancelarConfirm();
+    if (!pedido) return;
+    this.pedidoCancelarConfirm.set(null);
+    this.pedidoService.cancelar(pedido.uuid).subscribe({
+      next: () => {
+        toast.success('Pedido cancelado.');
+        this.refreshPedidos();
+        const detalhe = this.pedidoDetalhe();
+        if (detalhe?.uuid === pedido.uuid) {
+          this.pedidoDetalhe.set({ ...detalhe, status: 'cancelado' });
+        }
+      },
+      error: (e) => {
+        toast.error(e?.error?.error ?? 'Erro ao cancelar pedido.');
+      },
+    });
+  }
+
   // ── Detalhe do Pedido (modal) ─────────────────────────────────────────────
   readonly pedidoDetalhe = signal<Pedido | null>(null);
 
