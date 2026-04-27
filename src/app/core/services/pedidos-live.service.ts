@@ -32,6 +32,51 @@ export class PedidosLiveService {
     };
   }
 
+  acompanharPorCodigo(codigo: string): Observable<Pedido> {
+    if (!isPlatformBrowser(this.platformId)) return EMPTY;
+
+    const url = `${environment.apiUrl.replace(/^https/, 'wss').replace(/^http$/, 'ws')}/pedidos/codigo/${encodeURIComponent(codigo)}/ws`;
+
+    return new Observable<Pedido>(observer => {
+      let ws: WebSocket | null = null;
+      let active = true;
+      let retryTimer: ReturnType<typeof setTimeout> | null = null;
+      let retryDelay = 2000;
+
+      const connect = () => {
+        if (!active) return;
+        ws = new WebSocket(url);
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data && typeof data === 'object' && !Array.isArray(data)) {
+              observer.next(this.normalizar(data));
+            }
+          } catch { /* JSON inválido: ignorar */ }
+        };
+
+        ws.onerror = () => ws?.close();
+
+        ws.onclose = () => {
+          if (!active) return;
+          retryTimer = setTimeout(() => {
+            retryDelay = Math.min(retryDelay * 1.5, 30_000);
+            connect();
+          }, retryDelay);
+        };
+      };
+
+      connect();
+
+      return () => {
+        active = false;
+        if (retryTimer) clearTimeout(retryTimer);
+        if (ws && ws.readyState < WebSocket.CLOSING) ws.close();
+      };
+    });
+  }
+
   conectar(lojaUuid: string, status: StatusPedido, token: string): Observable<Pedido[]> {
     if (!isPlatformBrowser(this.platformId)) return EMPTY;
 
