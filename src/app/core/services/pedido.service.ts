@@ -42,8 +42,15 @@ export class PedidoService {
   }
 
   listar(): Observable<Pedido[]> {
-    return this.http.get<any[]>(`${this.base}/`).pipe(
+    return this.http.get<any[]>(`${this.base}/meus`).pipe(
       map((lista) => lista.map((p) => this.normalizar(p))),
+    );
+  }
+
+  avancar(uuid: string, isRetirada: boolean): Observable<StatusPedidoResponse> {
+    return this.http.post<StatusPedidoResponse>(
+      `${this.base}/${uuid}/avancar`,
+      { is_retirada: isRetirada },
     );
   }
 

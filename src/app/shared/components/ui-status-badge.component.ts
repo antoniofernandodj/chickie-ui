@@ -9,6 +9,7 @@ const CFG: Record<StatusPedido, { label: string; color: string; bg: string; icon
   pronto_para_retirada:           { label: 'Pronto',            color: 'text-teal-700',   bg: 'bg-teal-100',   icon: '📦' },
   saiu_para_entrega:              { label: 'Saiu para entrega', color: 'text-orange-700', bg: 'bg-orange-100', icon: '🛵' },
   entregue:                       { label: 'Entregue',          color: 'text-green-700',  bg: 'bg-green-100',  icon: '🎉' },
+  cancelado:                      { label: 'Cancelado',         color: 'text-red-700',    bg: 'bg-red-100',    icon: '❌' },
 };
 
 export { CFG as STATUS_PEDIDO_CFG };

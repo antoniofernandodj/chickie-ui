@@ -121,19 +121,24 @@ export class AdminComponent {
     this.refreshPedidosTrigger.next();
   }
 
-  atualizarStatusPedido(pedidoUuid: string, novoStatus: StatusPedido) {
-    this.pedidoService.atualizarStatus(pedidoUuid, { novo_status: novoStatus }).subscribe({
-      next: () => {
-        toast.success('Status atualizado com sucesso!');
+  readonly statusTerminal: StatusPedido[] = ['entregue', 'cancelado'];
+
+  isPedidoTerminal(status: StatusPedido): boolean {
+    return this.statusTerminal.includes(status);
+  }
+
+  avancarPedido(pedidoUuid: string, isRetirada = false) {
+    this.pedidoService.avancar(pedidoUuid, isRetirada).subscribe({
+      next: (res) => {
+        toast.success('Pedido avançado com sucesso!');
         this.refreshPedidos();
-        // Update modal if open
         const detalhe = this.pedidoDetalhe();
         if (detalhe?.uuid === pedidoUuid) {
-          this.pedidoDetalhe.set({ ...detalhe, status: novoStatus });
+          this.pedidoDetalhe.set({ ...detalhe, status: res.status });
         }
       },
       error: (e) => {
-        toast.error(e?.error?.error ?? 'Erro ao atualizar status do pedido.');
+        toast.error(e?.error?.error ?? 'Erro ao avançar pedido.');
       },
     });
   }

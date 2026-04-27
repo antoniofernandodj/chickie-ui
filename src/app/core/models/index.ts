@@ -14,7 +14,8 @@ export type StatusPedido =
   | 'em_preparo'
   | 'pronto_para_retirada'
   | 'saiu_para_entrega'
-  | 'entregue';
+  | 'entregue'
+  | 'cancelado';
 
 export type TipoDesconto = 'percentual' | 'valor_fixo' | 'frete_gratis';
 export type TipoEscopo   = 'loja' | 'produto' | 'categoria';
