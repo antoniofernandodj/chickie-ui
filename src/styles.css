@@ -1,10 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  --color-brand:      oklch(65% 0.22 40);
-  --color-brand-dark: oklch(55% 0.22 40);
-  --color-brand-light:oklch(96% 0.04 40);
-  --color-surface:    oklch(98.5% 0.002 270);
+  --color-brand:      oklch(63% 0.22 40);
+  --color-brand-dark: oklch(50% 0.22 40);
+  --color-brand-light:oklch(96.5% 0.06 40);
+  --color-surface:    oklch(98.5% 0.008 40);
+  --color-accent:     oklch(80% 0.16 75);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -12,7 +14,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Nunito', system-ui, sans-serif;
   background-color: var(--color-surface);
   color: oklch(18% 0.01 270);
   -webkit-font-smoothing: antialiased;
@@ -26,3 +28,7 @@ body {
   50%       { opacity: 0.4; }
 }
 .skeleton { animation: skeleton-pulse 1.5s ease-in-out infinite; }
+
+/* scrollbar hide */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

@@ -9,17 +9,19 @@ export interface UiTab {
   selector: 'ui-tab-bar',
   standalone: true,
   template: `
-    <div class="flex gap-1 bg-gray-100 rounded-xl p-1">
+    <div class="flex overflow-x-auto scrollbar-hide border-b-2 border-gray-100">
       @for (tab of tabs(); track tab.id) {
         <button
           type="button"
           (click)="active.set(tab.id)"
-          class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all shrink-0"
-          [class.bg-white]="active() === tab.id"
-          [class.shadow-sm]="active() === tab.id"
-          [class.text-gray-900]="active() === tab.id"
-          [class.text-gray-500]="active() !== tab.id"
-        >{{ tab.label }}</button>
+          class="shrink-0 px-5 py-3.5 text-sm font-bold transition-colors duration-150 relative whitespace-nowrap"
+          [style.color]="active() === tab.id ? 'var(--color-brand)' : '#9ca3af'"
+        >
+          {{ tab.label }}
+          <span class="absolute bottom-[-2px] left-3 right-3 h-0.5 rounded-full transition-opacity duration-200"
+                style="background:var(--color-brand)"
+                [style.opacity]="active() === tab.id ? '1' : '0'"></span>
+        </button>
       }
     </div>
   `,

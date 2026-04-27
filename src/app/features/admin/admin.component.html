@@ -28,26 +28,27 @@
     <!-- Header com breadcrumb -->
     <div class="mb-6">
       <button (click)="voltar()"
-              class="text-sm text-gray-500 hover:text-gray-800 mb-3 flex items-center gap-1">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              class="inline-flex items-center gap-1.5 text-sm font-bold mb-4 transition-opacity hover:opacity-70"
+              style="color:var(--color-brand)">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
         </svg>
         Minhas Lojas
       </button>
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold shrink-0"
-             style="background:var(--color-brand)">
-          {{ lojaSelecionada()!.nome.charAt(0) }}
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-2xl shrink-0 shadow-lg"
+             style="background: linear-gradient(135deg, var(--color-brand) 0%, var(--color-brand-dark) 100%)">
+          {{ lojaSelecionada()!.nome.charAt(0).toUpperCase() }}
         </div>
         <div>
-          <h1 class="text-xl font-bold text-gray-900">{{ lojaSelecionada()!.nome }}</h1>
-          <p class="text-gray-500 text-sm">{{ lojaSelecionada()!.slug }}</p>
+          <h1 class="text-2xl font-black text-gray-900 leading-tight">{{ lojaSelecionada()!.nome }}</h1>
+          <p class="text-sm font-semibold text-gray-400">{{ lojaSelecionada()!.slug }}</p>
         </div>
       </div>
     </div>
 
     <!-- Tabs -->
-    <div class="mb-8 overflow-x-auto">
+    <div class="mb-6">
       <ui-tab-bar [tabs]="tabs" [(active)]="aba"/>
     </div>
 
@@ -55,23 +56,28 @@
   @if (aba() === 'pedidos') {
     <div class="space-y-4">
       <!-- Header + refresh -->
-      <div class="flex items-center justify-between">
-        <h2 class="text-base font-semibold text-gray-900">Pedidos recebidos</h2>
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-lg font-black text-gray-900">Pedidos recebidos</h2>
         <button (click)="refreshPedidos()"
-                class="text-sm px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center gap-1.5">
-          🔄 Atualizar
+                class="inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-full border-2 transition-all hover:opacity-80"
+                style="color:var(--color-brand); border-color:var(--color-brand-light); background:var(--color-brand-light)">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Atualizar
         </button>
       </div>
 
       <!-- Filtros de status -->
-      <div class="flex flex-wrap gap-2">
+      <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
         @for (entry of statusEntries; track entry.key) {
           <button
             (click)="pedidoFiltroStatus.set(entry.key)"
-            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            class="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold border-2 transition-all duration-150 whitespace-nowrap"
             [class]="pedidoFiltroStatus() === entry.key
-              ? entry.cfg.bg + ' ' + entry.cfg.color + ' font-semibold'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+              ? 'border-transparent text-white shadow-sm'
+              : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700'"
+            [style.background]="pedidoFiltroStatus() === entry.key ? 'var(--color-brand)' : ''"
           >{{ entry.cfg.icon }} {{ entry.cfg.label }}</button>
         }
       </div>
@@ -90,24 +96,26 @@
           <p class="text-gray-500 text-sm">Nenhum pedido encontrado.</p>
         </div>
       } @else {
-        <div class="space-y-2">
+        <div class="space-y-2.5">
           @for (pedido of pedidos(); track pedido.uuid) {
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-3xl overflow-hidden"
+                 style="box-shadow: 0 2px 8px rgba(0,0,0,0.07), 0 0 1px rgba(0,0,0,0.06)">
 
               <!-- Accordion header -->
               <button type="button"
                       (click)="toggleExpandPedido(pedido.uuid)"
-                      class="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-gray-50/70 transition-colors">
+                      class="w-full flex items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-orange-50/50 active:bg-orange-50">
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-1.5 mb-0.5">
-                    <span class="text-xs font-mono text-gray-400">{{ pedido.codigo || pedido.uuid.slice(0, 8) }}</span>
-                    <span class="text-gray-300 text-xs">·</span>
-                    <span class="text-xs text-gray-400">{{ pedido.criado_em | date:'dd/MM HH:mm' }}</span>
+                    <span class="text-xs font-bold font-mono" style="color:var(--color-brand)">{{ pedido.codigo || pedido.uuid.slice(0, 8) }}</span>
+                    <span class="text-gray-200 text-xs">·</span>
+                    <span class="text-xs font-semibold text-gray-400">{{ pedido.criado_em | date:'dd/MM HH:mm' }}</span>
                   </div>
-                  <p class="text-sm text-gray-600 truncate">{{ pedidoResumoItens(pedido) }}</p>
+                  <p class="text-sm font-bold text-gray-700 truncate">{{ pedidoResumoItens(pedido) }}</p>
                 </div>
-                <span class="text-sm font-bold text-gray-900 shrink-0">R$ {{ pedido.total | number:'1.2-2' }}</span>
-                <svg class="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200"
+                <span class="text-base font-black text-gray-900 shrink-0">R$ {{ pedido.total | number:'1.2-2' }}</span>
+                <svg class="w-4 h-4 shrink-0 transition-transform duration-200"
+                     style="color:var(--color-brand)"
                      [class.rotate-180]="isPedidoExpanded(pedido.uuid)"
                      fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -193,40 +201,43 @@
                 }
 
                 <!-- Rodapé: totais + ações -->
-                <div class="px-5 py-3 bg-gray-50/60 border-t border-gray-100 flex items-center justify-between gap-3">
-                  <div class="flex items-center gap-3 text-sm">
-                    <span class="font-bold text-gray-900">R$ {{ pedido.total | number:'1.2-2' }}</span>
-                    <span class="text-gray-300">·</span>
-                    <span class="text-gray-500">{{ pedido.forma_pagamento }}</span>
+                <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between gap-3"
+                     style="background:var(--color-brand-light)">
+                  <div class="flex items-center gap-2 text-sm">
+                    <span class="font-black text-gray-900">R$ {{ pedido.total | number:'1.2-2' }}</span>
+                    <span class="text-gray-300 text-xs">·</span>
+                    <span class="text-xs font-semibold text-gray-500">{{ pedido.forma_pagamento }}</span>
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
                     @if (!isPedidoTerminal(pedido.status)) {
                       <button
                         (click)="pedirConfirmacaoCancelar(pedido, $event)"
-                        class="text-xs font-medium px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                        class="text-xs font-bold px-3 py-1.5 rounded-full border-2 border-red-200 text-red-500 hover:bg-red-50 transition-colors"
                       >Cancelar</button>
                     }
                     <button
                       (click)="abrirDetalhesPedido(pedido)"
-                      class="text-xs font-medium px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-white hover:border-gray-300 transition-colors"
-                    >Ver detalhes →</button>
+                      class="text-xs font-bold px-3 py-1.5 rounded-full border-2 border-gray-200 bg-white text-gray-600 hover:border-gray-300 transition-colors"
+                    >Detalhes →</button>
                   </div>
                 </div>
 
                 <!-- Avançar pedido -->
                 @if (!isPedidoTerminal(pedido.status)) {
-                  <div class="px-5 py-3 border-t border-gray-100 space-y-2">
+                  <div class="px-5 py-3.5 border-t border-orange-100 space-y-2.5"
+                       style="background:var(--color-brand-light)">
                     @if (pedido.status === 'pronto') {
-                      <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+                      <label class="flex items-center gap-2 text-xs font-bold text-gray-600 cursor-pointer select-none">
                         <input type="checkbox"
                                [checked]="getIsRetirada(pedido.uuid)"
                                (change)="setIsRetirada(pedido.uuid, $any($event.target).checked)"
-                               class="rounded border-gray-300 text-green-600"/>
+                               class="rounded border-gray-300"/>
                         Retirada na loja (sem entregador)
                       </label>
                     }
                     <button (click)="avancarPedido(pedido.uuid, getIsRetirada(pedido.uuid))"
-                            class="w-full px-3 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-white hover:bg-gray-700 transition-colors">
+                            class="w-full px-4 py-2.5 rounded-2xl text-sm font-black text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                            style="background:var(--color-brand)">
                       Avançar ▶
                     </button>
                   </div>
