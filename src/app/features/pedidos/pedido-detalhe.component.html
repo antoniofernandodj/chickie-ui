@@ -25,54 +25,74 @@
     <div class="flex items-start justify-between mb-6">
       <div>
         <p class="text-xs text-gray-400 mb-1">{{ getFormattedDate(pedido()!.criado_em) }}</p>
-        <h1 class="text-xl font-bold text-gray-900">
-          Pedido #{{ pedido()!.codigo || pedido()!.uuid.slice(-8).toUpperCase() }}
-        </h1>
-      </div>
-    </div>
-
-    <!-- Timeline de status -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-      <h2 class="text-sm font-semibold text-gray-700 mb-5">Status do pedido</h2>
-      <div class="relative">
-        <!-- linha vertical -->
-        <div class="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-100"></div>
-
-        <div class="space-y-4">
-          @for (step of steps; track step.status) {
-            <div class="flex items-center gap-4 relative z-10">
-              <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition-all"
-                   [class.shadow-md]="isActive(step.status)"
-                   [class.bg-white]="!isActive(step.status) && !isDone(step.status)"
-                   [class.border-2]="!isActive(step.status) && !isDone(step.status)"
-                   [class.border-gray-200]="!isActive(step.status) && !isDone(step.status)"
-                   [style.background]="isActive(step.status) ? 'var(--color-brand)' : isDone(step.status) ? 'oklch(96% 0.04 40)' : ''">
-                @if (isActive(step.status)) {
-                  <span class="text-white">{{ step.icon }}</span>
-                } @else if (isDone(step.status)) {
-                  <svg class="w-4 h-4" style="color:var(--color-brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                  </svg>
-                } @else {
-                  <span class="text-gray-300 text-sm">{{ step.icon }}</span>
-                }
-              </div>
-              <div>
-                <p class="text-sm font-medium"
-                   [class.text-gray-900]="isActive(step.status) || isDone(step.status)"
-                   [class.text-gray-400]="!isActive(step.status) && !isDone(step.status)"
-                   [style.color]="isActive(step.status) ? 'var(--color-brand)' : ''">
-                  {{ step.label }}
-                </p>
-                @if (isActive(step.status)) {
-                  <p class="text-xs text-gray-400 mt-0.5">Status atual</p>
-                }
-              </div>
-            </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-xl font-bold text-gray-900">
+            Pedido #{{ pedido()!.codigo || pedido()!.uuid.slice(-8).toUpperCase() }}
+          </h1>
+          @if (isCancelled()) {
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+              ❌ Cancelado
+            </span>
           }
         </div>
       </div>
     </div>
+
+    <!-- Banner de cancelamento -->
+    @if (isCancelled()) {
+      <div class="bg-red-50 border border-red-100 rounded-2xl p-6 mb-6 text-center">
+        <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        <p class="text-base font-bold text-red-700 mb-1">Pedido cancelado</p>
+        <p class="text-sm text-red-400">Este pedido foi cancelado e não será processado.</p>
+      </div>
+    } @else {
+      <!-- Timeline de status -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h2 class="text-sm font-semibold text-gray-700 mb-5">Status do pedido</h2>
+        <div class="relative">
+          <!-- linha vertical -->
+          <div class="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-100"></div>
+
+          <div class="space-y-4">
+            @for (step of steps; track step.status) {
+              <div class="flex items-center gap-4 relative z-10">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition-all"
+                     [class.shadow-md]="isActive(step.status)"
+                     [class.bg-white]="!isActive(step.status) && !isDone(step.status)"
+                     [class.border-2]="!isActive(step.status) && !isDone(step.status)"
+                     [class.border-gray-200]="!isActive(step.status) && !isDone(step.status)"
+                     [style.background]="isActive(step.status) ? 'var(--color-brand)' : isDone(step.status) ? 'oklch(96% 0.04 40)' : ''">
+                  @if (isActive(step.status)) {
+                    <span class="text-white">{{ step.icon }}</span>
+                  } @else if (isDone(step.status)) {
+                    <svg class="w-4 h-4" style="color:var(--color-brand)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                  } @else {
+                    <span class="text-gray-300 text-sm">{{ step.icon }}</span>
+                  }
+                </div>
+                <div>
+                  <p class="text-sm font-medium"
+                     [class.text-gray-900]="isActive(step.status) || isDone(step.status)"
+                     [class.text-gray-400]="!isActive(step.status) && !isDone(step.status)"
+                     [style.color]="isActive(step.status) ? 'var(--color-brand)' : ''">
+                    {{ step.label }}
+                  </p>
+                  @if (isActive(step.status)) {
+                    <p class="text-xs text-gray-400 mt-0.5">Status atual</p>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
 
     <!-- Itens -->
     @if (pedido()!.itens && pedido()!.itens.length > 0) {

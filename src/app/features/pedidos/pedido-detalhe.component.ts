@@ -58,7 +58,8 @@ export class PedidoDetalheComponent {
     ),
   );
 
-  readonly loading = computed(() => this.pedido() === undefined);
+  readonly loading     = computed(() => this.pedido() === undefined);
+  readonly isCancelled = computed(() => this.pedido()?.status === 'cancelado');
 
   private currentIndex = computed(() =>
     ORDER.indexOf(this.pedido()?.status ?? 'criado'),
