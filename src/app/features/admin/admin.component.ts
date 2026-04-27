@@ -1,10 +1,10 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, DestroyRef } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { BehaviorSubject, catchError, combineLatest, of, switchMap, debounceTime, distinctUntilChanged, filter, tap, map, Observable } from 'rxjs';
+import { BehaviorSubject, Subscription, catchError, combineLatest, of, switchMap, debounceTime, distinctUntilChanged, filter, tap, map, Observable } from 'rxjs';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -13,6 +13,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { PedidoService } from '../../core/services/pedido.service';
+import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
 import { PhonePipe } from '../../shared/pipes/phone.pipe';
 import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido, ItemPedido } from '../../core/models';
@@ -36,6 +37,8 @@ export class AdminComponent {
   private marketingService = inject(MarketingService);
   private configPedidoService = inject(ConfigPedidoService);
   private pedidoService = inject(PedidoService);
+  private pedidosLiveService = inject(PedidosLiveService);
+  private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder);
 
   readonly aba  = signal('equipe');
@@ -83,29 +86,40 @@ export class AdminComponent {
 
   readonly lojaLoading = computed(() => this.lojaSelecionada() === undefined);
 
-  // ── Pedidos da Loja ──────────────────────────────────────────────────────
-
-  private readonly refreshPedidosTrigger = new BehaviorSubject<void>(undefined);
+  // ── Pedidos da Loja (WebSocket live) ────────────────────────────────────
 
   readonly pedidoFiltroStatus = signal<StatusPedido>('criado');
 
-  private readonly _pedidos = toSignal(
-    combineLatest([
-      this.refreshPedidosTrigger,
-      toObservable(this.pedidoFiltroStatus),
-    ]).pipe(
-      switchMap(([, status]) => {
-        const loja = this.lojaSelecionada();
-        if (!loja) return of([] as Pedido[]);
-        return this.pedidoService.listarPorLoja(loja.uuid, status).pipe(
-          catchError(() => of([] as Pedido[])),
-        );
-      }),
-    ),
-    { initialValue: [] as Pedido[] },
-  );
-  readonly pedidosLoading = computed(() => this._pedidos() === undefined);
-  readonly pedidos = computed(() => this._pedidos() ?? []);
+  private wsSubscription: Subscription | null = null;
+  private readonly _pedidosLive = signal<Pedido[]>([]);
+  readonly pedidosLoading = signal(false);
+  readonly pedidos = computed(() => this._pedidosLive());
+
+  private conectarWsPedidos(): void {
+    this.wsSubscription?.unsubscribe();
+    this.wsSubscription = null;
+
+    const loja = this.lojaSelecionada();
+    const token = this.authService.token();
+    if (!loja || !token) return;
+
+    this.pedidosLoading.set(true);
+    this.wsSubscription = this.pedidosLiveService
+      .conectar(loja.uuid, this.pedidoFiltroStatus(), token)
+      .subscribe({
+        next: (lista) => {
+          this.pedidosLoading.set(false);
+          this._pedidosLive.set(lista);
+        },
+        error: () => this.pedidosLoading.set(false),
+      });
+  }
+
+  private desconectarWsPedidos(): void {
+    this.wsSubscription?.unsubscribe();
+    this.wsSubscription = null;
+    this._pedidosLive.set([]);
+  }
 
   readonly statusEntries = (Object.entries(STATUS_CFG) as [StatusPedido, typeof STATUS_CFG[StatusPedido]][])
     .map(([key, cfg]) => ({ key, cfg }));
@@ -134,7 +148,8 @@ export class AdminComponent {
   }
 
   refreshPedidos() {
-    this.refreshPedidosTrigger.next();
+    // WS atualiza automaticamente; reconecta para forçar refresh imediato
+    this.conectarWsPedidos();
   }
 
   readonly statusTerminal: StatusPedido[] = ['entregue', 'cancelado'];
@@ -515,20 +530,29 @@ export class AdminComponent {
       }
     });
 
-    // Auto-load pedidos when tab changes to 'pedidos'
+    // Gerencia WS de pedidos: conecta ao entrar na aba, desconecta ao sair
     effect(() => {
       const aba = this.aba();
       const loja = this.lojaSelecionada();
       if (aba === 'pedidos' && loja) {
-        this.refreshPedidos();
+        this.conectarWsPedidos();
+      } else {
+        this.desconectarWsPedidos();
       }
     });
 
-    // Clear accordion state when filter changes
+    // Reconecta WS e limpa accordion quando o filtro de status muda
     effect(() => {
-      this.pedidoFiltroStatus();
+      const status = this.pedidoFiltroStatus();
       this.expandedPedidos.set(new Set());
+      const aba = this.aba();
+      const loja = this.lojaSelecionada();
+      if (aba === 'pedidos' && loja) {
+        this.conectarWsPedidos();
+      }
     });
+
+    this.destroyRef.onDestroy(() => this.desconectarWsPedidos());
 
     // Auto-load avaliacoes when tab changes to 'avaliacoes'
     effect(() => {
