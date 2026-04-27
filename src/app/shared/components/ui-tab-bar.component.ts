@@ -9,7 +9,7 @@ export interface UiTab {
   selector: 'ui-tab-bar',
   standalone: true,
   template: `
-    <div class="flex overflow-x-auto scrollbar-hide border-b-2 border-gray-100">
+    <div class="tab-scroll flex overflow-x-auto border-b-2 border-gray-100">
       @for (tab of tabs(); track tab.id) {
         <button
           type="button"
@@ -25,6 +25,12 @@ export interface UiTab {
       }
     </div>
   `,
+  styles: [`
+    .tab-scroll::-webkit-scrollbar { height: 3px; }
+    .tab-scroll::-webkit-scrollbar-track { background: transparent; }
+    .tab-scroll::-webkit-scrollbar-thumb { background: var(--color-brand); border-radius: 9999px; opacity: 0.6; }
+    .tab-scroll { scrollbar-width: thin; scrollbar-color: var(--color-brand) transparent; }
+  `],
 })
 export class UiTabBarComponent {
   tabs   = input.required<UiTab[]>();
