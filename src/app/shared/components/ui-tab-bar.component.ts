@@ -26,10 +26,10 @@ export interface UiTab {
     </div>
   `,
   styles: [`
+    .tab-scroll { overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--color-brand) transparent; }
     .tab-scroll::-webkit-scrollbar { height: 3px; }
     .tab-scroll::-webkit-scrollbar-track { background: transparent; }
-    .tab-scroll::-webkit-scrollbar-thumb { background: var(--color-brand); border-radius: 9999px; opacity: 0.6; }
-    .tab-scroll { scrollbar-width: thin; scrollbar-color: var(--color-brand) transparent; }
+    .tab-scroll::-webkit-scrollbar-thumb { background: var(--color-brand); border-radius: 9999px; }
   `],
 })
 export class UiTabBarComponent {
