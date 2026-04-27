@@ -4,7 +4,7 @@ import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { BehaviorSubject, catchError, of, switchMap, debounceTime, distinctUntilChanged, filter, tap, map, Observable } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, of, switchMap, debounceTime, distinctUntilChanged, filter, tap, map, Observable } from 'rxjs';
 import { NgxSonnerToaster, toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -87,12 +87,17 @@ export class AdminComponent {
 
   private readonly refreshPedidosTrigger = new BehaviorSubject<void>(undefined);
 
+  readonly pedidoFiltroStatus = signal<StatusPedido>('criado');
+
   private readonly _pedidos = toSignal(
-    this.refreshPedidosTrigger.pipe(
-      switchMap(() => {
+    combineLatest([
+      this.refreshPedidosTrigger,
+      toObservable(this.pedidoFiltroStatus),
+    ]).pipe(
+      switchMap(([, status]) => {
         const loja = this.lojaSelecionada();
         if (!loja) return of([] as Pedido[]);
-        return this.pedidoService.listarPorLoja(loja.uuid).pipe(
+        return this.pedidoService.listarPorLoja(loja.uuid, status).pipe(
           catchError(() => of([] as Pedido[])),
         );
       }),
@@ -101,14 +106,6 @@ export class AdminComponent {
   );
   readonly pedidosLoading = computed(() => this._pedidos() === undefined);
   readonly pedidos = computed(() => this._pedidos() ?? []);
-
-  readonly pedidoFiltroStatus = signal<StatusPedido | 'todos'>('todos');
-
-  readonly pedidosFiltrados = computed(() => {
-    const all = this.pedidos();
-    const filtro = this.pedidoFiltroStatus();
-    return filtro === 'todos' ? all : all.filter(p => p.status === filtro);
-  });
 
   readonly statusEntries = (Object.entries(STATUS_CFG) as [StatusPedido, typeof STATUS_CFG[StatusPedido]][])
     .map(([key, cfg]) => ({ key, cfg }));

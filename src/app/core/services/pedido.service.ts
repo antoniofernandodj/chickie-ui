@@ -73,8 +73,8 @@ export class PedidoService {
     );
   }
 
-  listarPorLoja(lojaUuid: string): Observable<Pedido[]> {
-    return this.http.get<any[]>(`${this.base}/por-loja/${lojaUuid}`).pipe(
+  listarPorLoja(lojaUuid: string, status: StatusPedido = 'criado'): Observable<Pedido[]> {
+    return this.http.get<any[]>(`${this.base}/por-loja/${lojaUuid}`, { params: { status } }).pipe(
       map((lista) => lista.map((p) => this.normalizar(p))),
     );
   }

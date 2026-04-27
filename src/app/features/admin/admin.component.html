@@ -65,14 +65,6 @@
 
       <!-- Filtros de status -->
       <div class="flex flex-wrap gap-2">
-        <button
-          (click)="pedidoFiltroStatus.set('todos')"
-          class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-          [class.bg-gray-800]="pedidoFiltroStatus() === 'todos'"
-          [class.text-white]="pedidoFiltroStatus() === 'todos'"
-          [class.bg-gray-100]="pedidoFiltroStatus() !== 'todos'"
-          [class.text-gray-600]="pedidoFiltroStatus() !== 'todos'"
-        >Todos ({{ pedidos().length }})</button>
         @for (entry of statusEntries; track entry.key) {
           <button
             (click)="pedidoFiltroStatus.set(entry.key)"
@@ -92,14 +84,14 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
           </svg>
         </div>
-      } @else if (pedidosFiltrados().length === 0) {
+      } @else if (pedidos().length === 0) {
         <div class="text-center py-12 bg-white rounded-2xl border border-gray-100">
           <p class="text-4xl mb-3">📋</p>
           <p class="text-gray-500 text-sm">Nenhum pedido encontrado.</p>
         </div>
       } @else {
         <div class="space-y-3">
-          @for (pedido of pedidosFiltrados(); track pedido.uuid) {
+          @for (pedido of pedidos(); track pedido.uuid) {
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <!-- Cabeçalho -->
               <div class="flex items-center justify-between px-5 py-3 border-b border-gray-50">
