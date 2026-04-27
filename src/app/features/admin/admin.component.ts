@@ -114,6 +114,25 @@ export class AdminComponent {
     return STATUS_CFG[s];
   }
 
+  readonly expandedPedidos = signal<Set<string>>(new Set());
+
+  isPedidoExpanded(uuid: string): boolean { return this.expandedPedidos().has(uuid); }
+
+  toggleExpandPedido(uuid: string): void {
+    const s = new Set(this.expandedPedidos());
+    s.has(uuid) ? s.delete(uuid) : s.add(uuid);
+    this.expandedPedidos.set(s);
+  }
+
+  pedidoResumoItens(pedido: Pedido): string {
+    if (!pedido.itens?.length) return 'Sem itens';
+    const p0 = pedido.itens[0];
+    const nome = p0.partes.length === 1
+      ? `${p0.quantidade}× ${p0.partes[0].produto_nome}`
+      : `${p0.quantidade}× Pizza (${p0.partes.length} sabores)`;
+    return pedido.itens.length > 1 ? `${nome} +${pedido.itens.length - 1}` : nome;
+  }
+
   refreshPedidos() {
     this.refreshPedidosTrigger.next();
   }
@@ -503,6 +522,12 @@ export class AdminComponent {
       if (aba === 'pedidos' && loja) {
         this.refreshPedidos();
       }
+    });
+
+    // Clear accordion state when filter changes
+    effect(() => {
+      this.pedidoFiltroStatus();
+      this.expandedPedidos.set(new Set());
     });
 
     // Auto-load avaliacoes when tab changes to 'avaliacoes'
