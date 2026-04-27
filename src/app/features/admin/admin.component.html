@@ -213,7 +213,7 @@
               <!-- Avançar pedido -->
               @if (!isPedidoTerminal(pedido.status)) {
                 <div class="px-5 py-3 border-t border-gray-100 space-y-2">
-                  @if (pedido.status === 'pronto_para_retirada') {
+                  @if (pedido.status === 'pronto') {
                     <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
                       <input type="checkbox"
                              [checked]="getIsRetirada(pedido.uuid)"
@@ -397,7 +397,7 @@
           <div class="px-5 py-4 border-t border-gray-100 shrink-0 space-y-2">
             <!-- Avançar -->
             <div class="space-y-2">
-              @if (p.status === 'pronto_para_retirada') {
+              @if (p.status === 'pronto') {
                 <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
                   <input type="checkbox"
                          [checked]="getIsRetirada(p.uuid)"

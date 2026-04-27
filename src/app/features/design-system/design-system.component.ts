@@ -48,7 +48,7 @@ export class DesignSystemComponent {
     'aguardando_confirmacao_de_loja',
     'confirmado_pela_loja',
     'em_preparo',
-    'pronto_para_retirada',
+    'pronto',
     'saiu_para_entrega',
     'entregue',
   ] as const;

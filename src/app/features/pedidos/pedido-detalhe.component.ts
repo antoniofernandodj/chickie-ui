@@ -18,7 +18,7 @@ const STEPS: Steps[] = [
   { status: 'aguardando_confirmacao_de_loja', label: 'Aguardando loja', icon: '⏳' },
   { status: 'confirmado_pela_loja', label: 'Confirmado', icon: '✅' },
   { status: 'em_preparo', label: 'Em preparo', icon: '👨‍🍳' },
-  { status: 'pronto_para_retirada', label: 'Pronto', icon: '📦' },
+  { status: 'pronto', label: 'Pronto', icon: '📦' },
   { status: 'saiu_para_entrega', label: 'Saiu p/ entrega', icon: '🛵' },
   { status: 'entregue', label: 'Entregue', icon: '🎉' },
 ];
