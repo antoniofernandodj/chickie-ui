@@ -9,6 +9,8 @@ import {
   LoginRequest,
   LoginResponse,
   SignupRequest,
+  SignupResponse,
+  ConfirmarEmailResponse,
   Usuario,
   ClasseUsuario,
 } from '../models';
@@ -83,11 +85,23 @@ export class AuthService {
     }
   }
 
-  signup(body: SignupRequest): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.base}/signup`, body).pipe(
-      tap((user) => {
-        this.saveItem('chickie_classe', user.classe);
-        this._userClassTrigger.set(new Date()); // Força atualização reativa
+  signup(body: SignupRequest): Observable<SignupResponse> {
+    return this.http.post<SignupResponse>(`${this.base}/signup`, body);
+  }
+
+  confirmarEmail(token: string): Observable<ConfirmarEmailResponse> {
+    return this.http.get<ConfirmarEmailResponse>(`${this.base}/confirmar-email`, { params: { token } }).pipe(
+      tap((res) => {
+        this.saveItem('chickie_token', res.token);
+        this._token.set(res.token);
+        this._tokenStatus.set('valid');
+        if (res.usuario.classe) {
+          this.saveItem('chickie_classe', res.usuario.classe);
+          this._userClassTrigger.set(new Date());
+        }
+        if (res.usuario.nome) {
+          this.saveItem('chickie_nome', res.usuario.nome);
+        }
       }),
     );
   }

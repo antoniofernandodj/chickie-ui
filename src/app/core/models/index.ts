@@ -49,6 +49,15 @@ export interface SignupRequest {
   classe?:     ClasseUsuario;
 }
 
+export interface SignupResponse {
+  message: string;
+}
+
+export interface ConfirmarEmailResponse {
+  token:   string;
+  usuario: Usuario;
+}
+
 export interface LoginRequest {
   identifier: string;
   senha: string;

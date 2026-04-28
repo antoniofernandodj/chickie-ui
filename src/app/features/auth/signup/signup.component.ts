@@ -172,15 +172,9 @@ export class SignupComponent {
     const v = this.form.value;
     this.auth.signup({ nome: v.nome!, username: v.username!, email: v.email!, senha: v.senha!, celular: v.celular!, cpf: v.cpf!, auth_method: v.auth_method!, classe: v.classe! })
       .subscribe({
-        next: (user) => {
-          this.auth.saveUserMeta(user.nome);
-          this.auth.login({ identifier: v.email!, senha: v.senha! }).subscribe({
-            next: () => this.auth.fetchAndSaveUserProfile().subscribe({
-              next: () => this.router.navigate(['/']),
-              error: () => this.router.navigate(['/auth/login']),
-            }),
-            error: () => this.router.navigate(['/auth/login']),
-          });
+        next: () => {
+          sessionStorage.setItem('chickie_signup_pending', JSON.stringify({ email: v.email!, nome: v.nome!, payload: { nome: v.nome!, username: v.username!, email: v.email!, senha: v.senha!, celular: v.celular!, cpf: v.cpf!, auth_method: v.auth_method!, classe: v.classe! } }));
+          this.router.navigate(['/auth/verificar-email']);
         },
         error: (err) => { this.loading.set(false); this.error.set(err?.error?.error ?? 'Erro ao criar conta. Tente novamente.'); },
       });

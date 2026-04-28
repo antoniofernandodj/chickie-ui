@@ -26,6 +26,22 @@ export const routes: Routes = [
     title: 'Criar conta — Chiquitos',
   },
   {
+    path: 'auth/verificar-email',
+    loadComponent: () =>
+      import('./features/auth/verificar-email/verificar-email.component').then(
+        (m) => m.VerificarEmailComponent,
+      ),
+    title: 'Verifique seu email — Chiquitos',
+  },
+  {
+    path: 'auth/confirmar-email',
+    loadComponent: () =>
+      import('./features/auth/confirmar-email/confirmar-email.component').then(
+        (m) => m.ConfirmarEmailComponent,
+      ),
+    title: 'Confirmar email — Chiquitos',
+  },
+  {
     path: 'loja/:slug',
     loadComponent: () =>
       import('./features/loja/loja-detalhe.component').then(
