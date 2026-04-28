@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { BehaviorSubject, catchError, of, switchMap, debounceTime, distinctUntilChanged, filter } from 'rxjs';
-import { NgxSonnerToaster, toast } from 'ngx-sonner';
+import { toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { LojaService } from '../../core/services/loja.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -14,7 +14,7 @@ import { SlugMaskDirective } from '../../shared/directives/slug-mask.directive';
 
 @Component({
   selector: 'app-admin-lojas-list',
-  imports: [ReactiveFormsModule, DecimalPipe, NgxSonnerToaster, PhoneMaskDirective, SlugMaskDirective],
+  imports: [ReactiveFormsModule, DecimalPipe, PhoneMaskDirective, SlugMaskDirective],
   templateUrl: './admin-lojas-list.component.html',
 })
 export class AdminLojasListComponent {

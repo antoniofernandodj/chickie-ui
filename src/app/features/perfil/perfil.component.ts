@@ -2,7 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl } from '@angular/forms';
 import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
-import { NgxSonnerToaster, toast } from 'ngx-sonner';
+import { toast } from 'ngx-sonner';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { AuthService } from '../../core/services/auth.service';
 import { EnderecoUsuario, EnderecoUsuarioRequest } from '../../core/models';
@@ -13,7 +13,7 @@ import {
 
 @Component({
   selector: 'app-perfil',
-  imports: [ReactiveFormsModule, NgxSonnerToaster,
+  imports: [ReactiveFormsModule,
     UiTabBarComponent, UiCardComponent, UiInputComponent, UiButtonComponent, UiAvatarComponent],
   templateUrl: './perfil.component.html',
 })

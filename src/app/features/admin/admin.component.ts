@@ -5,7 +5,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DecimalPipe, DatePipe } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { BehaviorSubject, Subscription, catchError, combineLatest, of, switchMap, debounceTime, distinctUntilChanged, filter, tap, map, Observable } from 'rxjs';
-import { NgxSonnerToaster, toast } from 'ngx-sonner';
+import { toast } from 'ngx-sonner';
 import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { LojaService } from '../../core/services/loja.service';
@@ -23,7 +23,7 @@ const STATUS_CFG = STATUS_PEDIDO_CFG;
 
 @Component({
   selector: 'app-admin',
-  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, NgxSonnerToaster, PhoneMaskDirective, PhonePipe, DragDropModule,
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, PhoneMaskDirective, PhonePipe, DragDropModule,
     UiTabBarComponent, UiSpinnerComponent],
   templateUrl: './admin.component.html',
 })

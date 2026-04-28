@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { NgxSonnerToaster, toast } from 'ngx-sonner';
+import { toast } from 'ngx-sonner';
 import { UsuarioService } from '../../core/services/usuario.service';
 import { AdminService } from '../../core/services/admin.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -11,7 +11,7 @@ import { Usuario, ClasseUsuario, CategoriaProdutos } from '../../core/models';
 
 @Component({
   selector: 'app-owner-panel',
-  imports: [CommonModule, ReactiveFormsModule, NgxSonnerToaster],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './owner-panel.component.html',
 })
 export class OwnerPanelComponent {
