@@ -7,11 +7,13 @@ import {
   Output,
   EventEmitter,
   OnInit,
+  OnDestroy,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { formatPhone } from '../../core/utils/phone-utils';
+import { formatCpf, validarCpf } from '../../core/utils/cpf-utils';
 import { catchError, of } from 'rxjs';
 import { toast } from 'ngx-sonner';
 import {
@@ -23,10 +25,12 @@ import {
   Cupom,
   Pedido,
   CreatePedidoRequest,
+  CreatePagamentoResponse,
 } from '../../core/models';
 import { AuthService } from '../../core/services/auth.service';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
+import { PagamentoService } from '../../core/services/pagamento.service';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { MarketingService } from '../../core/services/marketing.service';
@@ -76,16 +80,16 @@ type Step = CategoriaStep | FixedStep;
   imports: [FormsModule, DecimalPipe],
   templateUrl: './criar-pedido-modal.component.html',
 })
-export class CriarPedidoModalComponent implements OnInit {
+export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   @Input({ required: true }) loja!: Loja;
   @Input({ required: true }) produtos!: Produto[];
   @Input({ required: true }) categorias!: CategoriaProdutos[];
   @Output() fechar = new EventEmitter<void>();
-  @Output() pedidoCriado = new EventEmitter<string>();
 
   private auth = inject(AuthService);
   private pedidoService = inject(PedidoService);
   private pedidoLocalStorage = inject(PedidoLocalStorageService);
+  private pagamentoService = inject(PagamentoService);
   private enderecoService = inject(EnderecoUsuarioService);
   private configService = inject(ConfigPedidoService);
   private marketingService = inject(MarketingService);
@@ -211,9 +215,20 @@ export class CriarPedidoModalComponent implements OnInit {
   readonly validandoCupom = signal(false);
   readonly cupomErro = signal<string | null>(null);
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
-  readonly submitting = signal(false);
-  readonly codigoCriado = signal<string | null>(null);
+  // ── Submit / PIX ────────────────────────────────────────────────────────────
+  readonly submitting    = signal(false);
+  readonly codigoCriado  = signal<string | null>(null);
+  readonly pagamentoPix  = signal<CreatePagamentoResponse | null>(null);
+
+  // Dados do pagador para usuários anônimos que escolhem PIX
+  readonly pagadorNome         = signal('');
+  readonly pagadorCpf          = signal('');         // apenas dígitos
+  readonly pagadorCpfFormatted = signal('');         // exibição mascarada
+  readonly pagadorErro         = signal('');
+  readonly copiado             = signal(false);
+  private copiadoTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly isAuthenticated = this.auth.isAuthenticated;
 
   // ── Computed totals ─────────────────────────────────────────────────────────
   get subtotal(): number {
@@ -246,7 +261,15 @@ export class CriarPedidoModalComponent implements OnInit {
     if (!s) return false;
     if (s.tipo === 'categoria') return true;
     if (s.tipo === 'endereco') return this.enderecoValido;
-    if (s.tipo === 'pagamento') return this.formaPagamento !== '' && this.contato.length === 11;
+    if (s.tipo === 'pagamento') {
+      const base = this.formaPagamento !== '' && this.contato.length === 11;
+      if (this.formaPagamento === 'PIX' && !this.auth.isAuthenticated()) {
+        return base
+          && this.pagadorNome().trim().length > 0
+          && validarCpf(this.pagadorCpf());
+      }
+      return base;
+    }
     return this.cart().length > 0;
   }
 
@@ -570,6 +593,28 @@ export class CriarPedidoModalComponent implements OnInit {
     this.cupomErro.set(null);
   }
 
+  ngOnDestroy(): void {
+    if (this.copiadoTimer) clearTimeout(this.copiadoTimer);
+  }
+
+  onPagadorCpfInput(event: Event): void {
+    const digits = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 11);
+    this.pagadorCpf.set(digits);
+    const formatted = formatCpf(digits);
+    this.pagadorCpfFormatted.set(formatted);
+    (event.target as HTMLInputElement).value = formatted;
+  }
+
+  copiarPix(): void {
+    const pix = this.pagamentoPix()?.pix_copia_cola;
+    if (!pix) return;
+    navigator.clipboard.writeText(pix).then(() => {
+      this.copiado.set(true);
+      if (this.copiadoTimer) clearTimeout(this.copiadoTimer);
+      this.copiadoTimer = setTimeout(() => this.copiado.set(false), 2000);
+    });
+  }
+
   // ── Submit ──────────────────────────────────────────────────────────────────
   confirmarPedido(): void {
     if (this.cart().length === 0) {
@@ -615,38 +660,54 @@ export class CriarPedidoModalComponent implements OnInit {
     };
 
     const isAuth = this.auth.isAuthenticated();
+    const isPix  = this.formaPagamento === 'PIX';
+    const pagador = isPix && !isAuth
+      ? { nome: this.pagadorNome().trim(), cpf: this.pagadorCpf() }
+      : undefined;
+
     this.submitting.set(true);
     this.pedidoService.criar(body).subscribe({
       next: (res) => {
-        this.pedidoService.buscarPorCodigo(res.codigo).subscribe({
-          next: (pedido: Pedido) => {
-            this.pedidoLocalStorage.salvar(pedido);
-            this.submitting.set(false);
-            this.pedidoCriado.emit(res.uuid);
-            if (isAuth) {
-              toast.success(`Pedido criado! Código: ${res.codigo}`);
-              this.router.navigate(['/pedidos', res.codigo]);
+        // Tenta buscar pedido completo para salvar em localStorage; ignora erro
+        this.pedidoService.buscarPorCodigo(res.codigo).pipe(catchError(() => of(null)))
+          .subscribe((pedido) => {
+            if (pedido) this.pedidoLocalStorage.salvar(pedido);
+
+            if (isPix) {
+              // Cria cobrança PIX antes de navegar
+              this.pagamentoService.criar(res.uuid, pagador).subscribe({
+                next: (pix) => {
+                  this.submitting.set(false);
+                  this.codigoCriado.set(res.codigo);
+                  this.pagamentoPix.set(pix);
+                },
+                error: () => {
+                  // PIX falhou: navega normalmente, usuário pode pagar depois
+                  toast.error('Pedido criado, mas falha ao gerar PIX. Pague na tela do pedido.');
+                  this.submitting.set(false);
+                  this._navegarAposCriar(isAuth, res.codigo);
+                },
+              });
             } else {
-              this.codigoCriado.set(res.codigo);
+              this.submitting.set(false);
+              this._navegarAposCriar(isAuth, res.codigo);
             }
-          },
-          error: () => {
-            this.submitting.set(false);
-            this.pedidoCriado.emit(res.uuid);
-            if (isAuth) {
-              toast.success(`Pedido criado! Código: ${res.codigo}`);
-              this.router.navigate(['/pedidos', res.codigo]);
-            } else {
-              this.codigoCriado.set(res.codigo);
-            }
-          },
-        });
+          });
       },
       error: () => {
         toast.error('Erro ao criar pedido. Tente novamente.');
         this.submitting.set(false);
       },
     });
+  }
+
+  private _navegarAposCriar(isAuth: boolean, codigo: string): void {
+    if (isAuth) {
+      toast.success(`Pedido criado! Código: ${codigo}`);
+      this.router.navigate(['/pedidos', codigo]);
+    } else {
+      this.codigoCriado.set(codigo);
+    }
   }
 
   irParaDetalhe(): void {
