@@ -58,6 +58,9 @@
           }
         </ui-input>
 
+        <ui-input formControlName="cpf" label="CPF" placeholder="000.000.000-00"
+                  mask="cpf" [error]="cpfError()"/>
+
         <ui-password-input formControlName="senha" label="Senha" placeholder="Mínimo 6 caracteres"
                            [error]="senhaError()"/>
 

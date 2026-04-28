@@ -44,6 +44,7 @@ export interface SignupRequest {
   senha:       string;
   email:       string;
   celular:     string;
+  cpf:         string;
   auth_method: string;
   classe?:     ClasseUsuario;
 }
@@ -66,6 +67,8 @@ export interface Usuario {
   username:                   string;
   email:                      string;
   celular:                    string;
+  cpf:                        string;
+  asaas_customer_id:          string | null;
   classe:                     ClasseUsuario;
   ativo:                      boolean;
   passou_pelo_primeiro_acesso:boolean;
@@ -318,6 +321,7 @@ export interface Pedido {
   usuario_uuid:      string;
   loja_uuid:         string;
   status:            StatusPedido;
+  pago:              boolean;
   total:             number;
   subtotal:          number;
   taxa_entrega:      number;
@@ -617,6 +621,24 @@ export interface LojaFavorita {
   usuario_uuid: string;
   loja_uuid:    string;
   criado_em:    string;
+}
+
+// ─── Pagamentos ──────────────────────────────────────────────────────────────
+
+export interface PagamentoPagador {
+  nome: string;
+  cpf:  string;
+}
+
+export interface CreatePagamentoRequest {
+  pagador?: PagamentoPagador;
+}
+
+export interface CreatePagamentoResponse {
+  payment_id:    string;
+  qr_code_image: string;
+  pix_copia_cola:string;
+  vencimento:    string;
 }
 
 // ─── Genéricos ───────────────────────────────────────────────────────────────

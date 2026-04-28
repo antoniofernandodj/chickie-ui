@@ -207,6 +207,9 @@
                     <span class="font-black text-gray-900">R$ {{ pedido.total | number:'1.2-2' }}</span>
                     <span class="text-gray-300 text-xs">·</span>
                     <span class="text-xs font-semibold text-gray-500">{{ pedido.forma_pagamento }}</span>
+                    @if (pedido.pago) {
+                      <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Pago</span>
+                    }
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
                     @if (!isPedidoTerminal(pedido.status)) {

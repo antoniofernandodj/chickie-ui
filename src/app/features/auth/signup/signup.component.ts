@@ -1,9 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { ClasseUsuario } from '../../../core/models';
+import { validarCpf } from '../../../core/utils/cpf-utils';
 import { debounceTime, distinctUntilChanged, filter, switchMap, catchError, of } from 'rxjs';
+
+function cpfValidator(control: AbstractControl): ValidationErrors | null {
+  const digits = (control.value ?? '').replace(/\D/g, '');
+  if (!digits) return null;
+  return validarCpf(digits) ? null : { cpf: true };
+}
 import {
   UiInputComponent,
   UiPasswordInputComponent,
@@ -38,6 +45,7 @@ export class SignupComponent {
     email:       ['', [Validators.required, Validators.email]],
     senha:       ['', [Validators.required, Validators.minLength(6)]],
     celular:     ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
+    cpf:         ['', [Validators.required, Validators.pattern(/^\d{11}$/), cpfValidator]],
     auth_method: ['email'],
     classe:      ['cliente' as ClasseUsuario],
   });
@@ -82,6 +90,14 @@ export class SignupComponent {
     return this.emailAvailable() === true && this.usernameAvailable() === true
         && this.celularAvailable() === true && this.form.valid;
   }
+
+  cpfError = computed(() => {
+    const c = this.f.cpf;
+    if (!c.invalid || !c.touched) return null;
+    if (c.errors?.['required']) return 'CPF é obrigatório.';
+    if (c.errors?.['pattern'] || c.errors?.['cpf']) return 'CPF inválido.';
+    return null;
+  });
 
   nomeError = computed(() => {
     const c = this.f.nome;
@@ -154,7 +170,7 @@ export class SignupComponent {
     this.loading.set(true);
     this.error.set('');
     const v = this.form.value;
-    this.auth.signup({ nome: v.nome!, username: v.username!, email: v.email!, senha: v.senha!, celular: v.celular!, auth_method: v.auth_method!, classe: v.classe! })
+    this.auth.signup({ nome: v.nome!, username: v.username!, email: v.email!, senha: v.senha!, celular: v.celular!, cpf: v.cpf!, auth_method: v.auth_method!, classe: v.classe! })
       .subscribe({
         next: (user) => {
           this.auth.saveUserMeta(user.nome);

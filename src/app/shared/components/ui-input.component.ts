@@ -1,6 +1,7 @@
 import { Component, computed, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { formatPhone } from '../../core/utils/phone-utils';
+import { formatCpf } from '../../core/utils/cpf-utils';
 
 @Component({
   selector: 'ui-input',
@@ -39,7 +40,7 @@ export class UiInputComponent implements ControlValueAccessor {
   state       = input<'default' | 'error' | 'success' | 'warning'>('default');
   error       = input<string | null | undefined>(null);
   hint        = input<string | null | undefined>(null);
-  mask        = input<'phone' | null>(null);
+  mask        = input<'phone' | 'cpf' | null>(null);
 
   innerValue = signal('');
   isDisabled = signal(false);
@@ -64,6 +65,8 @@ export class UiInputComponent implements ControlValueAccessor {
   writeValue(v: string) {
     if (this.mask() === 'phone' && v) {
       this.innerValue.set(formatPhone(v.replace(/\D/g, '').slice(0, 11)));
+    } else if (this.mask() === 'cpf' && v) {
+      this.innerValue.set(formatCpf(v));
     } else {
       this.innerValue.set(v ?? '');
     }
@@ -77,6 +80,12 @@ export class UiInputComponent implements ControlValueAccessor {
     if (this.mask() === 'phone') {
       const digits = input.value.replace(/\D/g, '').slice(0, 11);
       const formatted = formatPhone(digits);
+      input.value = formatted;
+      this.innerValue.set(formatted);
+      this.onChange(digits);
+    } else if (this.mask() === 'cpf') {
+      const digits = input.value.replace(/\D/g, '').slice(0, 11);
+      const formatted = formatCpf(digits);
       input.value = formatted;
       this.innerValue.set(formatted);
       this.onChange(digits);
