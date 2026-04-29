@@ -1,11 +1,11 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { forkJoin, catchError, of } from 'rxjs';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Pedido, StatusPedido } from '../../core/models';
-import { catchError, of } from 'rxjs';
 import { STATUS_PEDIDO_CFG, UiModalComponent, UiEmptyStateComponent, UiStatusBadgeComponent } from '../../shared/components';
 
 @Component({
@@ -13,33 +13,56 @@ import { STATUS_PEDIDO_CFG, UiModalComponent, UiEmptyStateComponent, UiStatusBad
   imports: [RouterLink, DecimalPipe, UiModalComponent, UiEmptyStateComponent, UiStatusBadgeComponent],
   templateUrl: './pedidos.component.html',
 })
-export class PedidosComponent {
-  private pedidoService     = inject(PedidoService);
+export class PedidosComponent implements OnInit {
+  private pedidoService      = inject(PedidoService);
   private pedidoLocalStorage = inject(PedidoLocalStorageService);
+  private auth               = inject(AuthService);
 
-  readonly filtro           = signal<StatusPedido | 'todos'>('todos');
+  readonly filtro            = signal<StatusPedido | 'todos'>('todos');
   readonly pedidoSelecionado = signal<Pedido | null>(null);
+  readonly loading           = signal(true);
+
+  private readonly _apiPedidos = signal<Pedido[]>([]);
 
   readonly statusEntries = (Object.entries(STATUS_PEDIDO_CFG) as [StatusPedido, typeof STATUS_PEDIDO_CFG[StatusPedido]][])
     .map(([key, cfg]) => ({ key, cfg }));
 
-  readonly _pedidos = toSignal(this.pedidoService.listar().pipe(catchError(() => of([]))));
-
   readonly pedidos = computed(() => {
-    const api   = this._pedidos() ?? [];
-    const local = this.pedidoLocalStorage.pedidos();
-    const map   = new Map<string, Pedido>();
-    [...local, ...api].forEach(p => map.set(p.uuid, p));
-    return [...map.values()].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
+    if (this.auth.isAuthenticated()) {
+      const map = new Map<string, Pedido>();
+      [...this.pedidoLocalStorage.pedidos(), ...this._apiPedidos()].forEach(p => map.set(p.uuid, p));
+      return [...map.values()].sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime());
+    }
+    return this.pedidoLocalStorage.pedidos();
   });
 
-  readonly loading  = computed(() => this._pedidos() === undefined && this.pedidoLocalStorage.pedidos().length === 0);
   readonly filtered = computed(() => {
     const s = this.filtro();
     return s === 'todos' ? this.pedidos() : this.pedidos().filter(p => p.status === s);
   });
 
   readonly pedidosLocaisSet = computed(() => new Set(this.pedidoLocalStorage.pedidos().map(p => p.uuid)));
+
+  ngOnInit(): void {
+    if (this.auth.isAuthenticated()) {
+      this.pedidoService.listar().pipe(catchError(() => of([]))).subscribe((pedidos) => {
+        this._apiPedidos.set(pedidos);
+        this.loading.set(false);
+      });
+    } else {
+      const locais = this.pedidoLocalStorage.pedidos();
+      if (locais.length === 0) {
+        this.loading.set(false);
+        return;
+      }
+      forkJoin(
+        locais.map(p => this.pedidoService.buscarPorCodigo(p.codigo).pipe(catchError(() => of(p))))
+      ).subscribe((frescos) => {
+        frescos.forEach(p => this.pedidoLocalStorage.salvar(p));
+        this.loading.set(false);
+      });
+    }
+  }
 
   eLocal(uuid: string): boolean { return this.pedidosLocaisSet().has(uuid); }
 
