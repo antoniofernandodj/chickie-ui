@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { formatPhone } from '../../core/utils/phone-utils';
 import { formatCpf, validarCpf } from '../../core/utils/cpf-utils';
-import { catchError, of } from 'rxjs';
+import { catchError, of, Subscription } from 'rxjs';
 import { toast } from 'ngx-sonner';
 import {
   Loja,
@@ -31,6 +31,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { PagamentoService } from '../../core/services/pagamento.service';
+import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { MarketingService } from '../../core/services/marketing.service';
@@ -90,6 +91,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   private pedidoService = inject(PedidoService);
   private pedidoLocalStorage = inject(PedidoLocalStorageService);
   private pagamentoService = inject(PagamentoService);
+  private pedidosLive = inject(PedidosLiveService);
   private enderecoService = inject(EnderecoUsuarioService);
   private configService = inject(ConfigPedidoService);
   private marketingService = inject(MarketingService);
@@ -219,6 +221,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   readonly submitting    = signal(false);
   readonly codigoCriado  = signal<string | null>(null);
   readonly pagamentoPix  = signal<CreatePagamentoResponse | null>(null);
+  readonly pixPago       = signal(false);
 
   // Dados do pagador para usuários anônimos que escolhem PIX
   readonly pagadorNome         = signal('');
@@ -227,6 +230,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   readonly pagadorErro         = signal('');
   readonly copiado             = signal(false);
   private copiadoTimer: ReturnType<typeof setTimeout> | null = null;
+  private pixWsSub: Subscription | null = null;
 
   readonly isAuthenticated = this.auth.isAuthenticated;
 
@@ -595,6 +599,18 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.copiadoTimer) clearTimeout(this.copiadoTimer);
+    this.pixWsSub?.unsubscribe();
+  }
+
+  private _iniciarWatchPix(codigo: string): void {
+    this.pixWsSub?.unsubscribe();
+    this.pixWsSub = this.pedidosLive.acompanharPorCodigo(codigo).subscribe((pedido) => {
+      if (pedido.pago) {
+        this.pixPago.set(true);
+        this.pixWsSub?.unsubscribe();
+        this.pixWsSub = null;
+      }
+    });
   }
 
   onPagadorCpfInput(event: Event): void {
@@ -680,6 +696,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
                   this.submitting.set(false);
                   this.codigoCriado.set(res.codigo);
                   this.pagamentoPix.set(pix);
+                  this._iniciarWatchPix(res.codigo);
                 },
                 error: () => {
                   // PIX falhou: navega normalmente, usuário pode pagar depois
