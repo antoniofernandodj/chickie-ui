@@ -54,14 +54,6 @@ O modelo `Entregador` já existe (`models/index.ts`) e o admin consegue criar/ed
 - **Prioridade**: **Alta** — é UX crítica e a infra (WS + normalizador) já existe.
 - **Dependências**: endpoint `/pedidos/meus/ws` no backend.
 
-### 2.2 Carrinho persistente multi-loja
-- **Por que**: hoje o pedido é montado dentro do `criar-pedido-modal.component.ts` e enviado direto. Não há `CartService`, não há "ver carrinho", não há cross-session. Se o cliente fechar a aba antes de pagar, perde tudo.
-- **O que construir**:
-  - `CartService` em `src/app/core/services/cart.service.ts` com signals `itens`, `lojaAtual`, `subtotal`, persistência em `localStorage` (chave `chickie_cart`).
-  - Componente `CartDrawerComponent` (sheet lateral) ativado por ícone no `HeaderComponent`.
-  - Rota `/checkout` para finalização separada da loja (hoje tudo acontece no modal).
-- **Prioridade**: **Alta** — padrão UX universal de delivery; aumenta drasticamente a conversão.
-- **Dependências**: nenhuma; o backend já aceita `CreatePedidoRequest` independente da fonte.
 
 ### 2.3 Repetir Pedido (Re-order)
 - **Por que**: feature de retenção. Cliente que pediu sushi terça quer pedir de novo na sexta com 1 clique.
@@ -260,12 +252,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Alta** — segurança/UX.
 - **Dependências**: nenhuma.
 
-### 6.2 Interceptor de erros HTTP centralizado
-- **Por que**: hoje cada componente faz `catchError(() => of([]))` ou um toast manual. Erros 401 não disparam logout automático fora do init do `AuthService`.
-- **O que construir**: `error.interceptor.ts` em `src/app/core/interceptors/` que trata: 401 → `auth.logout()` + redirect; 5xx → toast genérico; rate-limit → mensagem específica.
-- **Prioridade**: **Alta**.
-- **Dependências**: nenhuma.
-
 ### 6.3 PWA / Offline-first
 - **Por que**: `ngsw-config.json` está no projeto mas o service worker pode não estar registrado em `app.config.ts`. Deveria cachear catálogo da loja para revisita.
 - **O que construir**: verificar/ativar `provideServiceWorker('ngsw-worker.js')`, estratégia `freshness` para listas, `performance` para imagens.
@@ -328,12 +314,10 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 5. Endereço selecionável no checkout (2.5) + Lookup CEP (5.4)
 6. Recuperação de senha (5.8)
 7. Loja fechada bloqueia pedido (5.9)
-8. Interceptor de erros 401 (6.2)
-9. `adminLojaGuard` (6.1)
+8. `adminLojaGuard` (6.1)
 
 ### Sprint 2 — Alto valor / UX
-1. Carrinho persistente (2.2) + Checkout dedicado
-2. Múltiplas formas de pagamento (2.8)
+1. Múltiplas formas de pagamento (2.8)
 3. Filtros de busca (5.1) + Geolocalização (5.3)
 4. Notificações Push (4.3)
 5. Dashboard admin (4.1)

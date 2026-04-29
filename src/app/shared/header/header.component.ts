@@ -8,6 +8,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { CartService } from '../../core/services/cart.service';
 
 @Component({
   selector: 'app-header',
@@ -17,6 +18,7 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class HeaderComponent {
   readonly auth = inject(AuthService);
+  readonly cart = inject(CartService);
   private  router = inject(Router);
   private  platform = inject(PLATFORM_ID);
 

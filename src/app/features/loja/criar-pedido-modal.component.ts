@@ -8,6 +8,7 @@ import {
   EventEmitter,
   OnInit,
   OnDestroy,
+  effect,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -28,6 +29,7 @@ import {
   CreatePagamentoResponse,
 } from '../../core/models';
 import { AuthService } from '../../core/services/auth.service';
+import { CartService, CartItem, CartParte } from '../../core/services/cart.service';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { PagamentoService } from '../../core/services/pagamento.service';
@@ -38,19 +40,6 @@ import { MarketingService } from '../../core/services/marketing.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 
 // ─── Local types ──────────────────────────────────────────────────────────────
-
-interface CartParte {
-  produto:    Produto;
-  posicao:    number;
-  adicionais: Adicional[];
-}
-
-interface CartItem {
-  id:             number;
-  categoria_uuid: string;
-  partes:         CartParte[];
-  quantidade:     number;
-}
 
 interface EnderecoForm {
   logradouro:   string;
@@ -88,6 +77,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   @Output() fechar = new EventEmitter<void>();
 
   private auth = inject(AuthService);
+  private cartService = inject(CartService);
   private pedidoService = inject(PedidoService);
   private pedidoLocalStorage = inject(PedidoLocalStorageService);
   private pagamentoService = inject(PagamentoService);
@@ -277,8 +267,26 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
     return this.cart().length > 0;
   }
 
+  constructor() {
+    // Sync cart to CartService on every mutation
+    effect(() => {
+      const items = this.cart();
+      if (this.loja) this.cartService.sincronizar(this.loja, items);
+    });
+  }
+
   // ─────────────────────────────────────────────────────────────────────────────
   ngOnInit(): void {
+    // Restore cart from CartService if same loja
+    const savedLoja = this.cartService.lojaAtual();
+    if (savedLoja?.uuid === this.loja.uuid) {
+      const savedItems = this.cartService.itens();
+      if (savedItems.length > 0) {
+        this.cart.set(savedItems);
+        this.nextId = savedItems.reduce((max, i) => Math.max(max, i.id), -1) + 1;
+      }
+    }
+
     this.buildSteps();
 
     this.configService
@@ -696,17 +704,20 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
                   this.submitting.set(false);
                   this.codigoCriado.set(res.codigo);
                   this.pagamentoPix.set(pix);
+                  this.cartService.limpar();
                   this._iniciarWatchPix(res.codigo);
                 },
                 error: () => {
                   // PIX falhou: navega normalmente, usuário pode pagar depois
                   toast.error('Pedido criado, mas falha ao gerar PIX. Pague na tela do pedido.');
                   this.submitting.set(false);
+                  this.cartService.limpar();
                   this._navegarAposCriar(isAuth, res.codigo);
                 },
               });
             } else {
               this.submitting.set(false);
+              this.cartService.limpar();
               this._navegarAposCriar(isAuth, res.codigo);
             }
           });

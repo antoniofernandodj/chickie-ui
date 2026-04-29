@@ -111,6 +111,14 @@ export const routes: Routes = [
     title: 'Painel Admin — Chiquitos',
   },
   {
+    path: 'checkout',
+    loadComponent: () =>
+      import('./features/checkout/checkout.component').then(
+        (m) => m.CheckoutComponent,
+      ),
+    title: 'Checkout — Chiquitos',
+  },
+  {
     path: 'design-system',
     loadComponent: () =>
       import('./features/design-system/design-system.component').then(

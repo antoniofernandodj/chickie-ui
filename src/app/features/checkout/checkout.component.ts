@@ -1,0 +1,383 @@
+import {
+  Component,
+  inject,
+  signal,
+  computed,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { catchError, of, Subscription } from 'rxjs';
+import { toast } from 'ngx-sonner';
+import { formatPhone } from '../../core/utils/phone-utils';
+import { formatCpf, validarCpf } from '../../core/utils/cpf-utils';
+import {
+  EnderecoUsuario,
+  Cupom,
+  CreatePedidoRequest,
+  CreatePagamentoResponse,
+} from '../../core/models';
+import { CartService } from '../../core/services/cart.service';
+import { AuthService } from '../../core/services/auth.service';
+import { PedidoService } from '../../core/services/pedido.service';
+import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
+import { PagamentoService } from '../../core/services/pagamento.service';
+import { PedidosLiveService } from '../../core/services/pedidos-live.service';
+import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
+import { MarketingService } from '../../core/services/marketing.service';
+
+type CheckoutStep = 'endereco' | 'pagamento' | 'resumo';
+
+interface EnderecoForm {
+  logradouro:  string;
+  numero:      string;
+  complemento: string;
+  bairro:      string;
+  cidade:      string;
+  estado:      string;
+  cep:         string;
+}
+
+@Component({
+  selector: 'app-checkout',
+  standalone: true,
+  imports: [FormsModule, DecimalPipe],
+  templateUrl: './checkout.component.html',
+})
+export class CheckoutComponent implements OnInit, OnDestroy {
+  readonly cart            = inject(CartService);
+  private auth             = inject(AuthService);
+  private pedidoService    = inject(PedidoService);
+  private pedidoLocalStorage = inject(PedidoLocalStorageService);
+  private pagamentoService = inject(PagamentoService);
+  private pedidosLive      = inject(PedidosLiveService);
+  private enderecoService  = inject(EnderecoUsuarioService);
+  private marketingService = inject(MarketingService);
+  private router           = inject(Router);
+
+  readonly loja  = computed(() => this.cart.lojaAtual());
+  readonly itens = computed(() => this.cart.itens());
+
+  readonly isAuthenticated = this.auth.isAuthenticated;
+
+  // ── Steps ────────────────────────────────────────────────────────────────────
+  readonly step = signal<CheckoutStep>('endereco');
+
+  readonly stepIndex = computed(() =>
+    ({ endereco: 0, pagamento: 1, resumo: 2 })[this.step()],
+  );
+
+  // ── Endereço ─────────────────────────────────────────────────────────────────
+  readonly enderecosUsuario = signal<EnderecoUsuario[]>([]);
+  enderecoSelecionadoUuid: string | null = null;
+
+  enderecoForm: EnderecoForm = {
+    logradouro:  '',
+    numero:      '',
+    complemento: '',
+    bairro:      '',
+    cidade:      '',
+    estado:      '',
+    cep:         '',
+  };
+
+  get enderecoValido(): boolean {
+    const f = this.enderecoForm;
+    return (
+      f.logradouro.trim() !== '' &&
+      f.numero.trim()     !== '' &&
+      f.bairro.trim()     !== '' &&
+      f.cidade.trim()     !== '' &&
+      f.estado.trim()     !== ''
+    );
+  }
+
+  // ── Pagamento ─────────────────────────────────────────────────────────────────
+  formaPagamento = 'PIX';
+  contato        = '';
+  observacoes    = '';
+  codigoCupom    = '';
+
+  readonly formasPagamento = [
+    { valor: 'PIX',      emoji: '📱' },
+    { valor: 'Cartão',   emoji: '💳' },
+    { valor: 'Dinheiro', emoji: '💵' },
+  ];
+
+  readonly cupomValidado = signal<Cupom | null>(null);
+  readonly validandoCupom = signal(false);
+  readonly cupomErro      = signal<string | null>(null);
+
+  // PIX pagador (usuário não autenticado)
+  readonly pagadorNome         = signal('');
+  readonly pagadorCpf          = signal('');
+  readonly pagadorCpfFormatted = signal('');
+  readonly pagadorErro         = signal('');
+
+  get pagamentoValido(): boolean {
+    const base = this.formaPagamento !== '' && this.contato.length === 11;
+    if (this.formaPagamento === 'PIX' && !this.auth.isAuthenticated()) {
+      return base && this.pagadorNome().trim().length > 0 && validarCpf(this.pagadorCpf());
+    }
+    return base;
+  }
+
+  // ── Totais ────────────────────────────────────────────────────────────────────
+  readonly desconto = computed(() => {
+    const cupom = this.cupomValidado();
+    const loja  = this.loja();
+    if (!cupom || !loja) return 0;
+    const sub = this.cart.subtotal();
+    if (cupom.tipo_desconto === 'percentual')  return (sub * cupom.valor_desconto) / 100;
+    if (cupom.tipo_desconto === 'valor_fixo')  return Math.min(cupom.valor_desconto, sub);
+    if (cupom.tipo_desconto === 'frete_gratis') return Number(loja.taxa_entrega);
+    return 0;
+  });
+
+  readonly total = computed(() => {
+    const loja = this.loja();
+    if (!loja) return this.cart.subtotal();
+    return this.cart.subtotal() + Number(loja.taxa_entrega) - this.desconto();
+  });
+
+  // ── Submit / PIX ──────────────────────────────────────────────────────────────
+  readonly submitting    = signal(false);
+  readonly codigoCriado  = signal<string | null>(null);
+  readonly pagamentoPix  = signal<CreatePagamentoResponse | null>(null);
+  readonly pixPago       = signal(false);
+  readonly copiado       = signal(false);
+
+  private pixWsSub: Subscription | null = null;
+  private copiadoTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  itemLabel(item: ReturnType<typeof this.itens>[number]): string {
+    if (item.partes.length === 1) return item.partes[0].produto.nome;
+    return item.partes.map(p => `${p.posicao}/${item.partes.length} ${p.produto.nome}`).join(' + ');
+  }
+
+  itemPreco(item: ReturnType<typeof this.itens>[number]): number {
+    if (!item.partes.length) return 0;
+    const base   = Math.max(...item.partes.map(p => Number(p.produto.preco)));
+    const extras = item.partes.reduce(
+      (s, p) => s + p.adicionais.reduce((sa, a) => sa + Number(a.preco), 0), 0,
+    );
+    return (base + extras) * item.quantidade;
+  }
+
+  adicionaisLabel(item: ReturnType<typeof this.itens>[number]): string {
+    return item.partes.flatMap(p => p.adicionais).map(a => a.nome).join(', ');
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────────
+  ngOnInit(): void {
+    if (!this.loja() || this.itens().length === 0) {
+      this.router.navigate(['/']);
+      return;
+    }
+
+    if (this.auth.isAuthenticated()) {
+      this.enderecoService
+        .listar()
+        .pipe(catchError(() => of([])))
+        .subscribe(list => this.enderecosUsuario.set(list));
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.copiadoTimer) clearTimeout(this.copiadoTimer);
+    this.pixWsSub?.unsubscribe();
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────────────────
+  avancar(): void {
+    if (this.step() === 'endereco' && this.enderecoValido)  { this.step.set('pagamento'); return; }
+    if (this.step() === 'pagamento' && this.pagamentoValido) { this.step.set('resumo');    return; }
+  }
+
+  voltar(): void {
+    if (this.step() === 'pagamento') { this.step.set('endereco');  return; }
+    if (this.step() === 'resumo')    { this.step.set('pagamento'); return; }
+  }
+
+  irParaHome(): void {
+    this.router.navigate(['/']);
+  }
+
+  // ── Address ───────────────────────────────────────────────────────────────────
+  selecionarEndereco(end: EnderecoUsuario): void {
+    this.enderecoSelecionadoUuid = end.uuid;
+    this.enderecoForm = {
+      logradouro:  end.logradouro,
+      numero:      end.numero,
+      complemento: end.complemento ?? '',
+      bairro:      end.bairro,
+      cidade:      end.cidade,
+      estado:      end.estado,
+      cep:         end.cep ?? '',
+    };
+  }
+
+  onEnderecoInputChange(): void {
+    this.enderecoSelecionadoUuid = null;
+  }
+
+  // ── Contact ───────────────────────────────────────────────────────────────────
+  onContatoInput(event: Event): void {
+    const input  = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, 11);
+    input.value  = formatPhone(digits);
+    this.contato = digits;
+  }
+
+  onPagadorCpfInput(event: Event): void {
+    const digits = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 11);
+    this.pagadorCpf.set(digits);
+    const formatted = formatCpf(digits);
+    this.pagadorCpfFormatted.set(formatted);
+    (event.target as HTMLInputElement).value = formatted;
+  }
+
+  // ── Cupom ─────────────────────────────────────────────────────────────────────
+  validarCupom(): void {
+    const codigo = this.codigoCupom.trim();
+    if (!codigo) return;
+    this.validandoCupom.set(true);
+    this.cupomErro.set(null);
+    this.marketingService
+      .validarCupom(codigo)
+      .pipe(
+        catchError(() => {
+          this.cupomErro.set('Cupom inválido ou expirado.');
+          this.validandoCupom.set(false);
+          this.cupomValidado.set(null);
+          return of(null);
+        }),
+      )
+      .subscribe(cupom => {
+        if (cupom) {
+          this.cupomValidado.set(cupom);
+          this.validandoCupom.set(false);
+        }
+      });
+  }
+
+  removerCupom(): void {
+    this.cupomValidado.set(null);
+    this.codigoCupom   = '';
+    this.cupomErro.set(null);
+  }
+
+  // ── PIX ───────────────────────────────────────────────────────────────────────
+  copiarPix(): void {
+    const pix = this.pagamentoPix()?.pix_copia_cola;
+    if (!pix) return;
+    navigator.clipboard.writeText(pix).then(() => {
+      this.copiado.set(true);
+      if (this.copiadoTimer) clearTimeout(this.copiadoTimer);
+      this.copiadoTimer = setTimeout(() => this.copiado.set(false), 2000);
+    });
+  }
+
+  irParaDetalhe(): void {
+    const codigo = this.codigoCriado();
+    if (codigo) this.router.navigate(['/pedidos', codigo]);
+  }
+
+  private _iniciarWatchPix(codigo: string): void {
+    this.pixWsSub?.unsubscribe();
+    this.pixWsSub = this.pedidosLive.acompanharPorCodigo(codigo).subscribe(pedido => {
+      if (pedido.pago) {
+        this.pixPago.set(true);
+        this.pixWsSub?.unsubscribe();
+        this.pixWsSub = null;
+      }
+    });
+  }
+
+  // ── Submit ────────────────────────────────────────────────────────────────────
+  confirmarPedido(): void {
+    const loja = this.loja();
+    if (!loja || this.itens().length === 0) return;
+
+    const f = this.enderecoForm;
+    const body: CreatePedidoRequest = {
+      loja_uuid:       loja.uuid,
+      taxa_entrega:    Number(loja.taxa_entrega),
+      forma_pagamento: this.formaPagamento,
+      observacoes:     this.observacoes || null,
+      contato:         this.contato || null,
+      codigo_cupom:    this.cupomValidado()?.codigo ?? null,
+      itens: this.itens().map(item => ({
+        quantidade: item.quantidade,
+        partes: item.partes.map(p => ({
+          produto_uuid: p.produto.uuid,
+          posicao:      p.posicao,
+          adicionais:   p.adicionais.length
+            ? p.adicionais.map(a => ({ adicional_uuid: a.uuid }))
+            : undefined,
+        })),
+      })),
+      endereco_entrega: {
+        logradouro:  f.logradouro,
+        numero:      f.numero,
+        complemento: f.complemento || null,
+        bairro:      f.bairro,
+        cidade:      f.cidade,
+        estado:      f.estado,
+        cep:         f.cep || null,
+      },
+    };
+
+    const isAuth  = this.auth.isAuthenticated();
+    const isPix   = this.formaPagamento === 'PIX';
+    const pagador = isPix && !isAuth
+      ? { nome: this.pagadorNome().trim(), cpf: this.pagadorCpf() }
+      : undefined;
+
+    this.submitting.set(true);
+
+    this.pedidoService.criar(body).subscribe({
+      next: res => {
+        this.pedidoService.buscarPorCodigo(res.codigo).pipe(catchError(() => of(null)))
+          .subscribe(pedido => {
+            if (pedido) this.pedidoLocalStorage.salvar(pedido);
+
+            if (isPix) {
+              this.pagamentoService.criar(res.uuid, pagador).subscribe({
+                next: pix => {
+                  this.submitting.set(false);
+                  this.codigoCriado.set(res.codigo);
+                  this.pagamentoPix.set(pix);
+                  this.cart.limpar();
+                  this._iniciarWatchPix(res.codigo);
+                },
+                error: () => {
+                  toast.error('Pedido criado, mas falha ao gerar PIX. Pague na tela do pedido.');
+                  this.submitting.set(false);
+                  this.cart.limpar();
+                  if (isAuth) this.router.navigate(['/pedidos', res.codigo]);
+                  else this.codigoCriado.set(res.codigo);
+                },
+              });
+            } else {
+              this.submitting.set(false);
+              this.cart.limpar();
+              if (isAuth) {
+                toast.success(`Pedido criado! Código: ${res.codigo}`);
+                this.router.navigate(['/pedidos', res.codigo]);
+              } else {
+                this.codigoCriado.set(res.codigo);
+              }
+            }
+          });
+      },
+      error: () => {
+        toast.error('Erro ao criar pedido. Tente novamente.');
+        this.submitting.set(false);
+      },
+    });
+  }
+}

@@ -11,4 +11,5 @@ export { UiModalComponent }         from './ui-modal.component';
 export { UiEmptyStateComponent }    from './ui-empty-state.component';
 export { UiInputComponent }         from './ui-input.component';
 export { UiPasswordInputComponent } from './ui-password-input.component';
+export { CartDrawerComponent }      from './cart-drawer.component';
 export type { UiTab }               from './ui-tab-bar.component';

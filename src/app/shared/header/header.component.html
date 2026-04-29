@@ -133,6 +133,26 @@
           >Criar conta</a>
         }
 
+        <!-- Cart button -->
+        @if (cart.totalItens() > 0 || cart.drawerOpen()) {
+          <button
+            (click)="cart.toggleDrawer()"
+            class="relative p-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-600"
+            aria-label="Sacola"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm9 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>
+            </svg>
+            @if (cart.totalItens() > 0) {
+              <span
+                class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
+                style="background:var(--color-brand)"
+              >{{ cart.totalItens() }}</span>
+            }
+          </button>
+        }
+
         <!-- Hamburger mobile -->
         <button
           class="md:hidden p-2 rounded-lg hover:bg-gray-50 transition-colors"
