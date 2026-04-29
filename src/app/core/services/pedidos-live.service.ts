@@ -18,15 +18,21 @@ export class PedidosLiveService {
     return {
       ...p,
       status: (p.status as string).toLowerCase() as StatusPedido,
-      total: parseFloat(p.total),
-      subtotal: parseFloat(p.subtotal),
-      taxa_entrega: parseFloat(p.taxa_entrega ?? '0'),
-      desconto: parseFloat(p.desconto ?? '0'),
+      total:        typeof p.total        === 'string' ? parseFloat(p.total)              : (p.total        ?? 0),
+      subtotal:     typeof p.subtotal     === 'string' ? parseFloat(p.subtotal)           : (p.subtotal     ?? 0),
+      taxa_entrega: typeof p.taxa_entrega === 'string' ? parseFloat(p.taxa_entrega ?? '0'): (p.taxa_entrega ?? 0),
+      desconto:     typeof p.desconto     === 'string' ? parseFloat(p.desconto     ?? '0'): (p.desconto     ?? 0),
       itens: (p.itens ?? []).map((item: any) => ({
         ...item,
         partes: (item.partes ?? []).map((parte: any) => ({
           ...parte,
-          preco_unitario: parseFloat(parte.preco_unitario),
+          preco_unitario: typeof parte.preco_unitario === 'string'
+            ? parseFloat(parte.preco_unitario)
+            : (parte.preco_unitario ?? 0),
+          adicionais: (parte.adicionais ?? []).map((ad: any) => ({
+            ...ad,
+            preco: typeof ad.preco === 'string' ? parseFloat(ad.preco) : (ad.preco ?? 0),
+          })),
         })),
       })),
     };

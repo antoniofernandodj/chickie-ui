@@ -1,9 +1,8 @@
-import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, DestroyRef, LOCALE_ID } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { switchMap, catchError, of, map, tap } from 'rxjs';
-import { Subscription } from 'rxjs';
+import { switchMap, catchError, of, map, tap, startWith, takeWhile } from 'rxjs';
 import { PedidoService } from '../../core/services/pedido.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { PedidosLiveService } from '../../core/services/pedidos-live.service';
@@ -44,6 +43,7 @@ export class PedidoDetalheComponent {
   private pagamentoService   = inject(PagamentoService);
   private authService        = inject(AuthService);
   private destroyRef         = inject(DestroyRef);
+  private locale             = inject(LOCALE_ID);
 
   readonly steps = STEPS;
 
@@ -58,8 +58,6 @@ export class PedidoDetalheComponent {
     const p = this._pedido();
     return !!p && !p.pago && !STATUS_TERMINAL.includes(p.status);
   });
-
-  private wsSubscription: Subscription | null = null;
 
   private currentIndex = computed(() =>
     ORDER.indexOf(this._pedido()?.status ?? 'criado'),
@@ -82,14 +80,13 @@ export class PedidoDetalheComponent {
 
   constructor() {
     this.route.paramMap.pipe(
-      map(p => p.get('uuid')?.trim() ?? ''),
+      map(p => p.get('uuid')?.trim() ?? p.get('codigo')?.trim() ?? ''),
       tap(() => {
         this._pedido.set(undefined);
-        this.desconectarWs();
         this.resetarPagamento();
       }),
       switchMap(identificador => {
-        if (!identificador) return of(null as Pedido | null);
+        if (!identificador) return of(null);
         const obs = identificador.length === 36 && identificador.includes('-')
           ? this.pedidoService.buscar(identificador)
           : this.pedidoService.buscarPorCodigo(identificador);
@@ -102,40 +99,30 @@ export class PedidoDetalheComponent {
           }),
         );
       }),
+      switchMap(pedido => {
+        if (pedido?.codigo && !STATUS_TERMINAL.includes(pedido.status)) {
+          return this.pedidosLiveService.acompanharPorCodigo(pedido.codigo).pipe(
+            startWith(pedido),
+            takeWhile(p => !STATUS_TERMINAL.includes(p.status), true),
+            catchError(() => of(pedido))
+          );
+        }
+        return of(pedido);
+      }),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(pedido => {
-      this._pedido.set(pedido);
-      if (pedido?.codigo && !STATUS_TERMINAL.includes(pedido.status)) {
-        this.conectarWs(pedido.codigo);
+      if (pedido) {
+        const foiPago = !this._pedido()?.pago && pedido.pago;
+        this._pedido.set(pedido);
+        if (foiPago) this.pagamento.set(null);
+      } else {
+        this._pedido.set(null);
       }
     });
 
     this.destroyRef.onDestroy(() => {
-      this.desconectarWs();
       if (this.copiadoTimer) clearTimeout(this.copiadoTimer);
     });
-  }
-
-  // ── WebSocket ─────────────────────────────────────────────────────────────
-
-  private conectarWs(codigo: string): void {
-    this.desconectarWs();
-    this.wsSubscription = this.pedidosLiveService
-      .acompanharPorCodigo(codigo)
-      .subscribe({
-        next: (pedido) => {
-          const foiPago = !this._pedido()?.pago && pedido.pago;
-          this._pedido.set(pedido);
-          // Quando o webhook confirmar o pagamento, limpa o QR Code exibido
-          if (foiPago) this.pagamento.set(null);
-          if (STATUS_TERMINAL.includes(pedido.status)) this.desconectarWs();
-        },
-      });
-  }
-
-  private desconectarWs(): void {
-    this.wsSubscription?.unsubscribe();
-    this.wsSubscription = null;
   }
 
   // ── Pagamento PIX ─────────────────────────────────────────────────────────
@@ -198,9 +185,17 @@ export class PedidoDetalheComponent {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
-  getFormattedDate(date: string): string {
-    const dp = new DatePipe('en-US');
-    return `${dp.transform(date, 'dd/MM/yyyy')} às ${new Date(date).toLocaleTimeString('pt-BR')}`;
+  getFormattedDate(date: string | null | undefined): string {
+    if (!date) return '';
+    try {
+      const dp = new DatePipe(this.locale);
+      const dataFormatada = dp.transform(date, 'dd/MM/yyyy');
+      const horaFormatada = new Date(date).toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' });
+      return `${dataFormatada} às ${horaFormatada}`;
+    } catch (e) {
+      console.error('Erro ao formatar data:', e);
+      return '';
+    }
   }
 
   displayCode(): string {
