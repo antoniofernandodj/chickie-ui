@@ -21,7 +21,10 @@ export class PedidoLocalStorageService {
       desconto:     typeof p.desconto     === 'string' ? parseFloat(p.desconto     ?? '0'): (p.desconto     ?? 0),
       itens: (p.itens ?? []).map((item: any) => ({
         ...item,
-        adicionais: item.adicionais ?? [],
+        adicionais: (item.adicionais ?? []).map((ad: any) => ({
+          ...ad,
+          preco: typeof ad.preco === 'string' ? parseFloat(ad.preco) : (ad.preco ?? 0),
+        })),
         partes: (item.partes ?? []).map((parte: any) => ({
           ...parte,
           preco_unitario: typeof parte.preco_unitario === 'string'

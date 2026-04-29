@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, afterNextRender } from '@angular/core';
+import { Component, inject, signal, computed, afterNextRender, LOCALE_ID } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { forkJoin, catchError, of } from 'rxjs';
@@ -17,6 +17,7 @@ export class PedidosComponent {
   private pedidoService      = inject(PedidoService);
   private pedidoLocalStorage = inject(PedidoLocalStorageService);
   private auth               = inject(AuthService);
+  private locale             = inject(LOCALE_ID);
 
   readonly filtro            = signal<StatusPedido | 'todos'>('todos');
   readonly pedidoSelecionado = signal<Pedido | null>(null);
@@ -72,9 +73,17 @@ export class PedidosComponent {
     this.pedidoLocalStorage.remover(uuid);
   }
 
-  getFormattedDate(date: string): string {
-    const dp = new DatePipe('pt-BR');
-    return `${dp.transform(date, 'dd/MM/yyyy')} às ${new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  getFormattedDate(date: string | null | undefined): string {
+    if (!date) return '';
+    try {
+      const dp = new DatePipe(this.locale);
+      const dataFormatada = dp.transform(date, 'dd/MM/yyyy');
+      const horaFormatada = new Date(date).toLocaleTimeString(this.locale, { hour: '2-digit', minute: '2-digit' });
+      return `${dataFormatada} às ${horaFormatada}`;
+    } catch (e) {
+      console.error('Erro ao formatar data:', e);
+      return '';
+    }
   }
 
   statusCfg(s: StatusPedido) { return STATUS_PEDIDO_CFG[s] ?? STATUS_PEDIDO_CFG['criado']; }
