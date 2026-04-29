@@ -50,16 +50,14 @@ export class PedidosComponent implements OnInit {
         this.loading.set(false);
       });
     } else {
+      // Exibe dados locais imediatamente; atualiza em background
+      this.loading.set(false);
       const locais = this.pedidoLocalStorage.pedidos();
-      if (locais.length === 0) {
-        this.loading.set(false);
-        return;
-      }
+      if (locais.length === 0) return;
       forkJoin(
         locais.map(p => this.pedidoService.buscarPorCodigo(p.codigo).pipe(catchError(() => of(p))))
       ).subscribe((frescos) => {
         frescos.forEach(p => this.pedidoLocalStorage.salvar(p));
-        this.loading.set(false);
       });
     }
   }
