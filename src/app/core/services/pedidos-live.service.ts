@@ -51,7 +51,13 @@ export class PedidosLiveService {
 
       const connect = () => {
         if (!active) return;
+        console.log(`[WS] Conectando ao pedido: ${codigo}...`);
         ws = new WebSocket(url);
+
+        ws.onopen = () => {
+          console.log(`[WS] Conectado: ${codigo}`);
+          retryDelay = 2000;
+        };
 
         ws.onmessage = (event) => {
           try {
@@ -62,10 +68,17 @@ export class PedidosLiveService {
           } catch { /* JSON inválido: ignorar */ }
         };
 
-        ws.onerror = () => ws?.close();
+        ws.onerror = (err) => {
+          console.error(`[WS] Erro no pedido ${codigo}:`, err);
+          ws?.close();
+        };
 
         ws.onclose = () => {
-          if (!active) return;
+          if (!active) {
+            console.log(`[WS] Conexão encerrada pelo cliente: ${codigo}`);
+            return;
+          }
+          console.warn(`[WS] Conexão perdida: ${codigo}. Tentando reconectar em ${retryDelay}ms...`);
           retryTimer = setTimeout(() => {
             retryDelay = Math.min(retryDelay * 1.5, 30_000);
             connect();
@@ -76,9 +89,13 @@ export class PedidosLiveService {
       connect();
 
       return () => {
+        console.log(`[WS] Limpando observable (unsubscribed): ${codigo}`);
         active = false;
         if (retryTimer) clearTimeout(retryTimer);
-        if (ws && ws.readyState < WebSocket.CLOSING) ws.close();
+        if (ws) {
+          console.log(`[WS] Fechando WebSocket: ${codigo} (readyState: ${ws.readyState})`);
+          ws.close();
+        }
       };
     });
   }
@@ -96,7 +113,13 @@ export class PedidosLiveService {
 
       const connect = () => {
         if (!active) return;
+        console.log(`[WS Admin] Conectando à loja: ${lojaUuid}...`);
         ws = new WebSocket(url);
+
+        ws.onopen = () => {
+          console.log(`[WS Admin] Conectado: ${lojaUuid}`);
+          retryDelay = 2000;
+        };
 
         ws.onmessage = (event) => {
           try {
@@ -107,10 +130,17 @@ export class PedidosLiveService {
           } catch { /* JSON inválido: ignorar */ }
         };
 
-        ws.onerror = () => ws?.close();
+        ws.onerror = (err) => {
+          console.error(`[WS Admin] Erro na loja ${lojaUuid}:`, err);
+          ws?.close();
+        };
 
         ws.onclose = () => {
-          if (!active) return;
+          if (!active) {
+            console.log(`[WS Admin] Conexão encerrada pelo cliente: ${lojaUuid}`);
+            return;
+          }
+          console.warn(`[WS Admin] Conexão perdida: ${lojaUuid}. Tentando reconectar em ${retryDelay}ms...`);
           retryTimer = setTimeout(() => {
             retryDelay = Math.min(retryDelay * 1.5, 30_000);
             connect();
@@ -121,9 +151,13 @@ export class PedidosLiveService {
       connect();
 
       return () => {
+        console.log(`[WS Admin] Limpando observable (unsubscribed): ${lojaUuid}`);
         active = false;
         if (retryTimer) clearTimeout(retryTimer);
-        if (ws && ws.readyState < WebSocket.CLOSING) ws.close();
+        if (ws) {
+          console.log(`[WS Admin] Fechando WebSocket: ${lojaUuid} (readyState: ${ws.readyState})`);
+          ws.close();
+        }
       };
     });
   }
