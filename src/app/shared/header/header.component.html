@@ -25,13 +25,13 @@
           [routerLinkActiveOptions]="{ exact: true }"
           class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
         >Início</a>
+        <a
+          routerLink="/pedidos"
+          routerLinkActive="text-orange-500 bg-orange-50"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+        >Pedidos</a>
 
         @if (auth.isAuthenticated()) {
-          <a
-            routerLink="/pedidos"
-            routerLinkActive="text-orange-500 bg-orange-50"
-            class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-          >Pedidos</a>
           <a
             routerLink="/favoritos"
             routerLinkActive="text-orange-500 bg-orange-50"
@@ -155,9 +155,9 @@
       <nav class="md:hidden border-t border-gray-100 py-3 space-y-1">
         <a routerLink="/" (click)="mobileOpen.set(false)"
            class="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Início</a>
+        <a routerLink="/pedidos" (click)="mobileOpen.set(false)"
+           class="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Pedidos</a>
         @if (auth.isAuthenticated()) {
-          <a routerLink="/pedidos" (click)="mobileOpen.set(false)"
-             class="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Pedidos</a>
           <a routerLink="/favoritos" (click)="mobileOpen.set(false)"
              class="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">Favoritos</a>
           <a routerLink="/perfil" (click)="mobileOpen.set(false)"

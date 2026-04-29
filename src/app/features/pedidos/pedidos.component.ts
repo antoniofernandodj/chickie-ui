@@ -20,7 +20,6 @@ export class PedidosComponent {
   private locale             = inject(LOCALE_ID);
 
   readonly filtro            = signal<StatusPedido | 'todos'>('todos');
-  readonly pedidoSelecionado = signal<Pedido | null>(null);
   readonly loading           = signal(true);
 
   private readonly _apiPedidos = signal<Pedido[]>([]);
@@ -87,10 +86,4 @@ export class PedidosComponent {
   }
 
   statusCfg(s: StatusPedido) { return STATUS_PEDIDO_CFG[s] ?? STATUS_PEDIDO_CFG['criado']; }
-  abrirDetalhe(p: Pedido)    { this.pedidoSelecionado.set(p); }
-  fecharDetalhe()             { this.pedidoSelecionado.set(null); }
-
-  totalItem(item: Pedido['itens'][number]): number {
-    return item.partes.reduce((acc, p) => acc + p.preco_unitario + p.adicionais.reduce((a, ad) => a + ad.preco, 0), 0) * item.quantidade;
-  }
 }
