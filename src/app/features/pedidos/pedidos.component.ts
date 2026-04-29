@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, afterNextRender } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { forkJoin, catchError, of } from 'rxjs';
@@ -13,7 +13,7 @@ import { STATUS_PEDIDO_CFG, UiModalComponent, UiEmptyStateComponent, UiStatusBad
   imports: [RouterLink, DecimalPipe, UiModalComponent, UiEmptyStateComponent, UiStatusBadgeComponent],
   templateUrl: './pedidos.component.html',
 })
-export class PedidosComponent implements OnInit {
+export class PedidosComponent {
   private pedidoService      = inject(PedidoService);
   private pedidoLocalStorage = inject(PedidoLocalStorageService);
   private auth               = inject(AuthService);
@@ -43,23 +43,26 @@ export class PedidosComponent implements OnInit {
 
   readonly pedidosLocaisSet = computed(() => new Set(this.pedidoLocalStorage.pedidos().map(p => p.uuid)));
 
-  ngOnInit(): void {
-    if (this.auth.isAuthenticated()) {
-      this.pedidoService.listar().pipe(catchError(() => of([]))).subscribe((pedidos) => {
-        this._apiPedidos.set(pedidos);
+  constructor() {
+    // afterNextRender executa apenas no browser, após a hidratação SSR estabilizar.
+    // Isso evita mismatch entre o DOM do servidor (sem localStorage) e o cliente.
+    afterNextRender(() => {
+      if (this.auth.isAuthenticated()) {
+        this.pedidoService.listar().pipe(catchError(() => of([]))).subscribe((pedidos) => {
+          this._apiPedidos.set(pedidos);
+          this.loading.set(false);
+        });
+      } else {
         this.loading.set(false);
-      });
-    } else {
-      // Exibe dados locais imediatamente; atualiza em background
-      this.loading.set(false);
-      const locais = this.pedidoLocalStorage.pedidos();
-      if (locais.length === 0) return;
-      forkJoin(
-        locais.map(p => this.pedidoService.buscarPorCodigo(p.codigo).pipe(catchError(() => of(p))))
-      ).subscribe((frescos) => {
-        frescos.forEach(p => this.pedidoLocalStorage.salvar(p));
-      });
-    }
+        const locais = this.pedidoLocalStorage.pedidos();
+        if (locais.length === 0) return;
+        forkJoin(
+          locais.map(p => this.pedidoService.buscarPorCodigo(p.codigo).pipe(catchError(() => of(p))))
+        ).subscribe((frescos) => {
+          frescos.forEach(p => this.pedidoLocalStorage.salvar(p));
+        });
+      }
+    });
   }
 
   eLocal(uuid: string): boolean { return this.pedidosLocaisSet().has(uuid); }
