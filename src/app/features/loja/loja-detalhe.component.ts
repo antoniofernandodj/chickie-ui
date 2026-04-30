@@ -1,8 +1,8 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { switchMap, catchError, of, map, tap } from 'rxjs';
+import { switchMap, catchError, of, map, tap, distinctUntilChanged } from 'rxjs';
 import { LojaService } from '../../core/services/loja.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
 import { HorarioService } from '../../core/services/horario.service';
@@ -81,43 +81,19 @@ export class LojaDetalheComponent {
   readonly horarios = computed(() => this._horarios() ?? []);
   readonly diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
-  // Verificar se a loja está aberta agora (horário de Brasília)
-  readonly lojaAbertaAgora = computed(() => {
-    const horarios = this.horarios();
-    if (!horarios || horarios.length === 0) {
-      // Se não tem horários, usa o campo 'ativa' da loja
-      return this.loja()?.ativa ?? false;
-    }
+  // Verificar se a loja está aberta agora via API (horário de Brasília delegado ao backend)
+  readonly _lojaStatus = toSignal(
+    toObservable(this.loja).pipe(
+      distinctUntilChanged((a, b) => a?.uuid === b?.uuid),
+      switchMap(loja =>
+        loja
+          ? this.horarioService.verificarStatus(loja.uuid).pipe(catchError(() => of(null)))
+          : of(null)
+      )
+    )
+  );
 
-    // Obter hora atual de Brasília (UTC-3)
-    const agoraUTC = new Date();
-    const offsetBrasilia = -3; // UTC-3
-    const offsetLocal = agoraUTC.getTimezoneOffset(); // em minutos
-    const offsetBrasiliaMin = offsetBrasilia * 60; // em segundos
-    const agoraBrasilia = new Date(agoraUTC.getTime() + (offsetBrasiliaMin + offsetLocal * 60) * 1000);
-    
-    const diaSemana = agoraBrasilia.getDay(); // 0=Domingo, 1=Segunda, ..., 6=Sábado
-    const horaAtual = agoraBrasilia.getHours();
-    const minutoAtual = agoraBrasilia.getMinutes();
-    const minutoDoDia = horaAtual * 60 + minutoAtual; // Total de minutos desde 00:00
-
-    // Encontrar horário do dia atual
-    const horarioDoDia = horarios.find(h => h.dia_semana === diaSemana && h.ativo);
-    
-    if (!horarioDoDia) {
-      return false; // Loja fechada neste dia
-    }
-
-    // Converter horários de abertura e fechamento para minutos
-    const [aberturaHora, aberturaMinuto] = horarioDoDia.abertura.split(':').map(Number);
-    const [fechamentoHora, fechamentoMinuto] = horarioDoDia.fechamento.split(':').map(Number);
-    
-    const minutoAbertura = aberturaHora * 60 + aberturaMinuto;
-    const minutoFechamento = fechamentoHora * 60 + fechamentoMinuto;
-
-    // Verificar se está dentro do horário
-    return minutoDoDia >= minutoAbertura && minutoDoDia <= minutoFechamento;
-  });
+  readonly lojaAbertaAgora = computed(() => this._lojaStatus()?.aberta ?? false);
 
   // Catálogo: Categorias e Produtos
   readonly _categorias = toSignal(

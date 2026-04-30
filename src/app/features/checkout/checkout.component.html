@@ -374,8 +374,8 @@
                   Voltar
                 </button>
                 <button (click)="confirmarPedido()"
-                  [disabled]="submitting()"
-                  class="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
+                  [disabled]="submitting() || !lojaAberta()"
+                  class="flex-1 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
                   style="background:var(--color-brand)">
                   @if (submitting()) {
                     <span class="flex items-center justify-center gap-2">
@@ -385,6 +385,8 @@
                       </svg>
                       Processando…
                     </span>
+                  } @else if (!lojaAberta()) {
+                    🔒 Loja fechada no momento
                   } @else {
                     Confirmar pedido
                   }

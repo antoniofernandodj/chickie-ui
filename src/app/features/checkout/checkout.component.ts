@@ -6,10 +6,11 @@ import {
   OnInit,
   OnDestroy,
 } from '@angular/core';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { catchError, of, Subscription } from 'rxjs';
+import { catchError, of, Subscription, switchMap } from 'rxjs';
 import { toast } from 'ngx-sonner';
 import { formatPhone } from '../../core/utils/phone-utils';
 import { formatCpf, validarCpf } from '../../core/utils/cpf-utils';
@@ -27,6 +28,7 @@ import { PagamentoService } from '../../core/services/pagamento.service';
 import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { MarketingService } from '../../core/services/marketing.service';
+import { HorarioService } from '../../core/services/horario.service';
 
 type CheckoutStep = 'endereco' | 'pagamento' | 'resumo';
 
@@ -55,9 +57,22 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private pedidosLive      = inject(PedidosLiveService);
   private enderecoService  = inject(EnderecoUsuarioService);
   private marketingService = inject(MarketingService);
+  private horarioService   = inject(HorarioService);
   private router           = inject(Router);
 
   readonly loja  = computed(() => this.cart.lojaAtual());
+
+  private readonly _lojaStatus = toSignal(
+    toObservable(this.loja).pipe(
+      switchMap(loja =>
+        loja
+          ? this.horarioService.verificarStatus(loja.uuid).pipe(catchError(() => of(null)))
+          : of(null)
+      )
+    )
+  );
+
+  readonly lojaAberta = computed(() => this._lojaStatus()?.aberta ?? true);
   readonly itens = computed(() => this.cart.itens());
 
   readonly isAuthenticated = this.auth.isAuthenticated;

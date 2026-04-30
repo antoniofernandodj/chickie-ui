@@ -1,7 +1,10 @@
 import { Component, inject, computed } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { switchMap, catchError, of } from 'rxjs';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { CartService, CartItem } from '../../core/services/cart.service';
+import { HorarioService } from '../../core/services/horario.service';
 
 @Component({
   selector: 'app-cart-drawer',
@@ -104,10 +107,15 @@ import { CartService, CartItem } from '../../core/services/cart.service';
 
             <button
               (click)="goToCheckout()"
-              class="w-full py-3 rounded-xl font-semibold text-white text-sm transition-all hover:opacity-90 active:scale-95"
+              [disabled]="!lojaAberta()"
+              class="w-full py-3 rounded-xl font-semibold text-white text-sm transition-all"
+              [class.hover:opacity-90]="lojaAberta()"
+              [class.active:scale-95]="lojaAberta()"
+              [class.opacity-60]="!lojaAberta()"
+              [class.cursor-not-allowed]="!lojaAberta()"
               style="background:var(--color-brand)"
             >
-              Finalizar pedido
+              @if (lojaAberta()) { Finalizar pedido } @else { Loja fechada }
             </button>
 
             @if (loja()) {
@@ -125,14 +133,27 @@ import { CartService, CartItem } from '../../core/services/cart.service';
   `,
 })
 export class CartDrawerComponent {
-  readonly cart = inject(CartService);
-  private  router = inject(Router);
+  readonly cart            = inject(CartService);
+  private  router          = inject(Router);
+  private  horarioService  = inject(HorarioService);
 
   readonly loja  = computed(() => this.cart.lojaAtual());
   readonly total = computed(() => {
     const taxa = Number(this.loja()?.taxa_entrega ?? 0);
     return this.cart.subtotal() + taxa;
   });
+
+  private readonly _lojaStatus = toSignal(
+    toObservable(computed(() => this.cart.lojaAtual()?.uuid)).pipe(
+      switchMap(uuid =>
+        uuid
+          ? this.horarioService.verificarStatus(uuid).pipe(catchError(() => of(null)))
+          : of(null)
+      )
+    )
+  );
+
+  readonly lojaAberta = computed(() => this._lojaStatus()?.aberta ?? true);
 
   goToCheckout(): void {
     this.cart.closeDrawer();

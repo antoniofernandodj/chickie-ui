@@ -500,6 +500,14 @@ export interface HorarioFuncionamento {
   criado_em:  string;
 }
 
+export interface StatusLojaAberta {
+  aberta:     boolean;
+  hora_atual: string;
+  dia_semana: number;
+  abertura:   string | null;
+  fechamento: string | null;
+}
+
 export interface CreateHorarioFuncionamentoRequest {
   dia_semana:  number;
   abertura:    string;
