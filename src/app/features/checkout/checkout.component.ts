@@ -7,7 +7,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, of, Subscription, switchMap } from 'rxjs';
@@ -45,7 +45,7 @@ interface EnderecoForm {
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, SlicePipe],
   templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
