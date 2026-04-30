@@ -17,14 +17,14 @@ import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
 import { PhonePipe } from '../../shared/pipes/phone.pipe';
 import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido, ItemPedido, EnderecoFormValue } from '../../core/models';
-import { STATUS_PEDIDO_CFG, UiTabBarComponent, UiSpinnerComponent, UiTab, EnderecoFormComponent } from '../../shared/components';
+import { STATUS_PEDIDO_CFG, UiTabBarComponent, UiSpinnerComponent, UiTab, EnderecoFormComponent, ChatPanelComponent } from '../../shared/components';
 
 const STATUS_CFG = STATUS_PEDIDO_CFG;
 
 @Component({
   selector: 'app-admin',
   imports: [ReactiveFormsModule, DecimalPipe, DatePipe, PhoneMaskDirective, PhonePipe, DragDropModule,
-    UiTabBarComponent, UiSpinnerComponent, EnderecoFormComponent],
+    UiTabBarComponent, UiSpinnerComponent, EnderecoFormComponent, ChatPanelComponent],
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
@@ -53,6 +53,12 @@ export class AdminComponent {
     { id: 'config-pedido',label: '⚙️ Config Pedido'  },
     { id: 'enderecos',    label: '📍 Endereços'      },
     { id: 'horarios',     label: '🕐 Horários'       },
+  ];
+
+  readonly pedidoDetalheAba = signal<'detalhes' | 'chat'>('detalhes');
+  readonly pedidoDetalheTabs: UiTab[] = [
+    { id: 'detalhes', label: '📋 Detalhes' },
+    { id: 'chat',     label: '💬 Chat'     },
   ];
 
   // ── Loja (carregada via URL) ──────────────────────────────────────────────
@@ -218,6 +224,7 @@ export class AdminComponent {
   readonly pedidoDetalhe = signal<Pedido | null>(null);
 
   abrirDetalhesPedido(pedido: Pedido): void {
+    this.pedidoDetalheAba.set('detalhes');
     this.pedidoDetalhe.set(pedido);
   }
 

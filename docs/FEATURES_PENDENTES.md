@@ -151,12 +151,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Alta** — recurso PWA-flagship.
 - **Dependências**: VAPID keys, alteração no backend.
 
-### 4.4 Chat Cliente ↔ Loja ↔ Entregador
-- **Por que**: "Estou no portão", "campainha não funciona" — sem canal direto, viram ligações.
-- **O que construir**: WebSocket `/pedidos/:uuid/chat/ws`, `ChatService`, `ChatPanelComponent` integrado a `pedido-detalhe` e `admin` (aba pedido).
-- **Prioridade**: **Baixa** (nice-to-have).
-- **Dependências**: backend novo.
-
 ### 4.5 Bloquear/Banir Cliente (admin)
 - **Por que**: a loja precisa se proteger de clientes problemáticos.
 - **O que construir**: aba "Clientes" no admin listando `Cliente` (model existe) com toggle `bloqueado`. Endpoint `PATCH /api/clientes/:uuid/bloqueado`.

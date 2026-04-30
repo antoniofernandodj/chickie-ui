@@ -13,4 +13,5 @@ export { UiInputComponent }         from './ui-input.component';
 export { UiPasswordInputComponent } from './ui-password-input.component';
 export { EnderecoFormComponent }    from './endereco-form.component';
 export { CartDrawerComponent }      from './cart-drawer.component';
+export { ChatPanelComponent }      from './chat-panel.component';
 export type { UiTab }               from './ui-tab-bar.component';

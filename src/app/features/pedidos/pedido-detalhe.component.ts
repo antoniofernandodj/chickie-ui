@@ -9,6 +9,7 @@ import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { PagamentoService } from '../../core/services/pagamento.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Pedido, StatusPedido, CreatePagamentoResponse } from '../../core/models';
+import { ChatPanelComponent } from '../../shared/components/chat-panel.component';
 import { validarCpf, formatCpf } from '../../core/utils/cpf-utils';
 
 type Steps = {
@@ -32,7 +33,8 @@ const STATUS_TERMINAL: StatusPedido[] = ['entregue', 'cancelado'];
 
 @Component({
   selector: 'app-pedido-detalhe',
-  imports: [RouterLink, DecimalPipe],
+  standalone: true,
+  imports: [RouterLink, DecimalPipe, ChatPanelComponent, DatePipe],
   templateUrl: './pedido-detalhe.component.html',
 })
 export class PedidoDetalheComponent {
@@ -73,6 +75,7 @@ export class PedidoDetalheComponent {
   readonly pagadorCpfFormatted    = signal('');          // exibição mascarada
   readonly pagadorError           = signal('');
   readonly copiado                = signal(false);
+  readonly chatAberto             = signal(false);
 
   private copiadoTimer: ReturnType<typeof setTimeout> | null = null;
 

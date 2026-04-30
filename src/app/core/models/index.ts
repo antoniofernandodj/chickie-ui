@@ -689,3 +689,23 @@ export interface CreatePagamentoResponse {
 export interface ApiError        { error:    string; }
 export interface MessageResponse { message:  string; }
 export interface FavoritaResponse{ favorita: boolean; }
+
+// ─── Chat ────────────────────────────────────────────────────────────────────
+
+export interface MensagemChat {
+  uuid:           string;
+  pedido_uuid:    string | null;
+  loja_uuid:      string;
+  usuario_uuid:   string;
+  remetente_uuid: string;
+  texto:          string;
+  lida:           boolean;
+  criado_em:      string;
+}
+
+export interface CreateMensagemRequest {
+  loja_uuid:      string;
+  usuario_uuid:   string;
+  texto:          string;
+  pedido_uuid?:   string | null;
+}
