@@ -196,12 +196,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Alta** — UX padrão.
 - **Dependências**: 5.1.
 
-### 5.4 Lookup de CEP (autocomplete de endereço)
-- **Por que**: endereços são digitados manualmente em `criar-pedido-modal`, `perfil`, admin. Padrão BR é digitar CEP e auto-preencher (ViaCEP).
-- **O que construir**: `CepService` consumindo `https://viacep.com.br/ws/:cep/json/`, integrado a um `EnderecoFormComponent` reutilizável que substitua os 4 forms duplicados hoje (perfil, modal, admin endereços loja, admin endereços entrega).
-- **Prioridade**: **Alta** — economiza ~30s por pedido.
-- **Dependências**: nenhuma.
-
 ### 5.5 Distribuição de estrelas real
 - **Por que**: em `loja-detalhe.component.html` a distribuição de notas não é calculada. A lógica já existe em `admin.component.ts` — precisa ser reutilizada.
 - **O que construir**: usar `marketingService.listarAvaliacoesLoja(uuid)` em `LojaDetalheComponent` e calcular distribuição localmente (mesmo código de `admin.component.ts`).
@@ -290,13 +284,8 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Média**.
 - **Dependências**: 1.1, 3.1.
 
-### 6.9 `EnderecoFormComponent` compartilhado
-- **Por que**: o mesmo formulário (CEP, logradouro, número, complemento, bairro, cidade, estado) está implementado em 4+ lugares. Manutenção dolorosa.
-- **O que construir**: `EnderecoFormComponent` em `src/app/shared/components/endereco-form.component.ts` exportando `FormGroup` reutilizável + integração com `CepService` (5.4).
-- **Prioridade**: **Média**.
-- **Dependências**: 5.4.
-
 ### 6.10 Normalização e reconexão WebSocket centralizadas
+
 - **Por que**: `PedidosLiveService` tem boilerplate de reconexão repetido em 2 métodos, e a normalização de tipos numéricos (string vs number do backend) está duplicada em `pedido.service.ts` e `pedidos-live.service.ts`.
 - **O que construir**: helper genérico `createReconnectingWS<T>(urlFn, normalizer)` antes de adicionar mais 3-4 WS (entregador, chat, push). Extrair `pedido.normalizer.ts`.
 - **Prioridade**: **Média** — refactoring necessário antes de escalar WS.

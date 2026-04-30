@@ -27,6 +27,7 @@ import {
   Pedido,
   CreatePedidoRequest,
   CreatePagamentoResponse,
+  EnderecoFormValue,
 } from '../../core/models';
 import { AuthService } from '../../core/services/auth.service';
 import { CartService, CartItem, CartParte } from '../../core/services/cart.service';
@@ -38,18 +39,9 @@ import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.ser
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
+import { EnderecoFormComponent } from '../../shared/components';
 
 // ─── Local types ──────────────────────────────────────────────────────────────
-
-interface EnderecoForm {
-  logradouro:   string;
-  numero:       string;
-  complemento:  string;
-  bairro:       string;
-  cidade:       string;
-  estado:       string;
-  cep:          string;
-}
 
 interface CategoriaStep {
   tipo:     'categoria';
@@ -67,7 +59,7 @@ type Step = CategoriaStep | FixedStep;
 
 @Component({
   selector: 'app-criar-pedido-modal',
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, EnderecoFormComponent],
   templateUrl: './criar-pedido-modal.component.html',
 })
 export class CriarPedidoModalComponent implements OnInit, OnDestroy {
@@ -169,7 +161,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   readonly enderecosUsuario = signal<EnderecoUsuario[]>([]);
   enderecoSelecionadoUuid: string | null = null;
 
-  enderecoForm: EnderecoForm = {
+  enderecoForm: EnderecoFormValue = {
     logradouro: '',
     numero: '',
     complemento: '',
@@ -182,11 +174,11 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   get enderecoValido(): boolean {
     const f = this.enderecoForm;
     return (
-      f.logradouro.trim() !== '' &&
-      f.numero.trim() !== '' &&
-      f.bairro.trim() !== '' &&
-      f.cidade.trim() !== '' &&
-      f.estado.trim() !== ''
+      f.logradouro?.trim() !== '' &&
+      f.numero?.trim() !== '' &&
+      f.bairro?.trim() !== '' &&
+      f.cidade?.trim() !== '' &&
+      f.estado?.trim() !== ''
     );
   }
 

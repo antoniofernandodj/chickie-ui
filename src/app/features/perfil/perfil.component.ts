@@ -8,13 +8,13 @@ import { AuthService } from '../../core/services/auth.service';
 import { EnderecoUsuario, EnderecoUsuarioRequest } from '../../core/models';
 import {
   UiTabBarComponent, UiCardComponent, UiInputComponent,
-  UiButtonComponent, UiAvatarComponent, UiTab,
+  UiButtonComponent, UiAvatarComponent, UiTab, EnderecoFormComponent,
 } from '../../shared/components';
 
 @Component({
   selector: 'app-perfil',
   imports: [ReactiveFormsModule,
-    UiTabBarComponent, UiCardComponent, UiInputComponent, UiButtonComponent, UiAvatarComponent],
+    UiTabBarComponent, UiCardComponent, UiInputComponent, UiButtonComponent, UiAvatarComponent, EnderecoFormComponent],
   templateUrl: './perfil.component.html',
 })
 export class PerfilComponent {
@@ -49,35 +49,26 @@ export class PerfilComponent {
   readonly enderecos  = computed(() => this._enderecos() ?? []);
 
   formEnd = this.fb.group({
-    cep:         [''],
-    logradouro:  ['', Validators.required],
-    numero:      ['', Validators.required],
-    complemento: [''],
-    bairro:      ['', Validators.required],
-    cidade:      ['', Validators.required],
-    estado:      ['', [Validators.required, Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)]],
-    _uuid:       ['' as string | null],
+    endereco: [null as any],
+    _uuid:    ['' as string | null],
   });
 
   get fe() { return this.formEnd.controls; }
 
-  fieldError(ctrl: AbstractControl | null): string | null {
-    if (!ctrl?.invalid || !ctrl?.touched) return null;
-    if (ctrl.errors?.['required'])   return 'Campo obrigatório.';
-    if (ctrl.errors?.['maxlength'])  return `Máximo ${ctrl.errors['maxlength'].requiredLength} caracteres.`;
-    if (ctrl.errors?.['pattern'])    return 'Deve ter 2 letras maiúsculas (ex: SP).';
-    return null;
-  }
-
   emptyForm() {
-    this.formEnd.reset({ cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', _uuid: null });
+    this.formEnd.reset({ endereco: null, _uuid: null });
   }
 
   abrirFormNovo() { this.emptyForm(); this.editando.set(null); this.showForm.set(true); this.formError.set(''); }
 
   editarEndereco(e: EnderecoUsuario) {
-    this.formEnd.patchValue({ cep: e.cep ?? '', logradouro: e.logradouro, numero: e.numero,
-      complemento: e.complemento ?? '', bairro: e.bairro, cidade: e.cidade, estado: e.estado, _uuid: e.uuid });
+    this.formEnd.patchValue({
+      endereco: {
+        cep: e.cep ?? '', logradouro: e.logradouro, numero: e.numero,
+        complemento: e.complemento ?? '', bairro: e.bairro, cidade: e.cidade, estado: e.estado
+      },
+      _uuid: e.uuid
+    });
     this.editando.set(e.uuid);
     this.showForm.set(true);
     this.formError.set('');
@@ -88,10 +79,11 @@ export class PerfilComponent {
   salvarEndereco() {
     if (this.formEnd.invalid) { this.formEnd.markAllAsTouched(); this.formError.set('Preencha os campos obrigatórios.'); return; }
     this.formLoading.set(true); this.formError.set('');
-    const { logradouro, numero, bairro, cidade, estado, cep, complemento } = this.formEnd.value;
+
+    const { endereco } = this.formEnd.value;
     const payload: EnderecoUsuarioRequest = {
-      cep: cep || null, logradouro: logradouro!, numero: numero!,
-      complemento: complemento || null, bairro: bairro!, cidade: cidade!, estado: estado!,
+      cep: endereco.cep || null, logradouro: endereco.logradouro!, numero: endereco.numero!,
+      complemento: endereco.complemento || null, bairro: endereco.bairro!, cidade: endereco.cidade!, estado: endereco.estado!,
     };
     const uuid = this.editando();
     const op   = uuid ? this.endService.atualizar(uuid, payload) : this.endService.criar(payload);

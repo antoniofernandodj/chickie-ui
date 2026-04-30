@@ -19,6 +19,7 @@ import {
   Cupom,
   CreatePedidoRequest,
   CreatePagamentoResponse,
+  EnderecoFormValue,
 } from '../../core/models';
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -29,23 +30,14 @@ import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { HorarioService } from '../../core/services/horario.service';
+import { EnderecoFormComponent } from '../../shared/components';
 
 type CheckoutStep = 'endereco' | 'pagamento' | 'resumo';
-
-interface EnderecoForm {
-  logradouro:  string;
-  numero:      string;
-  complemento: string;
-  bairro:      string;
-  cidade:      string;
-  estado:      string;
-  cep:         string;
-}
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, SlicePipe],
+  imports: [FormsModule, DecimalPipe, SlicePipe, EnderecoFormComponent],
   templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
@@ -88,7 +80,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   readonly enderecosUsuario = signal<EnderecoUsuario[]>([]);
   enderecoSelecionadoUuid: string | null = null;
 
-  enderecoForm: EnderecoForm = {
+  enderecoForm: EnderecoFormValue = {
     logradouro:  '',
     numero:      '',
     complemento: '',
@@ -101,11 +93,11 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   get enderecoValido(): boolean {
     const f = this.enderecoForm;
     return (
-      f.logradouro.trim() !== '' &&
-      f.numero.trim()     !== '' &&
-      f.bairro.trim()     !== '' &&
-      f.cidade.trim()     !== '' &&
-      f.estado.trim()     !== ''
+      f.logradouro?.trim() !== '' &&
+      f.numero?.trim()     !== '' &&
+      f.bairro?.trim()     !== '' &&
+      f.cidade?.trim()     !== '' &&
+      f.estado?.trim()     !== ''
     );
   }
 

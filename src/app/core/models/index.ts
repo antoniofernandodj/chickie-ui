@@ -490,6 +490,16 @@ export interface UpdateEnderecoLojaRequest {
 
 // ─── Horário de Funcionamento ──────────────────────────────────────────────
 
+export interface EnderecoFormValue {
+  cep:         string;
+  logradouro:  string;
+  numero:      string;
+  complemento: string;
+  bairro:      string;
+  cidade:      string;
+  estado:      string;
+}
+
 export interface HorarioFuncionamento {
   uuid:       string;
   loja_uuid:  string;

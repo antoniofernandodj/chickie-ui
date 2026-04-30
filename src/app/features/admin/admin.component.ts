@@ -16,15 +16,15 @@ import { PedidoService } from '../../core/services/pedido.service';
 import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { PhoneMaskDirective } from '../../shared/directives/phone-mask.directive';
 import { PhonePipe } from '../../shared/pipes/phone.pipe';
-import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido, ItemPedido } from '../../core/models';
-import { STATUS_PEDIDO_CFG, UiTabBarComponent, UiSpinnerComponent, UiTab } from '../../shared/components';
+import { Loja, Funcionario, Entregador, CategoriaProdutos, Produto, CreateCategoriaRequest, UpdateFuncionarioRequest, UpdateEntregadorRequest, Adicional, CreateAdicionalRequest, EnderecoLoja, CreateEnderecoLojaRequest, UpdateEnderecoLojaRequest, HorarioFuncionamento, CreateHorarioFuncionamentoRequest, Cupom, CreateCupomRequest, UpdateCupomRequest, TipoDesconto, StatusCupom, ConfiguracaoDePedidosLoja, TipoCalculoPedido, AvaliacaoDeLoja, Promocao, CreatePromocaoRequest, TipoEscopo, Pedido, StatusPedido, ItemPedido, EnderecoFormValue } from '../../core/models';
+import { STATUS_PEDIDO_CFG, UiTabBarComponent, UiSpinnerComponent, UiTab, EnderecoFormComponent } from '../../shared/components';
 
 const STATUS_CFG = STATUS_PEDIDO_CFG;
 
 @Component({
   selector: 'app-admin',
   imports: [ReactiveFormsModule, DecimalPipe, DatePipe, PhoneMaskDirective, PhonePipe, DragDropModule,
-    UiTabBarComponent, UiSpinnerComponent],
+    UiTabBarComponent, UiSpinnerComponent, EnderecoFormComponent],
   templateUrl: './admin.component.html',
 })
 export class AdminComponent {
@@ -1867,13 +1867,7 @@ export class AdminComponent {
   }
 
   enderecoForm = this.fb.group({
-    cep: [''],
-    logradouro: ['', Validators.required],
-    numero: ['', Validators.required],
-    complemento: [''],
-    bairro: ['', Validators.required],
-    cidade: ['', Validators.required],
-    estado: ['', Validators.required],
+    endereco: [null as any],
     latitude: [''],
     longitude: [''],
   });
@@ -1897,14 +1891,15 @@ export class AdminComponent {
     this.enderecoLoadingSubmit.set(true);
     this.enderecoError.set('');
     const fv = this.enderecoForm.value;
+    const end = fv.endereco!;
     this.adminService.criarEnderecoLoja(loja.uuid, {
-      cep: fv.cep || null,
-      logradouro: fv.logradouro!,
-      numero: fv.numero!,
-      complemento: fv.complemento || null,
-      bairro: fv.bairro!,
-      cidade: fv.cidade!,
-      estado: fv.estado!,
+      cep: end.cep || null,
+      logradouro: end.logradouro!,
+      numero: end.numero!,
+      complemento: end.complemento || null,
+      bairro: end.bairro!,
+      cidade: end.cidade!,
+      estado: end.estado!,
       latitude: fv.latitude ? parseFloat(fv.latitude) : null,
       longitude: fv.longitude ? parseFloat(fv.longitude) : null,
     }).subscribe({
@@ -1924,13 +1919,15 @@ export class AdminComponent {
   abrirEdicaoEndereco(endereco: EnderecoLoja) {
     this.editEnderecoId.set(endereco.uuid);
     this.enderecoForm.patchValue({
-      cep: endereco.cep ?? '',
-      logradouro: endereco.logradouro,
-      numero: endereco.numero,
-      complemento: endereco.complemento ?? '',
-      bairro: endereco.bairro,
-      cidade: endereco.cidade,
-      estado: endereco.estado,
+      endereco: {
+        cep: endereco.cep ?? '',
+        logradouro: endereco.logradouro,
+        numero: endereco.numero,
+        complemento: endereco.complemento ?? '',
+        bairro: endereco.bairro,
+        cidade: endereco.cidade,
+        estado: endereco.estado,
+      },
       latitude: endereco.latitude?.toString() ?? '',
       longitude: endereco.longitude?.toString() ?? '',
     });
@@ -1954,14 +1951,15 @@ export class AdminComponent {
     this.enderecoLoadingSubmit.set(true);
     this.enderecoError.set('');
     const fv = this.enderecoForm.value;
+    const end = fv.endereco!;
     this.adminService.atualizarEnderecoLoja(loja.uuid, enderecoUuid, {
-      cep: fv.cep || null,
-      logradouro: fv.logradouro,
-      numero: fv.numero,
-      complemento: fv.complemento || null,
-      bairro: fv.bairro,
-      cidade: fv.cidade,
-      estado: fv.estado,
+      cep: end.cep || null,
+      logradouro: end.logradouro,
+      numero: end.numero,
+      complemento: end.complemento || null,
+      bairro: end.bairro,
+      cidade: end.cidade,
+      estado: end.estado,
       latitude: fv.latitude ? parseFloat(fv.latitude) : null,
       longitude: fv.longitude ? parseFloat(fv.longitude) : null,
     }).subscribe({

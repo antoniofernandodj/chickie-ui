@@ -35,26 +35,7 @@
             {{ editando() ? 'Editar endereço' : 'Novo endereço' }}
           </h2>
           <form [formGroup]="formEnd" (ngSubmit)="salvarEndereco()" class="space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-              <div class="col-span-2">
-                <ui-input formControlName="cep" label="CEP" placeholder="00000-000" size="sm"/>
-              </div>
-              <div class="col-span-2">
-                <ui-input formControlName="logradouro" label="Logradouro *" placeholder="Rua das Flores"
-                          size="sm" [error]="fieldError(fe.logradouro)"/>
-              </div>
-              <ui-input formControlName="numero"      label="Número *"      placeholder="123"
-                        size="sm" [error]="fieldError(fe.numero)"/>
-              <ui-input formControlName="complemento" label="Complemento"   placeholder="Apto 101" size="sm"/>
-              <ui-input formControlName="bairro"      label="Bairro *"      placeholder="Centro"
-                        size="sm" [error]="fieldError(fe.bairro)"/>
-              <ui-input formControlName="cidade"      label="Cidade *"      placeholder="São Paulo"
-                        size="sm" [error]="fieldError(fe.cidade)"/>
-              <div class="col-span-2">
-                <ui-input formControlName="estado" label="Estado *" placeholder="SP" size="sm"
-                          [error]="fieldError(fe.estado)"/>
-              </div>
-            </div>
+            <app-endereco-form formControlName="endereco" size="sm" />
 
             @if (formError()) {
               <p class="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{{ formError() }}</p>
