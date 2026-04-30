@@ -292,6 +292,22 @@ export interface UpdateCategoriaGlobalRequest {
   drink_mode: boolean;
 }
 
+export interface CategoriaCobertura {
+  uuid:        string;
+  nome:        string;
+  tem_produto: boolean;
+}
+
+export interface ProdutosPorLoja {
+  uuid:     string;
+  produtos: Produto[];
+}
+
+export interface CategoriaProdutosGlobalResponse {
+  categoria_uuid: string;
+  lojas:          ProdutosPorLoja[];
+}
+
 // ─── Pedido ──────────────────────────────────────────────────────────────────
 
 export interface AdicionalDeItemDePedido {

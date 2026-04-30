@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Adicional,
+  CategoriaCobertura,
   CategoriaProdutos,
+  CategoriaProdutosGlobalResponse,
   CreateAdicionalRequest,
   CreateCategoriaRequest,
   Produto,
@@ -99,6 +101,16 @@ export class CatalogoService {
 
   listarCategoriasGlobais(): Observable<CategoriaProdutos[]> {
     return this.http.get<CategoriaProdutos[]>(`${this.base}/categorias/globais`);
+  }
+
+  listarCategoriasComCobertura(): Observable<CategoriaCobertura[]> {
+    return this.http.get<CategoriaCobertura[]>(`${this.base}/categorias/globais/cobertura`);
+  }
+
+  listarProdutosPorCategoriaGlobal(categoriaUuid: string): Observable<CategoriaProdutosGlobalResponse> {
+    return this.http.get<CategoriaProdutosGlobalResponse>(
+      `${this.base}/categorias/globais/${categoriaUuid}/produtos`,
+    );
   }
 
   atualizarCategoria(

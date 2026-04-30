@@ -50,6 +50,14 @@ export const routes: Routes = [
     title: 'Loja — Chiquitos',
   },
   {
+    path: 'categorias/:uuid',
+    loadComponent: () =>
+      import('./features/categorias/categoria-detalhe.component').then(
+        (m) => m.CategoriaDetalheComponent,
+      ),
+    title: 'Categoria — Chiquitos',
+  },
+  {
     path: 'pedidos',
     loadComponent: () =>
       import('./features/pedidos/pedidos.component').then(

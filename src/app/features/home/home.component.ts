@@ -3,9 +3,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { LojaService } from '../../core/services/loja.service';
+import { CatalogoService } from '../../core/services/catalogo.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
-import { catchError, debounceTime, distinctUntilChanged, of, switchMap, Subject } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, of, switchMap, Subject } from 'rxjs';
+import { CategoriaCobertura } from '../../core/models';
 import { UiEmptyStateComponent, UiModalComponent } from '../../shared/components';
+import { categoriaEmoji } from '../categorias/categoria-detalhe.component';
 
 @Component({
   selector: 'app-home',
@@ -14,6 +17,7 @@ import { UiEmptyStateComponent, UiModalComponent } from '../../shared/components
 })
 export class HomeComponent {
   private lojaService        = inject(LojaService);
+  private catalogoService    = inject(CatalogoService);
   private pedidoLocalStorage = inject(PedidoLocalStorageService);
 
   readonly skeletons     = Array(8);
@@ -32,9 +36,19 @@ export class HomeComponent {
     { initialValue: null }
   );
 
-  readonly loading      = computed(() => this.search().trim() !== '' && this.lojas() === null);
+  readonly categorias = toSignal(
+    this.catalogoService.listarCategoriasComCobertura().pipe(
+      map(cats => cats.filter(c => c.tem_produto)),
+      catchError(() => of([] as CategoriaCobertura[])),
+    ),
+    { initialValue: null }
+  );
+
+  readonly loading       = computed(() => this.search().trim() !== '' && this.lojas() === null);
   readonly pedidosLocais = computed(() => this.pedidoLocalStorage.pedidos());
   readonly confirmandoRemocao = signal<string | null>(null);
+
+  getCategoriaEmoji(nome: string): string { return categoriaEmoji(nome); }
 
   onSearchInput(value: string) { this.searchSubject.next(value); }
 

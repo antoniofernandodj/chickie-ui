@@ -182,11 +182,14 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Alta** — descoberta é o motor do app.
 - **Dependências**: backend.
 
-### 5.2 Categorização global e exploração ("Pizzaria", "Hamburgueria")
+### 5.2 Categorização global e exploração ("Pizzaria", "Hamburgueria") ✅
 - **Por que**: existe `CategoriaProdutos` global (owner gerencia), mas a home não usa. Não há landing por categoria tipo iFood.
-- **O que construir**:
-  - Rota `/categorias/:slug` listando lojas que servem aquela categoria.
-  - Carrossel de categorias na home com ícones.
+- **Implementado**:
+  - Rota `/categorias/:uuid` (`CategoriaDetalheComponent`) listando produtos agrupados por loja.
+  - Carrossel de categorias na home (só exibe categorias com `tem_produto: true`).
+  - `CatalogoService.listarCategoriasComCobertura()` — `GET /catalogo/categorias/globais/cobertura`.
+  - `CatalogoService.listarProdutosPorCategoriaGlobal(uuid)` — `GET /catalogo/categorias/globais/:uuid/produtos`.
+  - Mapeamento emoji por nome de categoria; skeleton loading em ambas as superfícies.
 - **Prioridade**: **Média**.
 - **Dependências**: 5.1.
 
@@ -221,12 +224,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
   - Métodos `AuthService.solicitarRedefinicao(email)` e `redefinirSenha(token, senha)`.
 - **Prioridade**: **Alta** — bloqueador real para usuários.
 - **Dependências**: backend de envio de email + token de reset.
-
-### 5.9 Página da Loja em horário fechado
-- **Por que**: `HorarioFuncionamento[]` é gerenciado pelo admin, mas `loja-detalhe.component.ts` não bloqueia pedido fora do horário.
-- **O que construir**: `HorarioService.estaAberta(loja)` (puro), banner "Loja fechada — abre amanhã às 18h" no `LojaDetalheComponent`, desabilitar botão "Adicionar ao carrinho".
-- **Prioridade**: **Alta** — evita pedidos fantasma.
-- **Dependências**: nenhuma; serviço `HorarioService` já existe.
 
 ### 5.10 Loading skeletons consistentes
 - **Por que**: `UiSkeletonComponent` existe mas nem todas as listas têm skeletons. Pedido detalhe mostra spinner em vez de layout-skeleton.
@@ -319,7 +316,7 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 2. Avaliação pós-entrega automática (2.4)
 3. Repetir pedido (2.3)
 4. Histórico de pagamentos (2.6)
-5. Categorização global na home (5.2)
+5. ~~Categorização global na home (5.2)~~ ✅ feito
 6. Gestão de estoque (4.2)
 7. Testes E2E (6.4)
 8. PWA + Sentry (6.3, 6.6)
