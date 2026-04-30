@@ -285,7 +285,7 @@
         <!-- Abas do modal -->
         <div class="px-5 pt-2 border-b border-gray-100 bg-gray-50/50">
           <ui-tab-bar [tabs]="pedidoDetalheTabs"
-                      [activeTab]="pedidoDetalheAba()"
+                      [active]="pedidoDetalheAba()"
                       (tabChange)="pedidoDetalheAba.set($any($event))"
                       size="sm" />
         </div>
