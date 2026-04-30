@@ -696,6 +696,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
                   this.submitting.set(false);
                   this.codigoCriado.set(res.codigo);
                   this.pagamentoPix.set(pix);
+                  this.cart.set([]);
                   this.cartService.limpar();
                   this._iniciarWatchPix(res.codigo);
                 },
@@ -703,12 +704,14 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
                   // PIX falhou: navega normalmente, usuário pode pagar depois
                   toast.error('Pedido criado, mas falha ao gerar PIX. Pague na tela do pedido.');
                   this.submitting.set(false);
+                  this.cart.set([]);
                   this.cartService.limpar();
                   this._navegarAposCriar(isAuth, res.codigo);
                 },
               });
             } else {
               this.submitting.set(false);
+              this.cart.set([]);
               this.cartService.limpar();
               this._navegarAposCriar(isAuth, res.codigo);
             }
