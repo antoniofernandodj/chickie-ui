@@ -182,17 +182,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Alta** — descoberta é o motor do app.
 - **Dependências**: backend.
 
-### 5.2 Categorização global e exploração ("Pizzaria", "Hamburgueria") ✅
-- **Por que**: existe `CategoriaProdutos` global (owner gerencia), mas a home não usa. Não há landing por categoria tipo iFood.
-- **Implementado**:
-  - Rota `/categorias/:uuid` (`CategoriaDetalheComponent`) listando produtos agrupados por loja.
-  - Carrossel de categorias na home (só exibe categorias com `tem_produto: true`).
-  - `CatalogoService.listarCategoriasComCobertura()` — `GET /catalogo/categorias/globais/cobertura`.
-  - `CatalogoService.listarProdutosPorCategoriaGlobal(uuid)` — `GET /catalogo/categorias/globais/:uuid/produtos`.
-  - Mapeamento emoji por nome de categoria; skeleton loading em ambas as superfícies.
-- **Prioridade**: **Média**.
-- **Dependências**: 5.1.
-
 ### 5.3 Geolocalização do Cliente / "Lojas perto de você"
 - **Por que**: ordem de exibição hoje não considera distância. `EnderecoEntrega` já tem `lat/lng`, `Loja.raio_entrega_km` existe — falta consumir.
 - **O que construir**: `GeolocationService` que pede `navigator.geolocation`, salva em signal global, usa coordenadas em `LojaService.filtrar`. Adicionar campo "endereço de entrega ativo" no `HeaderComponent`.
