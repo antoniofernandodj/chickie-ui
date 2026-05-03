@@ -9,6 +9,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CartService } from '../../core/services/cart.service';
+import { PushNotificationService } from '../../core/services/push-notification.service';
 
 @Component({
   selector: 'app-header',
@@ -21,6 +22,7 @@ export class HeaderComponent {
   readonly cart = inject(CartService);
   private  router = inject(Router);
   private  platform = inject(PLATFORM_ID);
+  private  push = inject(PushNotificationService);
 
   readonly menuOpen = signal(false);
   readonly mobileOpen = signal(false);
@@ -37,7 +39,8 @@ export class HeaderComponent {
     if (!target.closest('[data-menu]')) this.menuOpen.set(false);
   }
 
-  logout() {
+  async logout(): Promise<void> {
+    await this.push.unsubscribe();
     this.auth.logout();
     this.menuOpen.set(false);
     this.mobileOpen.set(false);
