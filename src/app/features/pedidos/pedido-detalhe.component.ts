@@ -10,6 +10,7 @@ import { PagamentoService } from '../../core/services/pagamento.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Pedido, StatusPedido, CreatePagamentoResponse } from '../../core/models';
 import { ChatPanelComponent } from '../../shared/components/chat-panel.component';
+import { UiSkeletonComponent } from '../../shared/components';
 import { validarCpf, formatCpf } from '../../core/utils/cpf-utils';
 
 type Steps = {
@@ -34,7 +35,7 @@ const STATUS_TERMINAL: StatusPedido[] = ['entregue', 'cancelado'];
 @Component({
   selector: 'app-pedido-detalhe',
   standalone: true,
-  imports: [RouterLink, DecimalPipe, ChatPanelComponent, DatePipe],
+  imports: [RouterLink, DecimalPipe, ChatPanelComponent, DatePipe, UiSkeletonComponent],
   templateUrl: './pedido-detalhe.component.html',
 })
 export class PedidoDetalheComponent {

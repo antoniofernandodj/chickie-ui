@@ -208,14 +208,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Alta** — bloqueador real para usuários.
 - **Dependências**: backend de envio de email + token de reset.
 
-### 5.10 Loading skeletons consistentes
-- **Por que**: `UiSkeletonComponent` existe mas nem todas as listas têm skeletons. Pedido detalhe mostra spinner em vez de layout-skeleton.
-- **O que construir**: padronizar uso de `UiSkeletonComponent` em `pedidos.component.html`, `pedido-detalhe.component.html`, `favoritos.component.html`.
-- **Prioridade**: **Baixa**.
-- **Dependências**: nenhuma.
-
----
-
 ## 6. Infra & Qualidade
 
 ### 6.1 Guards de role granulares
@@ -281,14 +273,12 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 5. Dashboard admin (4.1)
 6. Header reativo a role (6.8)
 7. `EnderecoFormComponent` compartilhado (6.9)
-8. ~~Normalização WS centralizada (6.10)~~ ✅ feito
 
 ### Sprint 3 — Crescimento / Qualidade
 1. Mapa ao vivo do entregador (1.3)
 2. Avaliação pós-entrega automática (2.4)
 3. Repetir pedido (2.3)
 4. Histórico de pagamentos (2.6)
-5. ~~Categorização global na home (5.2)~~ ✅ feito
 6. Gestão de estoque (4.2)
 7. Testes E2E (6.4)
 8. PWA + Sentry (6.3, 6.6)
@@ -301,10 +291,8 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - Dark mode (5.6)
 - Onboarding (5.7)
 - i18n (6.5)
-- ~~Preload strategy (6.7)~~ ✅ feito
 - Histórico de ganhos do entregador (1.4)
 - Impressão térmica (3.2)
-- Skeletons consistentes (5.10)
 
 ---
 

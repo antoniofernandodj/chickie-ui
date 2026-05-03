@@ -8,10 +8,10 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       @for (_ of [1,2,3]; track $index) {
         <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
-          <div class="h-36 skeleton bg-gray-200"></div>
+          <ui-skeleton cls="h-36 w-full rounded-none"/>
           <div class="p-4 space-y-2">
-            <div class="h-4 skeleton bg-gray-200 rounded w-3/4"></div>
-            <div class="h-3 skeleton bg-gray-100 rounded w-1/2"></div>
+            <ui-skeleton cls="h-4 w-3/4 rounded"/>
+            <ui-skeleton cls="h-3 w-1/2 rounded"/>
           </div>
         </div>
       }

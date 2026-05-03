@@ -6,11 +6,11 @@ import { PedidoService } from '../../core/services/pedido.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Pedido, StatusPedido } from '../../core/models';
-import { STATUS_PEDIDO_CFG, UiModalComponent, UiEmptyStateComponent, UiStatusBadgeComponent } from '../../shared/components';
+import { STATUS_PEDIDO_CFG, UiModalComponent, UiEmptyStateComponent, UiStatusBadgeComponent, UiSkeletonComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-pedidos',
-  imports: [RouterLink, DecimalPipe, UiModalComponent, UiEmptyStateComponent, UiStatusBadgeComponent],
+  imports: [RouterLink, DecimalPipe, UiModalComponent, UiEmptyStateComponent, UiStatusBadgeComponent, UiSkeletonComponent],
   templateUrl: './pedidos.component.html',
 })
 export class PedidosComponent {

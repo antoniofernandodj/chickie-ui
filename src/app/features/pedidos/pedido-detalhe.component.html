@@ -11,9 +11,9 @@
 
   @if (loading()) {
     <div class="space-y-4">
-      <div class="h-6 skeleton bg-gray-200 rounded w-1/2"></div>
-      <div class="bg-white rounded-2xl p-6 skeleton h-32"></div>
-      <div class="bg-white rounded-2xl p-6 skeleton h-48"></div>
+      <ui-skeleton cls="h-6 w-1/2 rounded"/>
+      <ui-skeleton cls="h-32 rounded-2xl"/>
+      <ui-skeleton cls="h-48 rounded-2xl"/>
     </div>
   } @else if (!pedido()) {
     <div class="text-center py-20">
