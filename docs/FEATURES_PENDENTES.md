@@ -252,11 +252,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Média**.
 - **Dependências**: conta Sentry.
 
-### 6.7 Lazy split + preload strategy
-- **Por que**: rotas usam `loadComponent` (bom) mas não há `withPreloading`. Primeiro clique é lento.
-- **O que construir**: em `app.config.ts`, `provideRouter(routes, withPreloading(PreloadAllModules))` ou estratégia custom.
-- **Prioridade**: **Baixa**.
-- **Dependências**: nenhuma.
 
 ### 6.8 Header reativo a role
 - **Por que**: `header.component.ts` mostra os mesmos links para todos. Entregador não deveria ver "Favoritos"; admin deveria ver atalho para "Painel".
@@ -264,12 +259,6 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - **Prioridade**: **Média**.
 - **Dependências**: 1.1, 3.1.
 
-### 6.10 Normalização e reconexão WebSocket centralizadas
-
-- **Por que**: `PedidosLiveService` tem boilerplate de reconexão repetido em 2 métodos, e a normalização de tipos numéricos (string vs number do backend) está duplicada em `pedido.service.ts` e `pedidos-live.service.ts`.
-- **O que construir**: helper genérico `createReconnectingWS<T>(urlFn, normalizer)` antes de adicionar mais 3-4 WS (entregador, chat, push). Extrair `pedido.normalizer.ts`.
-- **Prioridade**: **Média** — refactoring necessário antes de escalar WS.
-- **Dependências**: nenhuma.
 
 ---
 
@@ -292,7 +281,7 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 5. Dashboard admin (4.1)
 6. Header reativo a role (6.8)
 7. `EnderecoFormComponent` compartilhado (6.9)
-8. Normalização WS centralizada (6.10)
+8. ~~Normalização WS centralizada (6.10)~~ ✅ feito
 
 ### Sprint 3 — Crescimento / Qualidade
 1. Mapa ao vivo do entregador (1.3)
@@ -312,7 +301,7 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 - Dark mode (5.6)
 - Onboarding (5.7)
 - i18n (6.5)
-- Preload strategy (6.7)
+- ~~Preload strategy (6.7)~~ ✅ feito
 - Histórico de ganhos do entregador (1.4)
 - Impressão térmica (3.2)
 - Skeletons consistentes (5.10)
@@ -322,7 +311,7 @@ O role `funcionario` está modelado (`Funcionario` em `models/index.ts`), o admi
 ## Observações arquiteturais transversais
 
 - **Padrão signals + `toSignal`/`toObservable`** já está consolidado — manter em todas as features novas.
-- **`PedidosLiveService`** é o único serviço com WS e tem boilerplate de reconexão repetido. Refatorar antes de adicionar mais conexões.
-- **Normalização de tipos numéricos** (string vs number do backend) está duplicada — extrair para `pedido.normalizer.ts`.
+- **`createReconnectingWS<T>`** é o helper genérico de WebSocket com reconexão — usar para novos WS (entregador, chat, push).
+- **`PedidoNormalizer`** centraliza normalização de tipos numéricos — reutilizar em novos serviços de pedido.
 - **Modais ad-hoc** (`UiModalComponent` + signal `confirm`) estão repetidos em vários lugares. Considerar `DialogService` (CDK Overlay) ao escalar.
 - O **role `cliente`** nunca é checado explicitamente — qualquer usuário autenticado é tratado como cliente. OK por ora, mas criar `clienteGuard` se surgir feature exclusiva (ex: programa de fidelidade).

@@ -12,30 +12,12 @@ import {
   StatusPedidoResponse,
   UpdateStatusPedidoRequest,
 } from '../models';
+import { PedidoNormalizer } from '../utils/pedido.normalizer';
 
 @Injectable({ providedIn: 'root' })
 export class PedidoService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/pedidos`;
-
-  // A API retorna status capitalizado ("Criado") e valores monetários como string ("80.33")
-  private normalizar(p: any): Pedido {
-    return {
-      ...p,
-      status: (p.status as string).toLowerCase() as StatusPedido,
-      total: parseFloat(p.total),
-      subtotal: parseFloat(p.subtotal),
-      taxa_entrega: parseFloat(p.taxa_entrega ?? '0'),
-      desconto: parseFloat(p.desconto ?? '0'),
-      itens: (p.itens ?? []).map((item: any) => ({
-        ...item,
-        partes: (item.partes ?? []).map((parte: any) => ({
-          ...parte,
-          preco_unitario: parseFloat(parte.preco_unitario),
-        })),
-      })),
-    };
-  }
 
   criar(body: CreatePedidoRequest): Observable<CreatePedidoResponse> {
     return this.http.post<CreatePedidoResponse>(`${this.base}/criar`, body);
@@ -43,7 +25,7 @@ export class PedidoService {
 
   listar(): Observable<Pedido[]> {
     return this.http.get<any[]>(`${this.base}/meus`).pipe(
-      map((lista) => lista.map((p) => this.normalizar(p))),
+      map((lista) => PedidoNormalizer.normalizarPedidos(lista)),
     );
   }
 
@@ -63,19 +45,19 @@ export class PedidoService {
 
   buscar(uuid: string): Observable<Pedido> {
     return this.http.get<any>(`${this.base}/${uuid}`).pipe(
-      map((p) => this.normalizar(p)),
+      map((p) => PedidoNormalizer.normalizarPedido(p)),
     );
   }
 
   buscarPorCodigo(codigo: string): Observable<Pedido> {
     return this.http.get<any>(`${this.base}/codigo/${codigo}`).pipe(
-      map((p) => this.normalizar(p)),
+      map((p) => PedidoNormalizer.normalizarPedido(p)),
     );
   }
 
   listarPorLoja(lojaUuid: string, status: StatusPedido = 'criado'): Observable<Pedido[]> {
     return this.http.get<any[]>(`${this.base}/por-loja/${lojaUuid}`, { params: { status } }).pipe(
-      map((lista) => lista.map((p) => this.normalizar(p))),
+      map((lista) => PedidoNormalizer.normalizarPedidos(lista)),
     );
   }
 

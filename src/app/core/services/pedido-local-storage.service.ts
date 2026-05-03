@@ -1,6 +1,7 @@
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Pedido } from '../models';
+import { PedidoNormalizer } from '../utils/pedido.normalizer';
 
 const STORAGE_KEY = 'chickie_pedidos_locais';
 
@@ -11,30 +12,6 @@ export class PedidoLocalStorageService {
   private readonly _pedidos = signal<Pedido[]>(this.load());
   readonly pedidos = this._pedidos.asReadonly();
 
-  private normalizar(p: any): Pedido {
-    return {
-      ...p,
-      status: typeof p.status === 'string' ? p.status.toLowerCase() as Pedido['status'] : p.status,
-      total:        typeof p.total        === 'string' ? parseFloat(p.total)              : (p.total        ?? 0),
-      subtotal:     typeof p.subtotal     === 'string' ? parseFloat(p.subtotal)           : (p.subtotal     ?? 0),
-      taxa_entrega: typeof p.taxa_entrega === 'string' ? parseFloat(p.taxa_entrega ?? '0'): (p.taxa_entrega ?? 0),
-      desconto:     typeof p.desconto     === 'string' ? parseFloat(p.desconto     ?? '0'): (p.desconto     ?? 0),
-      itens: (p.itens ?? []).map((item: any) => ({
-        ...item,
-        adicionais: (item.adicionais ?? []).map((ad: any) => ({
-          ...ad,
-          preco: typeof ad.preco === 'string' ? parseFloat(ad.preco) : (ad.preco ?? 0),
-        })),
-        partes: (item.partes ?? []).map((parte: any) => ({
-          ...parte,
-          preco_unitario: typeof parte.preco_unitario === 'string'
-            ? parseFloat(parte.preco_unitario)
-            : (parte.preco_unitario ?? 0),
-        })),
-      })),
-    };
-  }
-
   private load(): Pedido[] {
     if (!isPlatformBrowser(this.platformId)) return [];
     try {
@@ -42,7 +19,8 @@ export class PedidoLocalStorageService {
       if (!raw) return [];
       const pedidos = JSON.parse(raw) as any[];
       return Array.isArray(pedidos)
-        ? pedidos.map(p => this.normalizar(p)).sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
+        ? PedidoNormalizer.normalizarPedidos(pedidos)
+            .sort((a, b) => new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime())
         : [];
     } catch {
       return [];
