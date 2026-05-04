@@ -5,6 +5,7 @@ import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { toast } from 'ngx-sonner';
+import { ToastQueueService } from './toast-queue.service';
 import {
   LoginRequest,
   LoginResponse,
@@ -19,6 +20,7 @@ import {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly toastQueue = inject(ToastQueueService);
   private readonly base = `${environment.apiUrl}/auth`;
 
   private readonly _token = signal<string | null>(this.loadToken());
@@ -211,7 +213,7 @@ export class AuthService {
     this._token.set(null);
     this._tokenStatus.set('unauthenticated');
     this._userClassTrigger.set(new Date()); // Força atualização de userClass() para null
-    toast.success('Sessão encerrada com sucesso.');
+    this.toastQueue.enqueue('Sessão encerrada com sucesso.');
   }
 
   /** Extrai o UUID do usuário do token JWT */
