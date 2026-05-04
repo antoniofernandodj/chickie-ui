@@ -1,4 +1,4 @@
-import { Injectable, inject, PLATFORM_ID, signal, computed } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID, signal, computed, afterNextRender } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { tap } from 'rxjs/operators';
@@ -46,7 +46,15 @@ export class AuthService {
   readonly isOwner = computed(() => this.userClass() === 'owner');
 
   constructor() {
-    if (isPlatformBrowser(this.platformId) && this.loadToken()) {
+    // Usamos afterNextRender para garantir que a validação só ocorra no browser
+    // e após a hidratação inicial estar completa, evitando race conditions.
+    afterNextRender(() => {
+      const token = this.loadToken();
+      if (!token) {
+        this._tokenStatus.set('unauthenticated');
+        return;
+      }
+
       this.http.get<Usuario>(`${this.base}/me`).subscribe({
         next: (user) => {
           if (user.classe) {
@@ -56,16 +64,26 @@ export class AuthService {
           if (user.nome) this.saveItem('chickie_nome', user.nome);
           this._tokenStatus.set('valid');
         },
-        error: () => {
-          this.removeItem('chickie_token');
-          this.removeItem('chickie_nome');
-          this.removeItem('chickie_classe');
-          this._token.set(null);
-          this._tokenStatus.set('unauthenticated');
-          toast.error('Sessão expirada. Faça login novamente.');
+        error: (err) => {
+          console.error('[AuthService] Erro ao validar token no startup:', err);
+          
+          // Só limpa o localStorage se for explicitamente 401 (Unauthorized)
+          // Se for erro de rede (0), timeout, ou erro de servidor (5xx), não limpamos.
+          if (err.status === 401) {
+            this.removeItem('chickie_token');
+            this.removeItem('chickie_nome');
+            this.removeItem('chickie_classe');
+            this._token.set(null);
+            this._tokenStatus.set('unauthenticated');
+            toast.error('Sessão expirada. Faça login novamente.');
+          } else {
+            // Em caso de erro de rede ou servidor, paramos o loading mas mantemos o token
+            // para permitir que o usuário tente novamente depois (ex: dando F5).
+            this._tokenStatus.set('unauthenticated');
+          }
         },
       });
-    }
+    });
   }
 
   private loadToken(): string | null {
