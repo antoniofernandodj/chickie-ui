@@ -210,6 +210,8 @@ export class AuthService {
     this.removeItem('chickie_classe');
     this._token.set(null);
     this._tokenStatus.set('unauthenticated');
+    this._userClassTrigger.set(new Date()); // Força atualização de userClass() para null
+    toast.success('Sessão encerrada com sucesso.');
   }
 
   /** Extrai o UUID do usuário do token JWT */
