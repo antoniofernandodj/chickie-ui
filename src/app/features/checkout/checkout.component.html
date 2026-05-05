@@ -129,7 +129,7 @@
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h2 class="font-bold text-gray-900 text-lg mb-5">Endereço de entrega</h2>
 
-              <!-- Saved addresses -->
+              <!-- Saved addresses (authenticated) -->
               @if (enderecosUsuario().length > 0) {
                 <div class="space-y-2 mb-5">
                   <p class="text-sm font-medium text-gray-700 mb-2">Seus endereços</p>
@@ -140,6 +140,27 @@
                       [class.border-gray-200]="enderecoSelecionadoUuid !== end.uuid"
                       [class.bg-gray-50]="enderecoSelecionadoUuid !== end.uuid"
                       [style.border-color]="enderecoSelecionadoUuid === end.uuid ? 'var(--color-brand)' : ''"
+                    >
+                      <p class="font-medium text-gray-900">{{ end.logradouro }}, {{ end.numero }}</p>
+                      <p class="text-gray-500 text-xs mt-0.5">{{ end.bairro }}, {{ end.cidade }} – {{ end.estado }}</p>
+                    </button>
+                  }
+                  <p class="text-xs text-gray-500 pt-1">Ou preencha um endereço diferente abaixo</p>
+                </div>
+                <hr class="border-gray-100 mb-5"/>
+              }
+
+              <!-- Saved addresses (guest) -->
+              @if (!isAuthenticated() && enderecosGuestSalvos().length > 0) {
+                <div class="space-y-2 mb-5">
+                  <p class="text-sm font-medium text-gray-700 mb-2">Endereços usados anteriormente</p>
+                  @for (end of enderecosGuestSalvos(); track end.id) {
+                    <button
+                      (click)="selecionarEnderecoGuest(end)"
+                      class="w-full text-left p-3 rounded-xl border-2 transition-colors text-sm"
+                      [class.border-gray-200]="enderecoGuestSelecionadoId !== end.id"
+                      [class.bg-gray-50]="enderecoGuestSelecionadoId !== end.id"
+                      [style.border-color]="enderecoGuestSelecionadoId === end.id ? 'var(--color-brand)' : ''"
                     >
                       <p class="font-medium text-gray-900">{{ end.logradouro }}, {{ end.numero }}</p>
                       <p class="text-gray-500 text-xs mt-0.5">{{ end.bairro }}, {{ end.cidade }} – {{ end.estado }}</p>
