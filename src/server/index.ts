@@ -30,6 +30,16 @@ app.register(staticPlugin, {
   maxAge: 31536000000,
 });
 
+// The send module writes Cache-Control AFTER the setHeaders callback,
+// so the only reliable way to override it for SW files is an onSend hook.
+const SW_NO_CACHE_PATHS = new Set(['/ngsw-worker.js', '/ngsw.json', '/safety-worker.js', '/worker-basic.min.js']);
+app.addHook('onSend', async (request, reply, payload) => {
+  if (SW_NO_CACHE_PATHS.has(request.url)) {
+    reply.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  }
+  return payload;
+});
+
 /**
  * Handle all other requests by rendering the Angular application.
  */
