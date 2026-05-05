@@ -17,10 +17,17 @@
           [error]="identifierError()"
         />
 
-        <ui-password-input
-          formControlName="senha"
-          [error]="senhaError()"
-        />
+        <div>
+          <ui-password-input
+            formControlName="senha"
+            [error]="senhaError()"
+          />
+          <div class="text-right mt-1.5">
+            <a routerLink="/auth/esqueci-senha" class="text-xs font-medium hover:underline" style="color:var(--color-brand)">
+              Esqueci minha senha
+            </a>
+          </div>
+        </div>
 
         @if (error()) {
           <ui-error-banner [message]="error()"/>

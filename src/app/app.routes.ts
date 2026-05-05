@@ -42,6 +42,22 @@ export const routes: Routes = [
     title: 'Confirmar email — Chiquitos',
   },
   {
+    path: 'auth/esqueci-senha',
+    loadComponent: () =>
+      import('./features/auth/esqueci-senha/esqueci-senha.component').then(
+        (m) => m.EsqueciSenhaComponent,
+      ),
+    title: 'Esqueci minha senha — Chiquitos',
+  },
+  {
+    path: 'auth/redefinir-senha',
+    loadComponent: () =>
+      import('./features/auth/redefinir-senha/redefinir-senha.component').then(
+        (m) => m.RedefinirSenhaComponent,
+      ),
+    title: 'Redefinir senha — Chiquitos',
+  },
+  {
     path: 'loja/:slug',
     loadComponent: () =>
       import('./features/loja/loja-detalhe.component').then(

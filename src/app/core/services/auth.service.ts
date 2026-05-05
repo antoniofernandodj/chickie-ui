@@ -188,6 +188,16 @@ export class AuthService {
     this.saveItem('chickie_nome', nome);
   }
 
+  /** Solicita redefinição de senha — envia email com link */
+  esquecerSenha(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/esqueci-senha`, { email });
+  }
+
+  /** Redefine a senha usando o token recebido por email */
+  redefinirSenha(token: string, nova_senha: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/redefinir-senha`, { token, nova_senha });
+  }
+
   /** Verificar disponibilidade de email */
   verificarEmail(email: string): Observable<{ disponivel: boolean }> {
     return this.http.post<{ disponivel: boolean }>(`${this.base}/verificar-email`, { email });
