@@ -46,6 +46,22 @@ export class PushNotificationService {
   }
 
   // DELETE is sent while token is still valid; browser unsubscription is fire-and-forget.
+  async subscribePorPedido(pedidoUuid: string): Promise<void> {
+    if (!isPlatformBrowser(this.platformId) || !this.swPush.isEnabled) return;
+
+    try {
+      const publicKey = await this.carregarVapidKey();
+      if (!publicKey) return;
+
+      const sub = await this.swPush.requestSubscription({ serverPublicKey: publicKey });
+      await firstValueFrom(
+        this.http.post(`${this.api}/pedidos/${pedidoUuid}/push-subscription`, sub),
+      );
+    } catch (err) {
+      console.warn('Falha ao registrar push subscription para pedido:', err);
+    }
+  }
+
   async unsubscribe(): Promise<void> {
     if (!isPlatformBrowser(this.platformId) || !this.swPush.isEnabled) return;
 

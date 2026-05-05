@@ -356,6 +356,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     this.pedidoService.criar(body).subscribe({
       next: res => {
+        if (!isAuth) {
+          this.push.subscribePorPedido(res.uuid);
+        }
+
         this.pedidoService.buscarPorCodigo(res.codigo).pipe(catchError(() => of(null)))
           .subscribe(pedido => {
             if (pedido) this.pedidoLocalStorage.salvar(pedido);
