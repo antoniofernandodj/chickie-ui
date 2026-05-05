@@ -31,7 +31,11 @@ export class PushNotificationService {
   }
 
   async subscribe(): Promise<void> {
-    if (!isPlatformBrowser(this.platformId) || !this.swPush.isEnabled) return;
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (!this.swPush.isEnabled) {
+      console.warn('[PUSH] swPush.isEnabled=false — service worker desabilitado (apenas funciona em build de produção). Subscription de usuário não registrada.');
+      return;
+    }
 
     try {
       const publicKey = await this.carregarVapidKey();
@@ -47,18 +51,24 @@ export class PushNotificationService {
 
   // DELETE is sent while token is still valid; browser unsubscription is fire-and-forget.
   async subscribePorPedido(pedidoUuid: string): Promise<void> {
-    if (!isPlatformBrowser(this.platformId) || !this.swPush.isEnabled) return;
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (!this.swPush.isEnabled) {
+      console.warn('[PUSH] swPush.isEnabled=false — service worker desabilitado (apenas funciona em build de produção). Subscription para pedido não registrada.', { pedidoUuid });
+      return;
+    }
 
     try {
       const publicKey = await this.carregarVapidKey();
       if (!publicKey) return;
 
       const sub = await this.swPush.requestSubscription({ serverPublicKey: publicKey });
+      console.info('[PUSH] subscription obtida do browser — enviando para backend', { pedidoUuid, endpoint: sub.endpoint });
       await firstValueFrom(
         this.http.post(`${this.api}/pedidos/${pedidoUuid}/push-subscription`, sub),
       );
+      console.info('[PUSH] subscription de pedido salva no backend com sucesso', { pedidoUuid });
     } catch (err) {
-      console.warn('Falha ao registrar push subscription para pedido:', err);
+      console.warn('[PUSH] falha ao registrar push subscription para pedido:', err, { pedidoUuid });
     }
   }
 
