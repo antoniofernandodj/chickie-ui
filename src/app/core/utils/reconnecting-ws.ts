@@ -54,9 +54,15 @@ export function createReconnectingWS<T>(
         ws?.close();
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
         if (!active) {
           console.log(`${logPrefix} Conexão encerrada pelo cliente.`);
+          return;
+        }
+        // Códigos 4000-4999 indicam fechamento intencional do servidor (ex: recurso não encontrado).
+        if (event.code >= 4000) {
+          console.warn(`${logPrefix} Servidor encerrou a conexão (${event.code}: ${event.reason}). Não reconectando.`);
+          observer.complete();
           return;
         }
         console.warn(`${logPrefix} Conexão perdida. Tentando reconectar em ${retryDelay}ms...`);
