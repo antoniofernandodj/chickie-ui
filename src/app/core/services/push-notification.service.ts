@@ -23,9 +23,15 @@ export class PushNotificationService {
       const { public_key } = await firstValueFrom(
         this.http.get<{ public_key: string }>(`${this.api}/push/vapid-public-key`),
       );
+      if (!public_key) {
+        console.error('[PUSH] VAPID_PUBLIC_KEY está vazia no backend — configure a variável de ambiente');
+        return '';
+      }
       this.vapidKey = public_key;
+      console.info('[PUSH] VAPID public key carregada com sucesso');
       return public_key;
-    } catch {
+    } catch (err) {
+      console.error('[PUSH] falha ao buscar VAPID public key do backend:', err);
       return '';
     }
   }
@@ -39,13 +45,18 @@ export class PushNotificationService {
 
     try {
       const publicKey = await this.carregarVapidKey();
-      if (!publicKey) return;
+      if (!publicKey) {
+        console.error('[PUSH] subscribe: publicKey vazia, abortando');
+        return;
+      }
 
+      console.info('[PUSH] solicitando subscription ao browser (usuário)...');
       const sub = await this.swPush.requestSubscription({ serverPublicKey: publicKey });
-
+      console.info('[PUSH] subscription obtida — salvando no backend', { endpoint: sub.endpoint });
       await firstValueFrom(this.http.post(`${this.api}/usuarios/me/push-subscription`, sub));
+      console.info('[PUSH] subscription de usuário salva com sucesso');
     } catch (err) {
-      console.warn('Falha ao registrar push subscription:', err);
+      console.error('[PUSH] falha ao registrar subscription de usuário:', err);
     }
   }
 
@@ -58,17 +69,24 @@ export class PushNotificationService {
     }
 
     try {
-      const publicKey = await this.carregarVapidKey();
-      if (!publicKey) return;
+      const permissao = (Notification as any).permission;
+      console.info('[PUSH] subscribePorPedido iniciado', { pedidoUuid, permissao });
 
+      const publicKey = await this.carregarVapidKey();
+      if (!publicKey) {
+        console.error('[PUSH] subscribePorPedido: publicKey vazia, abortando', { pedidoUuid });
+        return;
+      }
+
+      console.info('[PUSH] solicitando subscription ao browser (pedido guest)...', { pedidoUuid });
       const sub = await this.swPush.requestSubscription({ serverPublicKey: publicKey });
-      console.info('[PUSH] subscription obtida do browser — enviando para backend', { pedidoUuid, endpoint: sub.endpoint });
+      console.info('[PUSH] subscription obtida — enviando para backend', { pedidoUuid, endpoint: sub.endpoint });
       await firstValueFrom(
         this.http.post(`${this.api}/pedidos/${pedidoUuid}/push-subscription`, sub),
       );
       console.info('[PUSH] subscription de pedido salva no backend com sucesso', { pedidoUuid });
     } catch (err) {
-      console.warn('[PUSH] falha ao registrar push subscription para pedido:', err, { pedidoUuid });
+      console.error('[PUSH] falha ao registrar push subscription para pedido:', err, { pedidoUuid });
     }
   }
 
