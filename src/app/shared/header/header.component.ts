@@ -40,18 +40,17 @@ export class HeaderComponent {
   }
 
   logout(): void {
-    // 1. Limpa o auth primeiro para garantir que o token suma do localStorage imediatamente
+    // 1. Tenta remover push subscription (token ainda válido)
+    this.push.unsubscribe().catch(err => console.warn('Logout: falha ao remover push', err));
+
+    // 2. Limpa o auth
     this.auth.logout();
-    
-    // 2. Fecha menus
+
+    // 3. Fecha menus
     this.menuOpen.set(false);
     this.mobileOpen.set(false);
 
-    // 3. Tenta remover push em background (sem await para não travar)
-    this.push.unsubscribe().catch(err => console.warn('Logout: falha ao remover push', err));
-
     // 4. Redireciona via window.location para forçar um refresh total da aplicação
-    // Isso garante que todos os signals e estados de todos os serviços sejam resetados.
     window.location.href = '/';
   }
 }

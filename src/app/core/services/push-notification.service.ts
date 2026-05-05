@@ -13,15 +13,31 @@ export class PushNotificationService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly api = environment.apiUrl;
 
-  async subscribe(): Promise<void> {
-    if (!isPlatformBrowser(this.platformId) || !this.swPush.isEnabled) return;
+  private vapidKey: string | null = null;
+
+  async carregarVapidKey(): Promise<string> {
+    if (!isPlatformBrowser(this.platformId)) return '';
+    if (this.vapidKey) return this.vapidKey;
 
     try {
       const { public_key } = await firstValueFrom(
         this.http.get<{ public_key: string }>(`${this.api}/push/vapid-public-key`),
       );
+      this.vapidKey = public_key;
+      return public_key;
+    } catch {
+      return '';
+    }
+  }
 
-      const sub = await this.swPush.requestSubscription({ serverPublicKey: public_key });
+  async subscribe(): Promise<void> {
+    if (!isPlatformBrowser(this.platformId) || !this.swPush.isEnabled) return;
+
+    try {
+      const publicKey = await this.carregarVapidKey();
+      if (!publicKey) return;
+
+      const sub = await this.swPush.requestSubscription({ serverPublicKey: publicKey });
 
       await firstValueFrom(this.http.post(`${this.api}/usuarios/me/push-subscription`, sub));
     } catch (err) {
@@ -51,5 +67,9 @@ export class PushNotificationService {
 
   get messages$() {
     return this.swPush.messages;
+  }
+
+  get notificationClicks$() {
+    return this.swPush.notificationClicks;
   }
 }

@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { PushNotificationService } from '../../../core/services/push-notification.service';
 import {
   UiInputComponent,
   UiPasswordInputComponent,
@@ -20,7 +19,6 @@ export class LoginComponent {
   private auth   = inject(AuthService);
   private router = inject(Router);
   private fb     = inject(FormBuilder);
-  private push   = inject(PushNotificationService);
 
   form = this.fb.group({
     identifier: ['', [Validators.required]],
@@ -60,7 +58,6 @@ export class LoginComponent {
       next: () => {
         this.auth.fetchAndSaveUserProfile().subscribe({
           next: (user) => {
-            this.push.subscribe();
             if (user.classe === 'owner') {
               this.router.navigate(['/owner']);
             } else {

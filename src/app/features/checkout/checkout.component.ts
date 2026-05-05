@@ -24,6 +24,7 @@ import {
 import { CartService } from '../../core/services/cart.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PedidoService } from '../../core/services/pedido.service';
+import { PushNotificationService } from '../../core/services/push-notification.service';
 import { PedidoLocalStorageService } from '../../core/services/pedido-local-storage.service';
 import { PagamentoService } from '../../core/services/pagamento.service';
 import { PedidosLiveService } from '../../core/services/pedidos-live.service';
@@ -41,16 +42,17 @@ type CheckoutStep = 'endereco' | 'pagamento' | 'resumo';
   templateUrl: './checkout.component.html',
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
-  readonly cart            = inject(CartService);
-  private auth             = inject(AuthService);
-  private pedidoService    = inject(PedidoService);
-  private pedidoLocalStorage = inject(PedidoLocalStorageService);
-  private pagamentoService = inject(PagamentoService);
-  private pedidosLive      = inject(PedidosLiveService);
-  private enderecoService  = inject(EnderecoUsuarioService);
-  private marketingService = inject(MarketingService);
-  private horarioService   = inject(HorarioService);
-  private router           = inject(Router);
+  readonly cart               = inject(CartService);
+  private auth                = inject(AuthService);
+  private pedidoService       = inject(PedidoService);
+  private push                = inject(PushNotificationService);
+  private pedidoLocalStorage  = inject(PedidoLocalStorageService);
+  private pagamentoService    = inject(PagamentoService);
+  private pedidosLive         = inject(PedidosLiveService);
+  private enderecoService     = inject(EnderecoUsuarioService);
+  private marketingService    = inject(MarketingService);
+  private horarioService      = inject(HorarioService);
+  private router              = inject(Router);
 
   readonly loja  = computed(() => this.cart.lojaAtual());
 
@@ -185,6 +187,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.push.carregarVapidKey();
+
     if (this.auth.isAuthenticated()) {
       this.enderecoService
         .listar()
@@ -308,6 +312,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   confirmarPedido(): void {
     const loja = this.loja();
     if (!loja || this.itens().length === 0) return;
+
+    if (this.auth.isAuthenticated()) {
+      this.push.subscribe();
+    }
 
     const f = this.enderecoForm;
     const body: CreatePedidoRequest = {

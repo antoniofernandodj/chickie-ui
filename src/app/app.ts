@@ -23,5 +23,10 @@ export class App implements OnInit {
       const url = msg?.notification?.data?.url;
       if (url) this.router.navigateByUrl(url);
     });
+
+    this.push.notificationClicks$.subscribe(({ notification }: any) => {
+      const url = notification?.data?.url;
+      if (url) this.router.navigateByUrl(url);
+    });
   }
 }
