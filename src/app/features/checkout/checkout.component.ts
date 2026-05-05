@@ -210,8 +210,15 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   // ── Navigation ────────────────────────────────────────────────────────────────
   avancar(): void {
-    if (this.step() === 'endereco' && this.enderecoValido)  { this.step.set('pagamento'); return; }
-    if (this.step() === 'pagamento' && this.pagamentoValido) { this.step.set('resumo');    return; }
+    if (this.step() === 'endereco' && this.enderecoValido) {
+      if (!this.auth.isAuthenticated()) {
+        this.guestEnderecoService.salvar(this.enderecoForm);
+        this.enderecosGuestSalvos.set(this.guestEnderecoService.listar());
+      }
+      this.step.set('pagamento');
+      return;
+    }
+    if (this.step() === 'pagamento' && this.pagamentoValido) { this.step.set('resumo'); return; }
   }
 
   voltar(): void {
@@ -380,7 +387,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       next: res => {
         if (!isAuth) {
           this.push.subscribePorPedido(res.uuid);
-          this.guestEnderecoService.salvar(this.enderecoForm);
         }
 
         this.pedidoService.buscarPorCodigo(res.codigo).pipe(catchError(() => of(null)))
