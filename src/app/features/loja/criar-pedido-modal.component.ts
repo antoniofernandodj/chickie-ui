@@ -36,6 +36,7 @@ import { PedidoLocalStorageService } from '../../core/services/pedido-local-stor
 import { PagamentoService } from '../../core/services/pagamento.service';
 import { PedidosLiveService } from '../../core/services/pedidos-live.service';
 import { EnderecoUsuarioService } from '../../core/services/endereco-usuario.service';
+import { GuestEnderecoService, EnderecoGuestSalvo } from '../../core/services/guest-endereco.service';
 import { ConfigPedidoService } from '../../core/services/config-pedido.service';
 import { MarketingService } from '../../core/services/marketing.service';
 import { CatalogoService } from '../../core/services/catalogo.service';
@@ -75,6 +76,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   private pagamentoService = inject(PagamentoService);
   private pedidosLive = inject(PedidosLiveService);
   private enderecoService = inject(EnderecoUsuarioService);
+  private guestEnderecoService = inject(GuestEnderecoService);
   private configService = inject(ConfigPedidoService);
   private marketingService = inject(MarketingService);
   private catalogoService = inject(CatalogoService);
@@ -159,7 +161,9 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
 
   // ── Endereço ────────────────────────────────────────────────────────────────
   readonly enderecosUsuario = signal<EnderecoUsuario[]>([]);
+  readonly enderecosGuestSalvos = signal<EnderecoGuestSalvo[]>([]);
   enderecoSelecionadoUuid: string | null = null;
+  enderecoGuestSelecionadoId: string | null = null;
 
   enderecoForm: EnderecoFormValue = {
     logradouro: '',
@@ -298,6 +302,8 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
         .listar()
         .pipe(catchError(() => of([])))
         .subscribe((list) => this.enderecosUsuario.set(list));
+    } else {
+      this.enderecosGuestSalvos.set(this.guestEnderecoService.listar());
     }
   }
 
@@ -323,6 +329,12 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   // ── Navigation ───────────────────────────────────────────────────────────────
   avancar(): void {
     if (!this.canAdvance) return;
+
+    if (this.currentStep.tipo === 'endereco' && !this.auth.isAuthenticated()) {
+      this.guestEnderecoService.salvar(this.enderecoForm);
+      this.enderecosGuestSalvos.set(this.guestEnderecoService.listar());
+    }
+
     this.pizzaPartes.set([]);
     this.pizzaAdicionaisPorPosicao.set({});
     this.pizzaParteExpandida.set(null);
@@ -552,6 +564,21 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
   // ── Address ───────────────────────────────────────────────────────────────────
   selecionarEndereco(end: EnderecoUsuario): void {
     this.enderecoSelecionadoUuid = end.uuid;
+    this.enderecoGuestSelecionadoId = null;
+    this.enderecoForm = {
+      logradouro: end.logradouro,
+      numero: end.numero,
+      complemento: end.complemento ?? '',
+      bairro: end.bairro,
+      cidade: end.cidade,
+      estado: end.estado,
+      cep: end.cep ?? '',
+    };
+  }
+
+  selecionarEnderecoGuest(end: EnderecoGuestSalvo): void {
+    this.enderecoGuestSelecionadoId = end.id;
+    this.enderecoSelecionadoUuid = null;
     this.enderecoForm = {
       logradouro: end.logradouro,
       numero: end.numero,
@@ -565,6 +592,7 @@ export class CriarPedidoModalComponent implements OnInit, OnDestroy {
 
   onEnderecoInputChange(): void {
     this.enderecoSelecionadoUuid = null;
+    this.enderecoGuestSelecionadoId = null;
   }
 
   // ── Cupom ──────────────────────────────────────────────────────────────────────
